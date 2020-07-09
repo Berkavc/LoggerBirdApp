@@ -1,5 +1,8 @@
 package models.api.gitlab
 
-data class GitlabAttachmentModel (
+/**
+ * This class is a model for Gitlab Api request
+ */
+internal data class GitlabAttachmentModel (
     var full_path:String? = null
 )

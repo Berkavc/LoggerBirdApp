@@ -1,6 +1,9 @@
 package models.api.gitlab
 
-data class GitlabUsersModel (
+/**
+ * This class is a model for Gitlab Api request
+ */
+internal data class GitlabUsersModel (
     var id:String? = null,
     var name:String? = null
 )

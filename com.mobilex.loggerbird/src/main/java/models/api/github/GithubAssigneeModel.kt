@@ -1,8 +1,9 @@
 package models.api.github
 
-
-
-data class GithubAssigneeModel(
+/**
+ * This class is a model for Github Api request
+ */
+internal data class GithubAssigneeModel(
     var login:String? = null
 )
 

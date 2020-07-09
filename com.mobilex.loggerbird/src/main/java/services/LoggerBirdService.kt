@@ -1,6 +1,33 @@
 package services
 
-import adapter.*
+import adapter.autoCompleteTextViews.api.basecamp.AutoCompleteTextViewBasecampCategoryAdapter
+import adapter.autoCompleteTextViews.api.trello.AutoCompleteTextViewTrelloLabelAdapter
+import adapter.recyclerView.api.asana.RecyclerViewAsanaAttachmentAdapter
+import adapter.recyclerView.api.asana.RecyclerViewAsanaSubTaskAdapter
+import adapter.recyclerView.api.basecamp.RecyclerViewBasecampAssigneeAdapter
+import adapter.recyclerView.api.basecamp.RecyclerViewBasecampAttachmentAdapter
+import adapter.recyclerView.api.basecamp.RecyclerViewBasecampNotifyAdapter
+import adapter.recyclerView.api.clubhouse.RecyclerViewClubhouseAttachmentAdapter
+import adapter.recyclerView.api.github.RecyclerViewGithubAssigneeAdapter
+import adapter.recyclerView.api.github.RecyclerViewGithubAttachmentAdapter
+import adapter.recyclerView.api.github.RecyclerViewGithubLabelAdapter
+import adapter.recyclerView.api.gitlab.RecyclerViewGitlabAttachmentAdapter
+import adapter.recyclerView.api.jira.RecyclerViewJiraAttachmentAdapter
+import adapter.recyclerView.api.jira.RecyclerViewJiraComponentAdapter
+import adapter.recyclerView.api.jira.RecyclerViewJiraFixVersionsAdapter
+import adapter.recyclerView.api.jira.RecyclerViewJiraIssueAdapter
+import adapter.recyclerView.api.jira.RecyclerViewJiraLabelAdapter
+import adapter.recyclerView.api.pivotal.*
+import adapter.recyclerView.api.pivotal.RecyclerViewPivotalAttachmentAdapter
+import adapter.recyclerView.api.pivotal.RecyclerViewPivotalBlockerAdapter
+import adapter.recyclerView.api.pivotal.RecyclerViewPivotalLabelAdapter
+import adapter.recyclerView.api.pivotal.RecyclerViewPivotalOwnerAdapter
+import adapter.recyclerView.api.slack.RecyclerViewSlackAttachmentAdapter
+import adapter.recyclerView.api.trello.RecyclerViewTrelloAttachmentAdapter
+import adapter.recyclerView.api.trello.RecyclerViewTrelloLabelAdapter
+import adapter.recyclerView.api.trello.RecyclerViewTrelloMemberAdapter
+import adapter.recyclerView.email.RecyclerViewEmaiToListAttachmentAdapter
+import adapter.recyclerView.email.RecyclerViewEmailAttachmentAdapter
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -43,7 +70,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.circularreveal.CircularRevealLinearLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.jakewharton.rxbinding2.view.RxView
@@ -54,16 +80,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
-import listeners.*
 import loggerbird.LoggerBird
 import models.*
+import models.recyclerView.*
 import observers.LogActivityLifeCycleObserver
 import org.aviran.cookiebar2.CookieBar
 import paint.PaintActivity
 import paint.PaintView
-import utils.*
-import utils.EmailUtil
-import utils.LinkedBlockingQueueUtil
+import utils.email.EmailUtil
+import utils.other.LinkedBlockingQueueUtil
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -71,6 +96,20 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import java.text.SimpleDateFormat
 import android.text.InputFilter
+import listeners.floatingActionButtons.FloatingActionButtonOnTouchListener
+import listeners.layouts.LayoutFeedbackOnTouchListener
+import listeners.layouts.LayoutJiraOnTouchListener
+import utils.api.asana.AsanaApi
+import utils.api.basecamp.BasecampApi
+import utils.api.clubhouse.ClubhouseApi
+import utils.api.github.GithubApi
+import utils.api.gitlab.GitlabApi
+import utils.api.jira.JiraApi
+import utils.api.pivotal.PivotalTrackerApi
+import utils.api.slack.SlackApi
+import utils.api.trello.TrelloApi
+import utils.other.DefaultToast
+import utils.other.InputTypeFilter
 
 internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     //Global variables:
@@ -102,14 +141,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var windowManagerBasecampDate: Any? = null
     private var windowManagerAsana: Any? = null
     private var windowManagerAsanaDate: Any? = null
-    private var windowManagerAsanaSub: Any? = null
     private var windowManagerClubhouse: Any? = null
     private var windowManagerClubhouseDatePicker: Any? = null
     private lateinit var windowManagerParams: WindowManager.LayoutParams
     private lateinit var windowManagerParamsFeedback: WindowManager.LayoutParams
     private lateinit var windowManagerParamsProgressBar: WindowManager.LayoutParams
     private lateinit var windowManagerParamsJira: WindowManager.LayoutParams
-    private lateinit var windowManagerParamsJiraAuth: WindowManager.LayoutParams
     private lateinit var windowManagerParamsSlack: WindowManager.LayoutParams
     private lateinit var windowManagerParamsJiraDatePicker: WindowManager.LayoutParams
     private lateinit var windowManagerParamsGitlabDatePicker: WindowManager.LayoutParams
@@ -129,11 +166,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var windowManagerParamsBaseCampDate: WindowManager.LayoutParams
     private lateinit var windowManagerParamsAsana: WindowManager.LayoutParams
     private lateinit var windowManagerParamsAsanaDate: WindowManager.LayoutParams
-    private lateinit var windowManagerParamsAsanaSub:WindowManager.LayoutParams
     private lateinit var windowManagerParamsClubhouse: WindowManager.LayoutParams
     private lateinit var windowManagerParamsClubhouseDatePicker: WindowManager.LayoutParams
     private var coroutineCallScreenShot: CoroutineScope = CoroutineScope(Dispatchers.IO)
-    private var coroutineCallAnimation: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var coroutineCallVideo: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var coroutineCallAudio: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var coroutineCallVideoStarter = CoroutineScope(Dispatchers.IO)
@@ -154,8 +189,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var resultCode: Int = -1
     private var dataIntent: Intent? = null
     private lateinit var logActivityLifeCycleObserver: LogActivityLifeCycleObserver
-    private lateinit var initializeFloatingActionButton: Runnable
-    private lateinit var takeOldCoordinates: Runnable
     private var isFabEnable: Boolean = false
     private var isActivateDialogShown: Boolean = false
     private var coroutineCallVideoCounter: CoroutineScope = CoroutineScope(Dispatchers.IO)
@@ -173,7 +206,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var timerTaskAudio: TimerTask? = null
     private var timerVideoTaskFileSize: TimerTask? = null
     private var timerAudioTaskFileSize: TimerTask? = null
-    private var fileSizeFormatter: Formatter = Formatter()
     private lateinit var cookieBar: CookieBar
     private lateinit var viewFeedback: View
     private lateinit var viewJira: View
@@ -194,9 +226,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var viewBasecampDate: View
     private lateinit var viewAsana: View
     private lateinit var viewAsanaDate: View
-    private lateinit var viewAsanaSub:View
     private lateinit var viewClubhouse: View
-    private lateinit var wrapper: FrameLayout
     private val fileLimit: Long = 10485760
     private var sessionTimeStart: Long? = System.currentTimeMillis()
     private var sessionTimeEnd: Long? = null
@@ -206,109 +236,64 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private val arrayListFileName: ArrayList<String> = ArrayList()
     private val coroutineCallFilesAction: CoroutineScope = CoroutineScope(Dispatchers.IO)
     private var controlFileAction: Boolean = false
-    private lateinit var progressBar: ProgressBar
     private lateinit var progressBarView: View
-    private val defaultToast: DefaultToast = DefaultToast()
-    private val arrayListUnhandledExceptionMessage: ArrayList<String> = ArrayList()
+    private val defaultToast: DefaultToast =
+        DefaultToast()
 
     //Jira:
-    internal val jiraAuthentication = JiraAuthentication()
-    //    private lateinit var spinnerProject: Spinner
-    private lateinit var autoTextViewProject: AutoCompleteTextView
-    //    private lateinit var spinnerIssueType: Spinner
-    private lateinit var autoTextViewIssueType: AutoCompleteTextView
+    internal val jiraAuthentication = JiraApi()
+    private lateinit var autoTextViewJiraProject: AutoCompleteTextView
+    private lateinit var autoTextViewJiraIssueType: AutoCompleteTextView
     private lateinit var recyclerViewJiraAttachment: RecyclerView
-    private lateinit var layout_jira_summary: TextInputLayout
-    private lateinit var editTextSummary: EditText
-    private lateinit var editTextDescription: EditText
-    //  private lateinit var editTextJiraAuthMail: EditText
-    //  private lateinit var editTextJiraAuthPassword: EditText
-    //    private lateinit var spinnerReporter: Spinner
-    private lateinit var autoTextViewReporter: AutoCompleteTextView
-    //    private lateinit var spinnerLinkedIssue: Spinner
-    private lateinit var autoTextViewLinkedIssue: AutoCompleteTextView
-    //    private lateinit var spinnerIssue: Spinner
-    private lateinit var autoTextViewIssue: AutoCompleteTextView
-    //    private lateinit var spinnerAssignee: Spinner
-    private lateinit var autoTextViewAssignee: AutoCompleteTextView
-    //    private lateinit var spinnerPriority: Spinner
-    private lateinit var autoTextViewPriority: AutoCompleteTextView
-    //    private lateinit var spinnerComponent: Spinner
-    private lateinit var autoTextViewComponent: AutoCompleteTextView
-    //    private lateinit var spinnerFixVersions: Spinner
-    private lateinit var autoTextViewFixVersions: AutoCompleteTextView
-    //    private lateinit var spinnerLabel: Spinner
-    private lateinit var autoTextViewLabel: AutoCompleteTextView
-    //    private lateinit var spinnerEpicLink: Spinner
-    private lateinit var autoTextViewEpicLink: AutoCompleteTextView
-    //    private lateinit var spinnerSprint: Spinner
-    private lateinit var autoTextViewSprint: AutoCompleteTextView
-    private lateinit var autoTextViewEpicName: AutoCompleteTextView
+    private lateinit var editTextJiraSummary: EditText
+    private lateinit var editTextJiraDescription: EditText
+    private lateinit var autoTextViewJiraReporter: AutoCompleteTextView
+    private lateinit var autoTextViewJiraLinkedIssue: AutoCompleteTextView
+    private lateinit var autoTextViewJiraIssue: AutoCompleteTextView
+    private lateinit var autoTextViewJiraAssignee: AutoCompleteTextView
+    private lateinit var autoTextViewJiraPriority: AutoCompleteTextView
+    private lateinit var autoTextViewJiraComponent: AutoCompleteTextView
+    private lateinit var autoTextViewJiraFixVersions: AutoCompleteTextView
+    private lateinit var autoTextViewJiraLabel: AutoCompleteTextView
+    private lateinit var autoTextViewJiraEpicLink: AutoCompleteTextView
+    private lateinit var autoTextViewJiraSprint: AutoCompleteTextView
+    private lateinit var autoTextViewJiraEpicName: AutoCompleteTextView
     private lateinit var buttonJiraCreate: Button
     internal lateinit var buttonJiraCancel: Button
-    internal fun controlButtonJiraCancel(): Boolean {
-        if (this::buttonJiraCancel.isInitialized) {
-            return true
-        }
-        return false
-    }
-
-    //  private lateinit var buttonJiraAuthCancel: Button
-    //  private lateinit var buttonJiraAuthNext: Button
     private lateinit var layoutJira: FrameLayout
     private lateinit var toolbarJira: Toolbar
     private lateinit var progressBarJira: ProgressBar
     private lateinit var progressBarJiraLayout: FrameLayout
-    private lateinit var cardViewSprint: CardView
-    private lateinit var cardViewStartDate: CardView
-    private lateinit var cardViewEpicName: CardView
-    private lateinit var cardViewEpicLink: CardView
+    private lateinit var cardViewJiraSprint: CardView
+    private lateinit var cardViewJiraStartDate: CardView
+    private lateinit var cardViewJiraEpicName: CardView
+    private lateinit var cardViewJiraEpicLink: CardView
     private lateinit var imageViewStartDate: ImageView
-    //    private lateinit var textViewRemoveDate: TextView
     private lateinit var imageButtonRemoveDate: ImageButton
-    private lateinit var calendarViewStartDate: CalendarView
+    private lateinit var calendarViewJiraStartDate: CalendarView
     private lateinit var calendarViewJiraView: View
     private lateinit var calendarViewJiraLayout: FrameLayout
     private var calendarViewJiraDate: Long? = null
     private lateinit var buttonCalendarViewJiraCancel: Button
     private lateinit var buttonCalendarViewJiraOk: Button
     private lateinit var scrollViewJira: ScrollView
-    //    private lateinit var layoutJiraAuth: LinearLayout
     private val arrayListJiraFileName: ArrayList<RecyclerViewModel> = ArrayList()
-    //    private val arrayListJiraProject: ArrayList<String> = ArrayList()
-//    private val arrayListJiraIssueType: ArrayList<String> = ArrayList()
-//    private val arrayListJiraReporter: ArrayList<String> = ArrayList()
-//    private val arrayListJiraLinkedIssue: ArrayList<String> = ArrayList()
-//    private val arrayListJiraAssignee: ArrayList<String> = ArrayList()
-//    private val arrayListJiraPriority: ArrayList<String> = ArrayList()
-    private lateinit var jiraAdapter: RecyclerViewJiraAdapter
-    //    private lateinit var spinnerProjectAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewProjectAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerIssueTypeAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewIssueTypeAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerReporterAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewReporterAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerLinkedIssueAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewLinkedIssueAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerIssueAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewIssueAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerAssigneeAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewAssigneeAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerPriorityAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewPriorityAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerFixVersionsAdapter: ArrayAdapter<String>
+    private lateinit var jiraAttachmentAdapter: RecyclerViewJiraAttachmentAdapter
+    private lateinit var autoTextViewJiraProjectAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraIssueTypeAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraReporterAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraLinkedIssueAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraIssueAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraAssigneeAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraPriorityAdapter: ArrayAdapter<String>
     private lateinit var autoTextViewFixVersionsAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerComponentAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewComponentAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerLabelAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewLabelAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerEpicLinkAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewEpicLinkAdapter: ArrayAdapter<String>
-    //    private lateinit var spinnerSprintAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewSprintAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewEpicNameAdapter: ArrayAdapter<String>
-    private var projectPosition: Int = 0
-    private var controlProjectPosition: Boolean = false
+    private lateinit var autoTextViewJiraComponentAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraLabelAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraEpicLinkAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraSprintAdapter: ArrayAdapter<String>
+    private lateinit var autoTextViewJiraEpicNameAdapter: ArrayAdapter<String>
+    private var projectJiraPosition: Int = 0
+    private var controlProjectJiraPosition: Boolean = false
     internal lateinit var cardViewJiraIssueList: CardView
     private lateinit var recyclerViewJiraIssueList: RecyclerView
     private lateinit var jiraAdapterIssueList: RecyclerViewJiraIssueAdapter
@@ -342,7 +327,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var progressBarFeedbackLayout: FrameLayout
 
     //Slack:
-    private val slackAuthentication = SlackAuthentication()
+    private val slackAuthentication = SlackApi()
     private lateinit var buttonSlackCreate: Button
     internal lateinit var buttonSlackCancel: Button
     private lateinit var buttonSlackCreateUser: Button
@@ -353,7 +338,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var editTextMessageUser: EditText
     private lateinit var spinnerChannelsAdapter: ArrayAdapter<String>
     private lateinit var spinnerUsersAdapter: ArrayAdapter<String>
-    private lateinit var slackAdapter: RecyclerViewSlackAdapter
+    private lateinit var slackAttachmentAdapter: RecyclerViewSlackAttachmentAdapter
     private lateinit var recyclerViewSlackAttachment: RecyclerView
     private lateinit var recyclerViewSlackAttachmentUser: RecyclerView
     private val arrayListSlackFileName: ArrayList<RecyclerViewModel> = ArrayList()
@@ -375,8 +360,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var toolbarEmail: Toolbar
     private lateinit var recyclerViewEmailAttachment: RecyclerView
     private lateinit var recyclerViewEmailToList: RecyclerView
-    private lateinit var emailAdapter: RecyclerViewEmailAdapter
-    private lateinit var emailToListAdapter: RecyclerViewEmaiToListAdapter
+    private lateinit var emailAttachmentAdapter: RecyclerViewEmailAttachmentAdapter
+    private lateinit var emailToListAttachmentAdapter: RecyclerViewEmaiToListAttachmentAdapter
     private val arrayListEmailFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private val arraylistEmailToUsername: ArrayList<RecyclerViewModelTo> = ArrayList()
 
@@ -402,14 +387,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var timePickerFutureTask: TimePicker
     private lateinit var buttonFutureTaskTimeCreate: Button
     private lateinit var buttonFutureTaskTimeCancel: Button
-    private lateinit var emailTo: String
-    private lateinit var emailMessage: String
-    private lateinit var emailFile: File
-    private lateinit var emailSubject: String
-    private lateinit var emailArrayListFilePath: ArrayList<File>
 
     //Gitlab:
-    private val gitlabAuthentication = GitlabAuthentication()
+    private val gitlabAuthentication = GitlabApi()
     private lateinit var autoTextViewGitlabProject: AutoCompleteTextView
     private lateinit var editTextGitlabTitle: EditText
     private lateinit var editTextGitlabDescription: EditText
@@ -429,7 +409,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var buttonCalendarViewGitlabCancel: Button
     private lateinit var buttonCalendarViewGitlabOk: Button
     private lateinit var recyclerViewGitlabAttachment: RecyclerView
-    private lateinit var gitlabAdapter: RecyclerViewGitlabAdapter
+    private lateinit var gitlabAttachmentAdapter: RecyclerViewGitlabAttachmentAdapter
     private lateinit var progressBarGitlab: ProgressBar
     private lateinit var progressBarGitlabLayout: FrameLayout
     private lateinit var autoTextViewGitlabProjectAdapter: ArrayAdapter<String>
@@ -439,16 +419,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var spinnerGitlabConfidentialityAdapter: ArrayAdapter<String>
     private val arrayListGitlabFileName: ArrayList<RecyclerViewModel> = ArrayList()
 
-
     //Github
-    internal val githubAuthentication = GithubAuthentication()
+    internal val githubAuthentication = GithubApi()
     private lateinit var buttonGithubCreate: Button
     private lateinit var buttonGithubCancel: Button
     private lateinit var editTextGithubTitle: EditText
     private lateinit var editTextGithubComment: EditText
     private lateinit var toolbarGithub: Toolbar
     private lateinit var recyclerViewGithubAttachment: RecyclerView
-    private lateinit var githubAdapter: RecyclerViewGithubAdapter
+    private lateinit var githubAttachmentAdapter: RecyclerViewGithubAttachmentAdapter
     private lateinit var autoTextViewGithubAssignee: AutoCompleteTextView
     private lateinit var autoTextViewGithubLabels: AutoCompleteTextView
     private lateinit var autoTextViewGithubRepo: AutoCompleteTextView
@@ -477,13 +456,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var arrayListGithubLabel: ArrayList<String>
 
     //Trello
-    internal val trelloAuthentication = TrelloAuthentication()
+    internal val trelloAuthentication = TrelloApi()
     private lateinit var buttonTrelloCreate: Button
     private lateinit var buttonTrelloCancel: Button
     private lateinit var editTextTrelloTitle: EditText
     private lateinit var toolbarTrello: Toolbar
     private lateinit var recyclerViewTrelloAttachment: RecyclerView
-    private lateinit var trelloAdapter: RecyclerViewTrelloAdapter
+    private lateinit var trelloAttachmentAdapter: RecyclerViewTrelloAttachmentAdapter
     private lateinit var autoTextViewTrelloProject: AutoCompleteTextView
     private lateinit var autoTextViewTrelloBoard: AutoCompleteTextView
     private lateinit var autoTextViewTrelloMember: AutoCompleteTextView
@@ -491,7 +470,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var autoTextViewTrelloProjectAdapter: ArrayAdapter<String>
     private lateinit var autoTextViewTrelloBoardAdapter: ArrayAdapter<String>
     private lateinit var autoTextViewTrelloMemberAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewTrelloLabelAdapter: AutoCompleteTextViewTrelloAdapter
+    private lateinit var autoTextViewTrelloLabelLabelAdapter: AutoCompleteTextViewTrelloLabelAdapter
     private lateinit var recyclerViewTrelloLabel: RecyclerView
     private lateinit var trelloLabelAdapter: RecyclerViewTrelloLabelAdapter
     private val arrayListTrelloFileName: ArrayList<RecyclerViewModel> = ArrayList()
@@ -533,7 +512,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var buttonTrelloTimeCancel: Button
 
     //Pivotal Tracker
-    internal val pivotalAuthentication = PivotalTrackerAuthentication()
+    internal val pivotalAuthentication = PivotalTrackerApi()
     private lateinit var buttonPivotalCreate: Button
     private lateinit var buttonPivotalCancel: Button
     private lateinit var toolbarPivotal: Toolbar
@@ -569,7 +548,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     internal lateinit var cardViewPivotalAttachments: CardView
     private lateinit var recyclerViewPivotalAttachmentList: RecyclerView
     private val arrayListPivotalFileName: ArrayList<RecyclerViewModel> = ArrayList()
-    private lateinit var pivotalAdapter: RecyclerViewPivotalAdapter
+    private lateinit var pivotalAttachmentAdapter: RecyclerViewPivotalAttachmentAdapter
     private val arrayListPivotalTaskName: ArrayList<RecyclerViewModelTask> = ArrayList()
     private lateinit var pivotalTaskAdapter: RecyclerViewPivotalTaskAdapter
     private val arrayListPivotalBlockerName: ArrayList<RecyclerViewModelBlocker> = ArrayList()
@@ -582,7 +561,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var arrayListPivotalOwner: ArrayList<String>
 
     //Basecamp
-    internal val basecampAuthentication = BasecampAuthentication()
+    internal val basecampAuthentication = BasecampApi()
     private lateinit var buttonBasecampCancel: Button
     private lateinit var buttonBasecampCreate: Button
     private lateinit var toolbarBasecamp: Toolbar
@@ -592,8 +571,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var autoTextViewBasecampAssignee: AutoCompleteTextView
     private lateinit var autoTextViewBasecampNotify: AutoCompleteTextView
     private lateinit var autoTextViewBasecampProjectAdapter: ArrayAdapter<String>
-    //    private lateinit var autoTextViewBasecampCategoryAdapter: ArrayAdapter<String>
-    private lateinit var autoTextViewBasecampCategoryAdapter: AutoCompleteTextViewBasecampAdapter
+    private lateinit var autoTextViewBasecampCategoryCategoryAdapter: AutoCompleteTextViewBasecampCategoryAdapter
     private lateinit var autoTextViewBasecampAssigneeAdapter: ArrayAdapter<String>
     private lateinit var autoTextViewBasecampNotifyAdapter: ArrayAdapter<String>
     private lateinit var editTextBasecampDescriptionMessage: EditText
@@ -608,7 +586,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var recyclerViewBasecampAttachmentList: RecyclerView
     private lateinit var recyclerViewBasecampNotifyList: RecyclerView
     private lateinit var recyclerViewBasecampAssigneeList: RecyclerView
-    private lateinit var basecampAdapter: RecyclerViewBasecampAdapter
+    private lateinit var basecampAttachmentAdapter: RecyclerViewBasecampAttachmentAdapter
     private val arrayListBasecampFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var basecampAssigneeAdapter: RecyclerViewBasecampAssigneeAdapter
     private val arrayListBasecampAssigneeName: ArrayList<RecyclerViewModelAssignee> = ArrayList()
@@ -618,13 +596,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var arrayListBasecampNotify: ArrayList<String>
     private lateinit var imageViewBasecampDate: ImageView
     private lateinit var imageButtonBasecampRemoveDate: ImageButton
+
     //basecamp_date:
     private lateinit var frameLayoutBasecampDate: FrameLayout
     private lateinit var calendarViewBasecamp: CalendarView
     private lateinit var buttonBasecampDateCreate: Button
     private lateinit var buttonBasecampDateCancel: Button
+
     //Asana
-    internal val asanaAuthentication = AsanaAuthentication()
+    internal val asanaAuthentication = AsanaApi()
     private lateinit var toolbarAsana: Toolbar
     private lateinit var scrollViewAsana: ScrollView
     private lateinit var autoTextViewAsanaProject: AutoCompleteTextView
@@ -644,19 +624,23 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var recyclerViewAsanaSubTasksList: RecyclerView
     private val arrayListAsanaSubtaskName: ArrayList<RecyclerViewModelSubtask> = ArrayList()
     internal lateinit var cardViewAsanaSubTasksList: CardView
-    private lateinit var asanaAdapter: RecyclerViewAsanaAdapter
+    private lateinit var asanaAttachmentAdapter: RecyclerViewAsanaAttachmentAdapter
     private lateinit var asanaSubTasksAdapter: RecyclerViewAsanaSubTaskAdapter
     private lateinit var imageViewAsanaStartDate: ImageView
     private lateinit var imageButtonAsanaRemoveDate: ImageButton
     private lateinit var buttonAsanaCancel: Button
     private lateinit var buttonAsanaCreate: Button
+    private var arrayListAsanaSubtaskAssignee: ArrayList<String> = ArrayList()
+    private var arrayListAsanaSubtaskSection: ArrayList<String> = ArrayList()
+
     //asana_date:
     private lateinit var frameLayoutAsanaDate: FrameLayout
     private lateinit var calendarViewAsana: CalendarView
     private lateinit var buttonAsanaDateCreate: Button
     private lateinit var buttonAsanaDateCancel: Button
+
     //Clubhouse
-    internal val clubhouseAuthentication = ClubhouseAuthentication()
+    internal val clubhouseAuthentication = ClubhouseApi()
     internal lateinit var buttonClubhouseCancel: Button
     private lateinit var buttonClubhouseCreate: Button
     private lateinit var toolbarClubhouse: Toolbar
@@ -679,7 +663,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var spinnerClubhouseRequester: Spinner
     private lateinit var spinnerClubhouseRequesterAdapter: ArrayAdapter<String>
     private val arrayListClubhouseFileName: ArrayList<RecyclerViewModel> = ArrayList()
-    private lateinit var clubhouseAdapter: RecyclerViewClubhouseAdapter
+    private lateinit var clubhouseAttachmentAdapter: RecyclerViewClubhouseAttachmentAdapter
     private lateinit var recyclerViewClubhouseAttachment: RecyclerView
     private lateinit var progressBarClubhouse: ProgressBar
     private lateinit var progressBarClubhouseLayout: FrameLayout
@@ -693,7 +677,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         private lateinit var floating_action_button_screenshot: FloatingActionButton
         private lateinit var floating_action_button_video: FloatingActionButton
         private lateinit var floating_action_button_audio: FloatingActionButton
-        private lateinit var reveal_linear_layout_share: CircularRevealLinearLayout
+        private lateinit var revealLinearLayoutShare: CircularRevealLinearLayout
         private lateinit var textView_send_email: TextView
         private lateinit var textView_share_jira: TextView
         private lateinit var textView_share_slack: TextView
@@ -705,7 +689,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         private lateinit var textView_share_asana: TextView
         private lateinit var textView_share_clubhouse: TextView
         private lateinit var textView_discard: TextView
-        //private lateinit var textView_dismiss : TextView
         private lateinit var textView_counter_video: TextView
         private lateinit var textView_counter_audio: TextView
         private lateinit var textView_video_size: TextView
@@ -729,8 +712,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         internal var controlPermissionRequest: Boolean = false
         private var runnableList: ArrayList<Runnable> = ArrayList()
         private var runnableListEmail: ArrayList<Runnable> = ArrayList()
-        private var workQueueLinked: LinkedBlockingQueueUtil = LinkedBlockingQueueUtil()
-        private var workQueueLinkedEmail: LinkedBlockingQueueUtil = LinkedBlockingQueueUtil()
+        private var workQueueLinkedVideo: LinkedBlockingQueueUtil =
+            LinkedBlockingQueueUtil()
+        private var workQueueLinkedEmail: LinkedBlockingQueueUtil =
+            LinkedBlockingQueueUtil()
         internal var controlVideoPermission: Boolean = false
         internal var controlAudioPermission: Boolean = false
         internal var controlDrawableSettingsPermission: Boolean = false
@@ -751,17 +736,22 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         internal lateinit var recyclerViewSlackNoAttachment: TextView
         internal lateinit var recyclerViewSlackUserNoAttachment: TextView
 
-
-        internal fun callEnqueue() {
-            workQueueLinked.controlRunnable = false
+        /**
+         * This method is used for removing video task from queue.
+         */
+        internal fun callEnqueueVideo() {
+            workQueueLinkedVideo.controlRunnable = false
             if (runnableList.size > 0) {
                 runnableList.removeAt(0)
                 if (runnableList.size > 0) {
-                    workQueueLinked.put(runnableList[0])
+                    workQueueLinkedVideo.put(runnableList[0])
                 }
             }
         }
 
+        /**
+         * This method is used for removing email task from queue.
+         */
         internal fun callEnqueueEmail() {
             workQueueLinkedEmail.controlRunnable = false
             if (runnableListEmail.size > 0) {
@@ -769,33 +759,33 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 if (runnableListEmail.size > 0) {
                     workQueueLinkedEmail.put(runnableListEmail[0])
                 } else {
-                    loggerBirdService.detachProgressBar()
-                    loggerBirdService.removeEmailLayout()
-                    loggerBirdService.defaultToast.attachToast(
-                        activity = loggerBirdService.returnActivity(),
-                        toastMessage = loggerBirdService.context.resources.getString(R.string.email_send_success)
-                    )
+                    loggerBirdService.finishShareLayout("single_email")
                 }
             } else {
-                loggerBirdService.detachProgressBar()
-                loggerBirdService.removeEmailLayout()
-                loggerBirdService.defaultToast.attachToast(
-                    activity = loggerBirdService.returnActivity(),
-                    toastMessage = loggerBirdService.context.resources.getString(R.string.email_send_success)
-                )
+                loggerBirdService.finishShareLayout("single_email")
             }
         }
 
-        internal fun resetEnqueueMail() {
+        /**
+         * This method is used for reseting email queue.
+         */
+        internal fun resetEnqueueEmail() {
             runnableListEmail.clear()
             workQueueLinkedEmail.controlRunnable = false
         }
 
-        internal fun resetEnqueue() {
+        /**
+         * This method is used for reseting video queue.
+         */
+        internal fun resetEnqueueVideo() {
             runnableList.clear()
-            workQueueLinked.controlRunnable = false
+            workQueueLinkedVideo.controlRunnable = false
         }
 
+        /**
+         * This method is used for checking intentForeGroundServiceVideo variable is initialized.
+         * @return Boolean value.
+         */
         internal fun controlIntentForegroundServiceVideo(): Boolean {
             if (this::intentForegroundServiceVideo.isInitialized) {
                 return true
@@ -803,6 +793,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             return false
         }
 
+        /**
+         * This method is used for checking loggerBirdService variable is initialized.
+         * @return Boolean value.
+         */
         internal fun controlLoggerBirdServiceInit(): Boolean {
             if (Companion::loggerBirdService.isInitialized) {
                 return true
@@ -810,6 +804,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             return false
         }
 
+        /**
+         * This method is used for checking floatingActionButtonView variable is initialized.
+         * @return Boolean value.
+         */
         internal fun controlFloatingActionButtonView(): Boolean {
             if (this::floatingActionButtonView.isInitialized) {
                 return true
@@ -817,20 +815,31 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             return false
         }
 
+        /**
+         * This method is used for checking revealLinearLayoutShare variable is initialized.
+         * @return Boolean value.
+         */
         internal fun controlRevealShareLayout(): Boolean {
-            if (this::reveal_linear_layout_share.isInitialized) {
+            if (this::revealLinearLayoutShare.isInitialized) {
                 return true
             }
             return false
         }
 
+        /**
+         * This method is used for checking workingAnimation variable is initialized.
+         * @return Boolean value.
+         */
         internal fun controlWorkingAnimation(): Boolean {
             if (this::workingAnimation.isInitialized) {
                 return true
             }
             return false
         }
-
+        /**
+         * This method is used for calling share view.
+         * @param filePathMedia is used for getting the reference of current media file.
+         */
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
         internal fun callShareView(filePathMedia: File? = null) {
             if (filePathMedia != null) {
@@ -839,7 +848,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 }
             } else {
                 loggerBirdService.activity.runOnUiThread {
-                    reveal_linear_layout_share.visibility = View.GONE
+                    revealLinearLayoutShare.visibility = View.GONE
                     floating_action_button.animate()
                         .rotationBy(360F)
                         .setDuration(200)
@@ -859,7 +868,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         }
     }
-
+    //Constructor
     init {
         ORIENTATIONS.append(Surface.ROTATION_0, 90)
         ORIENTATIONS.append(Surface.ROTATION_90, 0)
@@ -908,12 +917,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     /**
      * This Method Called When Service Detect's An  OnBind State In The Current Activity.
-     * Parameters:
      * @param rootIntent used for getting context reference from the Activity.
-     * Variables:
-     * @var currentLifeCycleState states takes current state as a String in the Activity life cycle.
-     * @var onDestroyMessage used for providing detail's for stringBuilder in LoggerBird.takelifeCycleDetails.
-     * Exceptions:
      * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of logExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
      * @return IBinder value.
      */
@@ -952,21 +956,27 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for getting reference of current activity and context.
+     * @param activity is used for getting reference of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     internal fun initializeActivity(activity: Activity) {
         this.activity = activity
         this.context = activity
-//        if (activity is AppCompatActivity) {
-//            initializeFloatingActionButton(activity = activity)
-//        }
     }
 
+
+    /**
+     * This method is used for creating Main Loggerbird layout which is attached to application overlay.
+     * @param activity is used for getting reference of current activity.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     internal fun initializeFloatingActionButton(activity: Activity) {
-
         try {
             if (windowManager != null && this::view.isInitialized) {
-                if (reveal_linear_layout_share.visibility == View.VISIBLE) {
+                if (revealLinearLayoutShare.visibility == View.VISIBLE) {
                     controlMedialFile()
                 }
                 (windowManager as WindowManager).removeViewImmediate(view)
@@ -1044,7 +1054,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         view.findViewById(R.id.fragment_floating_action_button_video)
                     floating_action_button_audio =
                         view.findViewById(R.id.fragment_floating_action_button_audio)
-                    reveal_linear_layout_share = view.findViewById(R.id.reveal_linear_layout_share)
+                    revealLinearLayoutShare = view.findViewById(R.id.reveal_linear_layout_share)
                     textView_send_email = view.findViewById(R.id.textView_send_email)
                     textView_discard = view.findViewById(R.id.textView_discard)
                     textView_share_jira = view.findViewById(R.id.textView_share_jira)
@@ -1173,7 +1183,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             LoggerBird.callExceptionDetails(exception = e, tag = Constants.floatingActionButtonTag)
         }
     }
-
+    /**
+     * This method formats a long time value into day format.
+     */
     private fun timeStringDay(remainingSeconds: Long): String {
         return String.format(
             Locale.getDefault(),
@@ -1195,6 +1207,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         )
     }
 
+    /**
+     * This method formats a long time value into hour format.
+     */
     private fun timeStringHour(remainingSeconds: Long): String {
         return String.format(
             Locale.getDefault(), "%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(remainingSeconds),
@@ -1211,17 +1226,22 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         )
     }
 
+    /**
+     * This method is used for getting reference of current activity and context.
+     * @param activity is used for getting reference of current activity.
+     */
     internal fun initializeNewActivity(activity: Activity) {
         this.activity = activity
         this.context = activity
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the fragment_logger_bird.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     @SuppressLint("ClickableViewAccessibility")
     private fun buttonClicks() {
-
         floating_action_button.setOnClickListener {
-
             if (!Settings.canDrawOverlays(context)) {
                 checkDrawOtherAppPermission(activity = (context as Activity))
             } else {
@@ -1232,7 +1252,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             if (floating_action_button_screenshot.visibility == View.VISIBLE) {
                 if (!PaintActivity.controlPaintInPictureState) {
                     if (!audioRecording && !videoRecording) {
-
                         takeScreenShot(view = activity.window.decorView.rootView, context = context)
                     } else {
                         Toast.makeText(context, R.string.media_recording_error, Toast.LENGTH_SHORT)
@@ -1306,11 +1325,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 textViewCounterAudio = textView_counter_audio,
                 textViewVideoSize = textView_video_size,
                 textViewAudiosize = textView_audio_size,
-                revealLinearLayoutShare = reveal_linear_layout_share
+                revealLinearLayoutShare = revealLinearLayoutShare
             )
         )
     }
-
+    /**
+     * This method is used for controlling state of buttons that are inside in the fragment_logger_bird.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun shareView(filePathMedia: File) {
         floating_action_button.backgroundTintList =
@@ -1338,13 +1360,62 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         floating_action_button_audio.visibility = View.GONE
         textView_counter_audio.visibility = View.GONE
         textView_counter_video.visibility = View.GONE
-        reveal_linear_layout_share.visibility = View.VISIBLE
+        revealLinearLayoutShare.visibility = View.VISIBLE
+        textView_share_jira.visibility = View.GONE
+        textView_share_clubhouse.visibility = View.GONE
+        textView_share_asana.visibility = View.GONE
+        textView_share_basecamp.visibility = View.GONE
+        textView_share_github.visibility = View.GONE
+        textView_share_gitlab.visibility = View.GONE
+        textView_share_pivotal.visibility = View.GONE
+        textView_share_slack.visibility = View.GONE
+        textView_share_trello.visibility = View.GONE
+
+        if(LoggerBird.clubhouseIsInitialized()){
+            textView_share_clubhouse.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.asanaIsInitialized()){
+            textView_share_asana.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.basecampIsInitialized()){
+            textView_share_basecamp.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.githubIsInitialized()){
+            textView_share_github.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.gitlabIsInitialized()){
+            textView_share_gitlab.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.pivotalIsInitialized()){
+            textView_share_pivotal.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.slackIsInitialized()){
+            textView_share_slack.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.jiraIsInitialized()){
+            textView_share_jira.visibility = View.VISIBLE
+        }
+
+        if(LoggerBird.trelloIsInitialized()){
+            textView_share_trello.visibility = View.VISIBLE
+        }
+
         shareViewClicks(filePathMedia = filePathMedia)
     }
 
+    /**
+     * This method is used for initializing shareview buttons clicks which are inside in the fragment_logger_bird.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun shareViewClicks(filePathMedia: File) {
-        if (reveal_linear_layout_share.isVisible) {
+        if (revealLinearLayoutShare.isVisible) {
             val sharedPref =
                 PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
             textView_send_email.setSafeOnClickListener {
@@ -1433,8 +1504,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 }
             }
 
-
-
             textView_discard.setSafeOnClickListener {
                 discardMediaFile()
             }
@@ -1474,24 +1543,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
-    private fun attachFloatingActionButtonLayoutListener() {
-        floating_action_button.viewTreeObserver.addOnGlobalLayoutListener(
-            FloatingActionButtonGlobalLayoutListener(
-                floatingActionButton = floating_action_button
-            )
-        )
-        floating_action_button_screenshot.viewTreeObserver.addOnGlobalLayoutListener(
-            FloatingActionButtonScreenshotGlobalLayoutListener(floatingActionButtonScreenshot = floating_action_button_screenshot)
-        )
-        floating_action_button_video.viewTreeObserver.addOnGlobalLayoutListener(
-            FloatingActionButtonVideoGlobalLayoutListener(floatingActionButtonVideo = floating_action_button_video)
-        )
-
-        floating_action_button_audio.viewTreeObserver.addOnGlobalLayoutListener(
-            FloatingActionButtonAudioGlobalLayoutListener(floatingActionButtonAudio = floating_action_button_audio)
-        )
-    }
-
+    /**
+     * This method is used for controlling animation of fragment_logger_bird layout.
+     */
     private fun animationVisibility() {
         if (isOpen) {
             isOpen = false
@@ -1544,6 +1598,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for checking taking write external storage recording permission(if permission doesn't given than it will request the permission).
+     * @return Boolean value.
+     */
     private fun checkWriteExternalStoragePermission(): Boolean {
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
                 context,
@@ -1563,6 +1621,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return true
     }
 
+    /**
+     * This method is used for checking taking audio recording permission(if permission doesn't given than it will request the permission).
+     * @return Boolean value.
+     */
     private fun checkAudioPermission(): Boolean {
         if (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(
                 context,
@@ -1582,6 +1644,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return true
     }
 
+    /**
+     * This method is used for requesting drawing overlay permission.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkDrawOtherAppPermission(activity: Activity) {
         controlPermissionRequest = true
@@ -1594,6 +1659,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         activity.startActivityForResult(intent, REQUEST_CODE_DRAW_OTHER_APP_SETTINGS)
     }
 
+    /**
+     * This method is used for taking screenshot of current view in the window.
+     */
     private fun createScreenShot(view: View): Bitmap {
         val viewScreenShot: View = view
         val bitmap: Bitmap = Bitmap.createBitmap(
@@ -1606,6 +1674,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return bitmap
     }
 
+    /**
+     * This method is used for starting or stopping screenshot action.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun takeScreenShot(view: View, context: Context) {
         if (checkWriteExternalStoragePermission()) {
@@ -1664,6 +1736,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for starting or stopping audio recording.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun takeAudioRecording() {
         if (checkAudioPermission() && checkWriteExternalStoragePermission()) {
@@ -1757,6 +1833,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for starting audio recording.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private suspend fun startAudioRecording() {
         try {
@@ -1778,6 +1858,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for stopping audio recording.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private suspend fun stopAudioRecording() {
         try {
             if (state) {
@@ -1798,20 +1882,30 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for starting the foreground service of video recording.
+     */
     private fun takeForegroundService() {
-        workQueueLinked.controlRunnable = true
+        workQueueLinkedVideo.controlRunnable = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             intentForegroundServiceVideo =
                 Intent((context as Activity), LoggerBirdForegroundServiceVideo::class.java)
             startForegroundServiceVideo()
         } else {
-            resetEnqueue()
+            resetEnqueueVideo()
         }
     }
 
+    /**
+     * This method is used for starting or stopping video recording.
+     * @param requestCode is used for getting reference of request code which is comes from onActivityResult method on activity.
+     * @param resultCode is used for getting reference of result code which is comes from onActivityResult method on activity.
+     * @param data is used for getting reference of intent data which is comes from onActivityResult method on activity.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun takeVideoRecording(requestCode: Int, resultCode: Int, data: Intent?) {
-        workQueueLinked.controlRunnable = true
+        workQueueLinkedVideo.controlRunnable = true
         if (checkWriteExternalStoragePermission() && checkAudioPermission()) {
             coroutineCallVideo.async {
                 try {
@@ -1856,7 +1950,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    resetEnqueue()
+                    resetEnqueueVideo()
                     LoggerBird.callEnqueue()
                     LoggerBird.callExceptionDetails(
                         exception = e,
@@ -1867,6 +1961,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for starting video recording.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private suspend fun startScreenRecording() {
         if (!videoRecording) {
@@ -1876,6 +1973,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for starting video recording animations.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private suspend fun shareScreen() {
         projectManager =
@@ -1913,7 +2013,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     ColorStateList.valueOf(resources.getColor(R.color.mediaRecordColor))
                 floating_action_button.imageTintList =
                     ColorStateList.valueOf(resources.getColor(R.color.white))
-                callEnqueue()
+                callEnqueueVideo()
             }
             initRecorder()
         } else {
@@ -1925,6 +2025,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing video recorder.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun initRecorder() {
         try {
@@ -1971,12 +2075,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            callEnqueue()
+            callEnqueueVideo()
             LoggerBird.callEnqueue()
             LoggerBird.callExceptionDetails(exception = e, tag = Constants.videoRecordingTag)
         }
     }
 
+    /**
+     * This method is used for creating virtual device for video recording.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun createVirtualDisplay(): VirtualDisplay? {
         val metrics = DisplayMetrics()
@@ -1996,6 +2103,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         )
     }
 
+    /**
+     * This method is used when screen recording is finished.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private suspend fun stopScreenRecord() {
         try {
@@ -2016,9 +2127,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            LoggerBird.callEnqueue()
+            LoggerBird.callExceptionDetails(exception = e, tag = Constants.videoRecordingTag)
         }
     }
 
+    /**
+     * This method is used for clearing media project.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun destroyMediaProjection() {
         try {
@@ -2031,33 +2148,48 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            LoggerBird.callEnqueue()
+            LoggerBird.callExceptionDetails(exception = e, tag = Constants.videoRecordingTag)
         }
     }
 
+    /**
+     * This method used when video foreground needs to be started.
+     */
     @RequiresApi(Build.VERSION_CODES.O)
     private fun startForegroundServiceVideo() {
         Log.d("start_foreground", "Foreground Service started!!!!!")
         (context as Activity).startForegroundService(intentForegroundServiceVideo)
     }
 
+    /**
+     * This method used when video foreground service needs to be stoped.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun stopForegroundServiceVideo() {
         try {
             (context as Activity).stopService(intentForegroundServiceVideo)
         } catch (e: Exception) {
             e.printStackTrace()
+            LoggerBird.callEnqueue()
+            LoggerBird.callExceptionDetails(exception = e, tag = Constants.videoRecordingTag)
         }
     }
 
+    /**
+     * This method is used when video recording methods needs to be in queue and executed in synchronized way.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun callVideoRecording(requestCode: Int, resultCode: Int, data: Intent?) {
         try {
             if (LoggerBird.isLogInitAttached()) {
-                workQueueLinked.controlRunnable = false
+                workQueueLinkedVideo.controlRunnable = false
                 runnableList.clear()
-                workQueueLinked.clear()
+                workQueueLinkedVideo.clear()
                 callForegroundService()
                 if (runnableList.isEmpty()) {
-                    workQueueLinked.put {
+                    workQueueLinkedVideo.put {
                         takeVideoRecording(
                             requestCode = requestCode,
                             resultCode = resultCode,
@@ -2082,11 +2214,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used when video foreground service methods needs to be in queue and executed in synchronized way.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun callForegroundService() {
         if (LoggerBird.isLogInitAttached()) {
             if (!videoRecording) {
                 if (runnableList.isEmpty()) {
-                    workQueueLinked.put {
+                    workQueueLinkedVideo.put {
                         takeForegroundService()
                     }
                 }
@@ -2099,6 +2235,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used when email methods needs to be in queue and executed in synchronized way.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun callEmail(filePathMedia: File, to: String) {
         if (LoggerBird.isLogInitAttached()) {
             if (runnableListEmail.isEmpty()) {
@@ -2114,11 +2255,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used when device was shaked.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     override fun hearShake() {
         try {
-//            val file:File ?  = null
-//            file!!.createNewFile()
             Log.d("shake", "shake fired!!")
             if (Settings.canDrawOverlays(this.activity)) {
                 if (checkUnhandledFilePath()) {
@@ -2167,18 +2309,22 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             e.printStackTrace()
             LoggerBird.callEnqueue()
             LoggerBird.callExceptionDetails(exception = e, tag = Constants.shakerTag)
-//            val file: File? = null
-//            file!!.createNewFile()
         }
     }
 
+    /**
+     * This method is used for blocking consecutive clicks in order to prevent spam.
+     */
     @SuppressLint("CheckResult")
-    fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
+    private fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
         RxView.clicks(this).throttleFirst(2000, TimeUnit.MILLISECONDS).subscribe {
             onClick(this)
         }
     }
 
+    /**
+     * This method is used for checking video file size is less than default file size limit.
+     */
     private fun takeVideoFileSize() {
         coroutineCallVideoFileSize.async {
             try {
@@ -2216,6 +2362,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for stopping video recording when file size have been exceeded.
+     */
     private fun stopVideoFileSize() {
         try {
             timerVideoTaskFileSize?.cancel()
@@ -2235,6 +2384,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for checking audio file size is less than default file size limit.
+     */
     private fun takeAudioFileSize() {
         coroutineCallAudioFileSize.async {
             try {
@@ -2272,6 +2424,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for stopping audio recording when file size have been exceeded.
+     */
     private fun stopAudioFileSize() {
         try {
             timerAudioTaskFileSize?.cancel()
@@ -2291,117 +2446,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun initializeFeedBackLayout() {
-        try {
-            if (windowManagerFeedback != null && this::viewFeedback.isInitialized) {
-                (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
-            }
-            viewFeedback = LayoutInflater.from(activity)
-                .inflate(
-                    R.layout.loggerbird_feedback,
-                    (this.rootView as ViewGroup),
-                    false
-                )
-            if (Settings.canDrawOverlays(activity)) {
-                windowManagerParamsFeedback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                        PixelFormat.TRANSLUCENT
-                    )
-                } else {
-                    WindowManager.LayoutParams(
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.MATCH_PARENT,
-                        WindowManager.LayoutParams.TYPE_APPLICATION,
-                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                        PixelFormat.TRANSLUCENT
-                    )
-                }
 
-                windowManagerFeedback = activity.getSystemService(Context.WINDOW_SERVICE)!!
-                if (windowManagerFeedback != null) {
-                    (windowManagerFeedback as WindowManager).addView(
-                        viewFeedback,
-                        windowManagerParamsFeedback
-                    )
-                    floating_action_button_feedback =
-                        viewFeedback.findViewById(R.id.floating_action_button_feed)
-                    floating_action_button_feed_close =
-                        viewFeedback.findViewById(R.id.floating_action_button_feed_dismiss)
-                    editText_feedback = viewFeedback.findViewById(R.id.editText_feed_back)
-                    toolbarFeedback = viewFeedback.findViewById(R.id.toolbar_feedback)
-                    progressBarFeedback = viewFeedback.findViewById(R.id.feedback_progressbar)
-                    progressBarFeedbackLayout =
-                        viewFeedback.findViewById(R.id.feedback_progressbar_background)
-                    buttonClicksFeedback()
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            LoggerBird.callEnqueue()
-            LoggerBird.callExceptionDetails(exception = e, tag = Constants.feedbackTag)
-        }
-    }
-
-    private fun removeFeedBackLayout() {
-        if (windowManagerFeedback != null && this::viewFeedback.isInitialized) {
-            (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
-            windowManagerFeedback = null
-        }
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun buttonClicksFeedback() {
-        val layoutFeedbackOnTouchListener: LayoutFeedbackOnTouchListener =
-            LayoutFeedbackOnTouchListener(
-                windowManager = (windowManagerFeedback as WindowManager),
-                windowManagerView = viewFeedback,
-                windowManagerParams = windowManagerParamsFeedback
-            )
-        (editText_feedback).setOnTouchListener(
-            layoutFeedbackOnTouchListener
-        )
-        floating_action_button_feedback.setOnTouchListener(layoutFeedbackOnTouchListener)
-
-        floating_action_button_feedback.setSafeOnClickListener {
-            sendFeedback("adnansomer@gmail.com")
-        }
-        floating_action_button_feed_close.setSafeOnClickListener {
-            removeFeedBackLayout()
-        }
-
-    }
-
-    private fun sendFeedback(to: String) {
-        if (editText_feedback.text.trim().isNotEmpty()) {
-            removeFeedBackLayout()
-            coroutineCallFeedback.async {
-                EmailUtil.sendFeedbackEmail(
-                    context = context,
-                    message = editText_feedback.text.toString(),
-                    to = to
-                )
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        R.string.feed_back_email_success,
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        } else {
-            Toast.makeText(
-                context,
-                R.string.feed_back_email_empty_text,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
+    /**
+     * This method starts video counter.
+     */
     private fun videoCounterStart() {
         coroutineCallVideoCounter.async {
             try {
@@ -2455,6 +2503,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method starts audio counter.
+     */
     private fun audioCounterStart() {
         coroutineCallAudioCounter.async {
             try {
@@ -2487,6 +2538,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method stops video counter.
+     */
     private fun videoCounterStop() {
         try {
             activity.runOnUiThread {
@@ -2513,6 +2567,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method stops audio counter.
+     */
     private fun audioCounterStop() {
         try {
             activity.runOnUiThread {
@@ -2527,7 +2584,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         } catch (e: Exception) {
             e.printStackTrace()
             activity.runOnUiThread {
-                textView_counter_video.performClick()
+                textView_counter_audio.performClick()
             }
             LoggerBird.callEnqueue()
             LoggerBird.callExceptionDetails(
@@ -2537,6 +2594,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for saving total and last session time.
+     */
     private fun dailySessionTimeRecorder() {
         sessionTimeEnd = System.currentTimeMillis()
         if (sessionTimeEnd != null && sessionTimeStart != null) {
@@ -2555,16 +2615,27 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for getting total time.
+     * @return Long value.
+     */
     private fun totalSessionTime(): Long {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         return sharedPref.getLong("session_time", 0)
     }
 
+    /**
+     * This method is used for getting last session time.
+     * @return Long value.
+     */
     private fun lastSessionTime(): Long {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         return sharedPref.getLong("last_session_time", 0)
     }
 
+    /**
+     * This method is used for adding Loggerbird file list.
+     */
     private fun addFileList() {
         if (getFileList() != null) {
             arrayListFileName.addAll(getFileList()!!)
@@ -2580,6 +2651,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for getting Loggerbird file list.
+     */
     private fun getFileList(): ArrayList<String>? {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         val gson = Gson()
@@ -2590,10 +2664,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return null
     }
 
+    /**
+     * This method is used for adding file name to file name list.
+     * @param fileName is used for getting reference of current file.
+     */
     private fun addFileNameList(fileName: String) {
         arrayListFileName.add(fileName)
     }
 
+    /**
+     * This method is used for deleting Loggerbird file list.
+     */
     private fun deleteOldFilesList() {
         val sharedPref = PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         val editor: SharedPreferences.Editor = sharedPref.edit()
@@ -2608,6 +2689,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for checking that number of Loggerbird files greater than ten.
+     */
     private fun controlActionFiles() {
         if (getFileList() != null) {
             if (getFileList()!!.size > 10) {
@@ -2616,6 +2700,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for choosing action for a Loggerbird file(delete or send as email).
+     */
     private fun chooseActionFiles() {
         this.controlFileAction = true
         CookieBar.build(activity)
@@ -2643,6 +2730,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             .show()
     }
 
+    /**
+     * This method deletes old Loggerbird files.
+     * @param controlEmailAction is used for controlling the email action.
+     */
     internal fun deleteOldFiles(controlEmailAction: Boolean? = null) {
         val arrayListOldFiles: ArrayList<String> = ArrayList()
         if (getFileList() != null) {
@@ -2675,6 +2766,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method send old Loggerbird files as email.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun sendOldFilesEmail() {
         coroutineCallFilesAction.async {
             try {
@@ -2708,16 +2803,22 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method deletes current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun discardMediaFile() {
         coroutineCallDiscardFile.async {
             try {
-                if (controlMedialFile()) {
-                    finishShareLayout(message = "media")
-                } else {
-                    finishShareLayout(message = "media_error")
+                if(checkUnhandledFilePath()){
+                    finishShareLayout("unhandled")
+                }else{
+                    if (controlMedialFile()) {
+                        finishShareLayout(message = "media")
+                    } else {
+                        finishShareLayout(message = "media_error")
+                    }
                 }
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 finishShareLayout(message = "media_error")
@@ -2727,6 +2828,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is called when a media file is sent with email action.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @param to is used for getting the reference of email address that email action will send.
+     * @param messsage is used for getting the reference of message that email action will send.
+     * @param subject is used for getting the reference of subject that email action will send.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun sendSingleMediaFile(
         filePathMedia: File,
@@ -2747,18 +2855,21 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     )
                 } else {
                     finishShareLayout("single_email_error")
-                    resetEnqueueMail()
+                    resetEnqueueEmail()
                 }
             } catch (e: Exception) {
                 finishShareLayout("single_email_error")
                 e.printStackTrace()
-                resetEnqueueMail()
+                resetEnqueueEmail()
                 LoggerBird.callEnqueue()
                 LoggerBird.callExceptionDetails(exception = e, tag = Constants.singleFileDeleteTag)
             }
         }
     }
 
+    /**
+     * This method is used when an error , timeout or success happens with a loggerbird action with main floating action button.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun finishShareLayout(message: String) {
         activity.runOnUiThread {
@@ -2775,18 +2886,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     //detachProgressBar()
                 }
                 "single_email" -> {
+                    detachProgressBar()
+                    removeEmailLayout()
                     Toast.makeText(context, R.string.share_file_sent, Toast.LENGTH_SHORT).show()
                     finishSuccessFab()
-                    detachProgressBar()
                 }
                 "single_email_error" -> {
                     Toast.makeText(context, R.string.share_file_sent_error, Toast.LENGTH_SHORT)
                         .show()
-//                    finishErrorFab()
                     removeEmailLayout()
                     detachProgressBar()
                 }
                 "jira" -> {
+                    removeJiraLayout()
                     Toast.makeText(context, R.string.jira_sent, Toast.LENGTH_SHORT).show()
                     finishSuccessFab()
                 }
@@ -2797,7 +2909,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         progressBarJiraLayout.visibility = View.GONE
                         progressBarJira.visibility = View.GONE
                     }
-
                     detachProgressBar()
                 }
                 "jira_error_time_out" -> {
@@ -2973,6 +3084,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     Toast.makeText(context, R.string.clubhouse_issue_time_out, Toast.LENGTH_SHORT)
                         .show()
                 }
+                "unhandled" ->{
+                    Toast.makeText(context, R.string.unhandled_file_discard_success, Toast.LENGTH_SHORT)
+                        .show()
+                    finishSuccessFab()
+                }
 
             }
             if (controlFloatingActionButtonView()) {
@@ -2981,10 +3097,33 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for showing an success happened when using a loggerbird action with main floating action button.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun finishSuccessFab() {
         if (controlRevealShareLayout() && controlFloatingActionButtonView()) {
-            reveal_linear_layout_share.visibility = View.GONE
+            if(checkUnhandledFilePath()){
+                val sharedPref =
+                    PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
+                if (sharedPref.getString("unhandled_file_path", null) != null) {
+                    val filepath = File(sharedPref.getString("unhandled_file_path", null)!!)
+                    if (filepath.exists()) {
+                        filepath.delete()
+                    } else {
+                        activity.runOnUiThread {
+                            defaultToast.attachToast(
+                                activity = activity,
+                                toastMessage = activity.resources.getString(R.string.unhandled_file_doesnt_exist)
+                            )
+                        }
+                    }
+                }
+                val editor: SharedPreferences.Editor = sharedPref.edit()
+                editor.remove("unhandled_file_path")
+                editor.apply()
+            }
+            revealLinearLayoutShare.visibility = View.GONE
             Handler().postDelayed({
                 floating_action_button.animate()
                     .rotationBy(360F)
@@ -3024,10 +3163,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for showing an error happened when using a loggerbird action with main floating action button.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun finishErrorFab() {
         if (controlRevealShareLayout() && controlFloatingActionButtonView()) {
-            reveal_linear_layout_share.visibility = View.GONE
+            revealLinearLayoutShare.visibility = View.GONE
             Handler().postDelayed({
                 floating_action_button.animate()
                     .rotationBy(360F)
@@ -3067,6 +3209,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method deletes media file after email sent.
+     * @param controlEmailAction is used for controlling the email action.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun deleteSingleMediaFile(controlEmailAction: Boolean? = null, filePathMedia: File) {
         if (filePathMedia.exists()) {
@@ -3077,6 +3224,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         LoggerBird.callEnqueue()
     }
 
+    /**
+     * This method attaches default progressbar into the window.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     internal fun attachProgressBar() {
         detachProgressBar()
@@ -3108,6 +3258,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         progressBarView.isClickable = false
     }
 
+    /**
+     * This method detaches default progressbar.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun detachProgressBar() {
         if (this::progressBarView.isInitialized && windowManagerProgressBar != null) {
@@ -3116,83 +3269,144 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method returns current activity reference.
+     */
     internal fun returnActivity(): Activity {
         return activity
     }
+    //Feedback
+    /**
+     * This method is used for creating jira layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun initializeFeedBackLayout() {
+        try {
+            if (windowManagerFeedback != null && this::viewFeedback.isInitialized) {
+                (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
+            }
+            viewFeedback = LayoutInflater.from(activity)
+                .inflate(
+                    R.layout.loggerbird_feedback,
+                    (this.rootView as ViewGroup),
+                    false
+                )
+            if (Settings.canDrawOverlays(activity)) {
+                windowManagerParamsFeedback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        PixelFormat.TRANSLUCENT
+                    )
+                } else {
+                    WindowManager.LayoutParams(
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.MATCH_PARENT,
+                        WindowManager.LayoutParams.TYPE_APPLICATION,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                        PixelFormat.TRANSLUCENT
+                    )
+                }
 
-//    @RequiresApi(Build.VERSION_CODES.M)
-//    private fun initializeJiraAuthLayout(filePathMedia: File) {
-//        try {
-//            if (windowManagerJiraAuth != null && this::viewJiraAuth.isInitialized) {
-//                (windowManagerJiraAuth as WindowManager).removeViewImmediate(viewJiraAuth)
-////                arrayListJiraFileName.clear()
-//            }
-//            viewJiraAuth = LayoutInflater.from(activity)
-//                .inflate(
-//                    R.layout.loggerbird_jira_init_popup,
-//                    (this.rootView as ViewGroup),
-//                    false
-//                )
-//            if (Settings.canDrawOverlays(activity)) {
-//                windowManagerParamsJiraAuth = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    WindowManager.LayoutParams(
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-//                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-//                        PixelFormat.TRANSLUCENT
-//                    )
-//                } else {
-//                    WindowManager.LayoutParams(
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.MATCH_PARENT,
-//                        WindowManager.LayoutParams.TYPE_APPLICATION,
-//                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-//                        PixelFormat.TRANSLUCENT
-//                    )
-//                }
-//
-//                windowManagerJiraAuth = activity.getSystemService(Context.WINDOW_SERVICE)!!
-//                if (windowManagerJiraAuth != null) {
-//                    (windowManagerJiraAuth as WindowManager).addView(
-//                        viewJiraAuth,
-//                        windowManagerParamsJiraAuth
-//                    )
-//                    if (Build.VERSION.SDK_INT >= 21) {
-//                        activity.window.navigationBarColor = ContextCompat.getColor(
-//                            this,
-//                            R.color.black
-//                        )
-//                        activity.window.statusBarColor = ContextCompat.getColor(
-//                            this,
-//                            R.color.black
-//                        )
-//                    }
-//                    progressBarJira = viewJiraAuth.findViewById(R.id.progressbar_jira)
-//                    buttonJiraAuthNext = viewJiraAuth.findViewById(R.id.button_jira_auth_next)
-//                    buttonJiraAuthCancel = viewJiraAuth.findViewById(R.id.button_jira_auth_cancel)
-//                    editTextJiraAuthMail = viewJiraAuth.findViewById(R.id.editText_jira_init_email)
-//                    editTextJiraAuthPassword =
-//                        viewJiraAuth.findViewById(R.id.editText_jira_init_key)
-//                    layoutJiraAuth = viewJiraAuth.findViewById(R.id.layout_jira_auth)
-//                    buttonClicksJiraAuth(filePathMedia = filePathMedia)
-//                }
-//            }
-//        } catch (e: Exception) {
-//            e.printStackTrace()
-//            LoggerBird.callEnqueue()
-//            LoggerBird.callExceptionDetails(exception = e, tag = Constants.jiraTag)
-//        }
-//    }
+                windowManagerFeedback = activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerFeedback != null) {
+                    (windowManagerFeedback as WindowManager).addView(
+                        viewFeedback,
+                        windowManagerParamsFeedback
+                    )
+                    floating_action_button_feedback =
+                        viewFeedback.findViewById(R.id.floating_action_button_feed)
+                    floating_action_button_feed_close =
+                        viewFeedback.findViewById(R.id.floating_action_button_feed_dismiss)
+                    editText_feedback = viewFeedback.findViewById(R.id.editText_feed_back)
+                    toolbarFeedback = viewFeedback.findViewById(R.id.toolbar_feedback)
+                    progressBarFeedback = viewFeedback.findViewById(R.id.feedback_progressbar)
+                    progressBarFeedbackLayout =
+                        viewFeedback.findViewById(R.id.feedback_progressbar_background)
+                    buttonClicksFeedback()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            LoggerBird.callEnqueue()
+            LoggerBird.callExceptionDetails(exception = e, tag = Constants.feedbackTag)
+        }
+    }
 
-//    private fun removeJiraAuthLayout() {
-//        if (windowManagerJiraAuth != null && this::viewJiraAuth.isInitialized) {
-//            (windowManagerJiraAuth as WindowManager).removeViewImmediate(viewJiraAuth)
-//            windowManagerJiraAuth = null
-//        }
-//    }
+    /**
+     * This method is used for removing loggerbird_jira_popup from window.
+     */
+    private fun removeFeedBackLayout() {
+        if (windowManagerFeedback != null && this::viewFeedback.isInitialized) {
+            (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
+            windowManagerFeedback = null
+        }
+    }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_feedback.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun buttonClicksFeedback() {
+        val layoutFeedbackOnTouchListener: LayoutFeedbackOnTouchListener =
+            LayoutFeedbackOnTouchListener(
+                windowManager = (windowManagerFeedback as WindowManager),
+                windowManagerView = viewFeedback,
+                windowManagerParams = windowManagerParamsFeedback
+            )
+        (editText_feedback).setOnTouchListener(
+            layoutFeedbackOnTouchListener
+        )
+        floating_action_button_feedback.setOnTouchListener(layoutFeedbackOnTouchListener)
 
+        floating_action_button_feedback.setSafeOnClickListener {
+            sendFeedback("adnansomer@gmail.com")
+        }
+        floating_action_button_feed_close.setSafeOnClickListener {
+            removeFeedBackLayout()
+        }
+
+    }
+
+    /**
+     * This method is used for sending feedback.
+     */
+    private fun sendFeedback(to: String) {
+        if (editText_feedback.text.trim().isNotEmpty()) {
+            removeFeedBackLayout()
+            coroutineCallFeedback.async {
+                EmailUtil.sendFeedbackEmail(
+                    context = context,
+                    message = editText_feedback.text.toString(),
+                    to = to
+                )
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        R.string.feed_back_email_success,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        } else {
+            Toast.makeText(
+                context,
+                R.string.feed_back_email_empty_text,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    //Jira
+    /**
+     * This method is used for creating jira layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeJiraLayout(filePathMedia: File) {
@@ -3236,51 +3450,43 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         ContextCompat.getColor(this, R.color.black)
                     activity.window.statusBarColor = ContextCompat.getColor(this, R.color.black)
 
-//                    spinnerProject = viewJira.findViewById(R.id.spinner_jira_project)
-                    autoTextViewProject = viewJira.findViewById(R.id.auto_textView_jira_project)
-//                    spinnerIssueType = viewJira.findViewById(R.id.spinner_jira_issue_type)
-                    autoTextViewIssueType =
+                    autoTextViewJiraProject = viewJira.findViewById(R.id.auto_textView_jira_project)
+                    autoTextViewJiraIssueType =
                         viewJira.findViewById(R.id.auto_textView_jira_issue_type)
                     recyclerViewJiraAttachment =
                         viewJira.findViewById(R.id.recycler_view_jira_attachment)
-                    editTextSummary = viewJira.findViewById(R.id.editText_jira_summary)
-                    editTextDescription = viewJira.findViewById(R.id.editText_jira_description)
-//                    spinnerReporter = viewJira.findViewById(R.id.spinner_jira_issue_reporter)
-                    autoTextViewReporter = viewJira.findViewById(R.id.auto_textView_jira_reporter)
-//                    spinnerLinkedIssue =
-//                        viewJira.findViewById(R.id.spinner_jira_issue_linked_issues)
-                    autoTextViewLinkedIssue =
+                    editTextJiraSummary = viewJira.findViewById(R.id.editText_jira_summary)
+                    editTextJiraDescription = viewJira.findViewById(R.id.editText_jira_description)
+                    autoTextViewJiraReporter =
+                        viewJira.findViewById(R.id.auto_textView_jira_reporter)
+                    autoTextViewJiraLinkedIssue =
                         viewJira.findViewById(R.id.auto_textView_jira_linked_issues)
-//                    spinnerIssue = viewJira.findViewById(R.id.spinner_jira_issue_issues)
-                    autoTextViewIssue = viewJira.findViewById(R.id.auto_textView_jira_issues)
-//                    spinnerAssignee = viewJira.findViewById(R.id.spinner_jira_issue_assignee)
-                    autoTextViewAssignee = viewJira.findViewById(R.id.auto_textView_jira_assignee)
-//                    spinnerPriority = viewJira.findViewById(R.id.spinner_jira_issue_priority)
-                    autoTextViewPriority = viewJira.findViewById(R.id.auto_textView_jira_priority)
-//                    spinnerComponent = viewJira.findViewById(R.id.spinner_jira_issue_component)
-                    autoTextViewComponent = viewJira.findViewById(R.id.auto_textView_jira_component)
-//                    spinnerFixVersions = viewJira.findViewById(R.id.spinner_jira_issue_fix_versions)
-                    autoTextViewFixVersions =
+                    autoTextViewJiraIssue = viewJira.findViewById(R.id.auto_textView_jira_issues)
+                    autoTextViewJiraAssignee =
+                        viewJira.findViewById(R.id.auto_textView_jira_assignee)
+                    autoTextViewJiraPriority =
+                        viewJira.findViewById(R.id.auto_textView_jira_priority)
+                    autoTextViewJiraComponent =
+                        viewJira.findViewById(R.id.auto_textView_jira_component)
+                    autoTextViewJiraFixVersions =
                         viewJira.findViewById(R.id.auto_textView_jira_fix_versions)
-//                    spinnerLabel = viewJira.findViewById(R.id.spinner_jira_labels)
-                    autoTextViewLabel = viewJira.findViewById(R.id.auto_textView_jira_labels)
-//                    spinnerEpicLink = viewJira.findViewById(R.id.spinner_jira_epic_link)
-                    autoTextViewEpicLink = viewJira.findViewById(R.id.auto_textView_jira_epic_link)
-//                    spinnerSprint = viewJira.findViewById(R.id.spinner_jira_sprint)
-                    autoTextViewSprint = viewJira.findViewById(R.id.auto_textView_jira_sprint)
-                    autoTextViewEpicName = viewJira.findViewById(R.id.auto_textView_jira_epic_name)
+                    autoTextViewJiraLabel = viewJira.findViewById(R.id.auto_textView_jira_labels)
+                    autoTextViewJiraEpicLink =
+                        viewJira.findViewById(R.id.auto_textView_jira_epic_link)
+                    autoTextViewJiraSprint = viewJira.findViewById(R.id.auto_textView_jira_sprint)
+                    autoTextViewJiraEpicName =
+                        viewJira.findViewById(R.id.auto_textView_jira_epic_name)
                     buttonJiraCreate = viewJira.findViewById(R.id.button_jira_create)
                     buttonJiraCancel = viewJira.findViewById(R.id.button_jira_cancel)
                     toolbarJira = viewJira.findViewById(R.id.textView_jira_title)
                     layoutJira = viewJira.findViewById(R.id.layout_jira)
                     progressBarJira = viewJira.findViewById(R.id.jira_progressbar)
                     progressBarJiraLayout = viewJira.findViewById(R.id.jira_progressbar_background)
-                    cardViewSprint = viewJira.findViewById(R.id.cardView_sprint)
-                    cardViewStartDate = viewJira.findViewById(R.id.cardView_start_date)
-                    cardViewEpicName = viewJira.findViewById(R.id.cardView_epic_name)
-                    cardViewEpicLink = viewJira.findViewById(R.id.cardView_epic_link)
+                    cardViewJiraSprint = viewJira.findViewById(R.id.cardView_sprint)
+                    cardViewJiraStartDate = viewJira.findViewById(R.id.cardView_start_date)
+                    cardViewJiraEpicName = viewJira.findViewById(R.id.cardView_epic_name)
+                    cardViewJiraEpicLink = viewJira.findViewById(R.id.cardView_epic_link)
                     imageViewStartDate = viewJira.findViewById(R.id.imageView_start_date)
-//                    textViewRemoveDate = viewJira.findViewById(R.id.textView_jira_remove_date)
                     imageButtonRemoveDate =
                         viewJira.findViewById(R.id.image_button_jira_remove_date)
                     scrollViewJira = viewJira.findViewById(R.id.scrollView_jira)
@@ -3312,28 +3518,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     recyclerViewJiraFixVersionsList =
                         viewJira.findViewById(R.id.recycler_view_fix_versions_list)
 
-                    jiraAuthentication.callJiraIssue(
+                    jiraAuthentication.callJira(
                         context = context,
                         activity = activity,
-                        jiraTask = "get",
+                        task = "get",
                         createMethod = "normal"
                     )
-//                    initializeJiraSpinner(
-//                        jiraAuthentication.getArrayListProjects(),
-//                        jiraAuthentication.getArrayListIssueTypes(),
-//                        jiraAuthentication.getArrayListReporter(),
-//                        jiraAuthentication.getArrayListIssueLinkedTypes(),
-//                        jiraAuthentication.getArrayListIssues(),
-//                        jiraAuthentication.getArrayListAsignee(),
-//                        jiraAuthentication.getArrayListPriorities(),
-//                        jiraAuthentication.getArrayListComponent(),
-//                        jiraAuthentication.getArrayListFixVersions(),
-//                        jiraAuthentication.getArrayListLabel(),
-//                        jiraAuthentication.getArrayListEpicLink(),
-//                        jiraAuthentication.getArrayListSprint()
-//                    )
 
-                    initializeJiraRecyclerView(filePathMedia = filePathMedia)
+                    initializeJiraAttachmentRecyclerView(filePathMedia = filePathMedia)
                     initializeJiraIssueRecyclerView()
                     initializeJiraLabelRecyclerView()
                     initializeJiraComponentRecyclerView()
@@ -3351,59 +3543,21 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_jira_popup from window.
+     */
     private fun removeJiraLayout() {
         if (windowManagerJira != null && this::viewJira.isInitialized) {
             (windowManagerJira as WindowManager).removeViewImmediate(viewJira)
             windowManagerJira = null
             arrayListJiraFileName.clear()
-            projectPosition = 0
-//
-//            removeJiraSpinner(
-//                jiraAuthentication.getArrayListProjects(),
-//                jiraAuthentication.getArrayListIssueTypes(),
-//                jiraAuthentication.getArrayListReporter(),
-//                jiraAuthentication.getArrayListIssueLinkedTypes(),
-//                jiraAuthentication.getArrayListIssues(),
-//                jiraAuthentication.getArrayListAsignee(),
-//                jiraAuthentication.getArrayListPriorities(),
-//                jiraAuthentication.getArrayListComponent(),
-//                jiraAuthentication.getArrayListFixVersions(),
-//                jiraAuthentication.getArrayListLabel(),
-//                jiraAuthentication.getArrayListEpicLink(),
-//                jiraAuthentication.getArrayListSprint())
+            projectJiraPosition = 0
         }
     }
 
-//    @RequiresApi(Build.VERSION_CODES.M)
-//    private fun buttonClicksJiraAuth(filePathMedia: File) {
-//        buttonJiraAuthNext.setSafeOnClickListener {
-//            removeJiraAuthLayout()
-//            initializeJiraLayout(filePathMedia = filePathMedia)
-//        }
-//
-//        buttonJiraAuthCancel.setSafeOnClickListener {
-//            removeJiraAuthLayout()
-//        }
-//    }
-//
-//    private fun dispatchKeyEvent(keyEvent: KeyEvent){
-//        val action = keyEvent.action
-//        val keyCode = keyEvent.keyCode
-//
-//
-//            switch (keyCode) {
-//            case KeyEvent.KEYCODE_BACK:
-//                if (action == KeyEvent.ACTION_DOWN ){
-//            //Do something in the back button
-//            Log.d("BackButton","back");
-//                }
-//                return true;
-//            default:
-//                return super.dispatchKeyEvent(event);
-//              }
-//
-//    }
-
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_jira_popup.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
     private fun buttonClicksJira(filePathMedia: File) {
@@ -3417,38 +3571,25 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
         buttonJiraCreate.setSafeOnClickListener {
             jiraAuthentication.gatherJiraSpinnerDetails(
-                autoTextViewProject = autoTextViewProject,
-//                spinnerProject = spinnerProject,
-                autoTextViewIssueType = autoTextViewIssueType,
-//                spinnerIssueType = spinnerIssueType,
-                autoTextViewLinkedIssues = autoTextViewLinkedIssue,
-//                spinnerLinkedIssues = spinnerLinkedIssue,
-                autoTextViewIssues = autoTextViewIssue,
-//                spinnerIssues = spinnerIssue,
-                autoTextViewAssignee = autoTextViewAssignee,
-//                spinnerAssignee = spinnerAssignee,
-                autoTextViewReporter = autoTextViewReporter,
-//                spinnerReporter = spinnerReporter,
-                autoTextViewPriority = autoTextViewPriority,
-//                spinnerPriority = spinnerPriority,
-                autoTextViewComponent = autoTextViewComponent,
-//                spinnerComponent = spinnerComponent,
-                autoTextViewFixVersions = autoTextViewFixVersions,
-//                spinnerFixVersions = spinnerFixVersions,
-                autoTextViewLabel = autoTextViewLabel,
-//                spinnerLabel = spinnerLabel,
-                autoTextViewEpicLink = autoTextViewEpicLink,
-//                spinnerEpicLink = spinnerEpicLink,
-                autoTextViewSprint = autoTextViewSprint,
-                autoTextViewEpicName = autoTextViewEpicName
-//                spinnerSprint = spinnerSprint
+                autoTextViewProject = autoTextViewJiraProject,
+                autoTextViewIssueType = autoTextViewJiraIssueType,
+                autoTextViewLinkedIssues = autoTextViewJiraLinkedIssue,
+                autoTextViewIssues = autoTextViewJiraIssue,
+                autoTextViewAssignee = autoTextViewJiraAssignee,
+                autoTextViewReporter = autoTextViewJiraReporter,
+                autoTextViewPriority = autoTextViewJiraPriority,
+                autoTextViewComponent = autoTextViewJiraComponent,
+                autoTextViewFixVersions = autoTextViewJiraFixVersions,
+                autoTextViewLabel = autoTextViewJiraLabel,
+                autoTextViewEpicLink = autoTextViewJiraEpicLink,
+                autoTextViewSprint = autoTextViewJiraSprint,
+                autoTextViewEpicName = autoTextViewJiraEpicName
             )
             jiraAuthentication.gatherJiraEditTextDetails(
-                editTextSummary = editTextSummary,
-                editTextDescription = editTextDescription
+                editTextSummary = editTextJiraSummary,
+                editTextDescription = editTextJiraDescription
             )
-            jiraAuthentication.gatherJiraRecyclerViewDetails(arrayListRecyclerViewItems = arrayListJiraFileName)
-            if (autoTextViewIssueType.editableText.toString() != "Epic") {
+            if (autoTextViewJiraIssueType.editableText.toString() != "Epic") {
                 callJiraTask(filePathMedia = filePathMedia)
             } else {
                 if (jiraAuthentication.checkEpicName(activity = activity, context = context)) {
@@ -3463,39 +3604,39 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     val sharedPref =
                         PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
                     with(sharedPref.edit()) {
-                        putString("jira_project", autoTextViewProject.editableText.toString())
-                        putInt("jira_project_position", projectPosition)
+                        putString("jira_project", autoTextViewJiraProject.editableText.toString())
+                        putInt("jira_project_position", projectJiraPosition)
                         putString(
                             "jira_issue_type",
-                            autoTextViewIssueType.editableText.toString()
+                            autoTextViewJiraIssueType.editableText.toString()
                         )
-                        putString("jira_summary", editTextSummary.text.toString())
-                        putString("jira_description", editTextDescription.text.toString())
+                        putString("jira_summary", editTextJiraSummary.text.toString())
+                        putString("jira_description", editTextJiraDescription.text.toString())
                         putString(
                             "jira_component",
-                            autoTextViewComponent.editableText.toString()
+                            autoTextViewJiraComponent.editableText.toString()
                         )
-                        putString("jira_reporter", autoTextViewReporter.editableText.toString())
+                        putString("jira_reporter", autoTextViewJiraReporter.editableText.toString())
                         putString(
                             "jira_linked_issue",
-                            autoTextViewLinkedIssue.editableText.toString()
+                            autoTextViewJiraLinkedIssue.editableText.toString()
                         )
-                        putString("jira_issue", autoTextViewIssue.editableText.toString())
-                        putString("jira_assignee", autoTextViewAssignee.editableText.toString())
-                        putString("jira_priority", autoTextViewPriority.editableText.toString())
+                        putString("jira_issue", autoTextViewJiraIssue.editableText.toString())
+                        putString("jira_assignee", autoTextViewJiraAssignee.editableText.toString())
+                        putString("jira_priority", autoTextViewJiraPriority.editableText.toString())
                         putString(
                             "jira_fix_versions",
-                            autoTextViewFixVersions.editableText.toString()
+                            autoTextViewJiraFixVersions.editableText.toString()
                         )
-                        putString("jira_labels", autoTextViewLabel.editableText.toString())
+                        putString("jira_labels", autoTextViewJiraLabel.editableText.toString())
                         putString(
                             "jira_epic_link",
-                            autoTextViewEpicLink.editableText.toString()
+                            autoTextViewJiraEpicLink.editableText.toString()
                         )
-                        putString("jira_sprint", autoTextViewSprint.editableText.toString())
+                        putString("jira_sprint", autoTextViewJiraSprint.editableText.toString())
                         putString(
                             "jira_epic_name",
-                            autoTextViewEpicName.editableText.toString()
+                            autoTextViewJiraEpicName.editableText.toString()
                         )
                         commit()
                     }
@@ -3524,18 +3665,18 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     editor.remove("jira_epic_link")
                     editor.remove("jira_sprint")
                     editor.apply()
-                    projectPosition = 0
-                    editTextDescription.text = null
-                    editTextSummary.text = null
-                    autoTextViewComponent.setText("", false)
-                    autoTextViewReporter.setText("", false)
-                    autoTextViewIssue.setText("", false)
-                    autoTextViewAssignee.setText("", false)
-                    autoTextViewFixVersions.setText("", false)
-                    autoTextViewLabel.setText("", false)
-                    autoTextViewEpicLink.setText("", false)
-                    autoTextViewSprint.setText("", false)
-                    autoTextViewEpicName.setText("", false)
+                    projectJiraPosition = 0
+                    editTextJiraDescription.text = null
+                    editTextJiraSummary.text = null
+                    autoTextViewJiraComponent.setText("", false)
+                    autoTextViewJiraReporter.setText("", false)
+                    autoTextViewJiraIssue.setText("", false)
+                    autoTextViewJiraAssignee.setText("", false)
+                    autoTextViewJiraFixVersions.setText("", false)
+                    autoTextViewJiraLabel.setText("", false)
+                    autoTextViewJiraEpicLink.setText("", false)
+                    autoTextViewJiraSprint.setText("", false)
+                    autoTextViewJiraEpicName.setText("", false)
                     defaultToast.attachToast(
                         activity = activity,
                         toastMessage = context.resources.getString(R.string.jira_issue_preferences_delete)
@@ -3562,10 +3703,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             attachJiraDatePicker()
         }
 
-//        textViewRemoveDate.setOnClickListener {
-//            jiraAuthentication.setStartDate(startDate = null)
-//            textViewRemoveDate.visibility = View.GONE
-//        }
         imageButtonRemoveDate.setOnClickListener {
             jiraAuthentication.setStartDate(startDate = null)
             imageButtonRemoveDate.visibility = View.GONE
@@ -3574,24 +3711,24 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             hideKeyboard(activity = activity, view = viewJira)
             if (!arrayListJiraIssueName.contains(
                     RecyclerViewModelIssue(
-                        autoTextViewIssue.editableText.toString()
+                        autoTextViewJiraIssue.editableText.toString()
                     )
                 ) && arrayListJiraIssue.contains(
-                    autoTextViewIssue.editableText.toString()
+                    autoTextViewJiraIssue.editableText.toString()
                 )
             ) {
-                arrayListJiraIssueName.add(RecyclerViewModelIssue(autoTextViewIssue.editableText.toString()))
+                arrayListJiraIssueName.add(RecyclerViewModelIssue(autoTextViewJiraIssue.editableText.toString()))
                 jiraAdapterIssueList.notifyDataSetChanged()
                 cardViewJiraIssueList.visibility = View.VISIBLE
             } else if (arrayListJiraIssueName.contains(
-                    RecyclerViewModelIssue(autoTextViewIssue.editableText.toString())
+                    RecyclerViewModelIssue(autoTextViewJiraIssue.editableText.toString())
                 )
             ) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_issue_exist)
                 )
-            } else if (!arrayListJiraIssue.contains(autoTextViewIssue.editableText.toString())) {
+            } else if (!arrayListJiraIssue.contains(autoTextViewJiraIssue.editableText.toString())) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_issue_doesnt_exist)
@@ -3603,24 +3740,24 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             hideKeyboard(activity = activity, view = viewJira)
             if (!arrayListJiraLabelName.contains(
                     RecyclerViewModelLabel(
-                        autoTextViewLabel.editableText.toString()
+                        autoTextViewJiraLabel.editableText.toString()
                     )
                 ) && arrayListJiraLabel.contains(
-                    autoTextViewLabel.editableText.toString()
+                    autoTextViewJiraLabel.editableText.toString()
                 )
             ) {
-                arrayListJiraLabelName.add(RecyclerViewModelLabel(autoTextViewLabel.editableText.toString()))
+                arrayListJiraLabelName.add(RecyclerViewModelLabel(autoTextViewJiraLabel.editableText.toString()))
                 jiraAdapterLabelList.notifyDataSetChanged()
                 cardViewJiraLabelList.visibility = View.VISIBLE
             } else if (arrayListJiraLabelName.contains(
-                    RecyclerViewModelLabel(autoTextViewLabel.editableText.toString())
+                    RecyclerViewModelLabel(autoTextViewJiraLabel.editableText.toString())
                 )
             ) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_label_exist)
                 )
-            } else if (!arrayListJiraLabel.contains(autoTextViewLabel.editableText.toString())) {
+            } else if (!arrayListJiraLabel.contains(autoTextViewJiraLabel.editableText.toString())) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_label_doesnt_exist)
@@ -3632,24 +3769,24 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             hideKeyboard(activity = activity, view = viewJira)
             if (!arrayListJiraComponentName.contains(
                     RecyclerViewModelComponent(
-                        autoTextViewComponent.editableText.toString()
+                        autoTextViewJiraComponent.editableText.toString()
                     )
                 ) && arrayListJiraComponent.contains(
-                    autoTextViewComponent.editableText.toString()
+                    autoTextViewJiraComponent.editableText.toString()
                 )
             ) {
-                arrayListJiraComponentName.add(RecyclerViewModelComponent(autoTextViewComponent.editableText.toString()))
+                arrayListJiraComponentName.add(RecyclerViewModelComponent(autoTextViewJiraComponent.editableText.toString()))
                 jiraAdapterComponentList.notifyDataSetChanged()
                 cardViewJiraComponentList.visibility = View.VISIBLE
             } else if (arrayListJiraComponentName.contains(
-                    RecyclerViewModelComponent(autoTextViewComponent.editableText.toString())
+                    RecyclerViewModelComponent(autoTextViewJiraComponent.editableText.toString())
                 )
             ) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_component_exist)
                 )
-            } else if (!arrayListJiraComponent.contains(autoTextViewComponent.editableText.toString())) {
+            } else if (!arrayListJiraComponent.contains(autoTextViewJiraComponent.editableText.toString())) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_component_doesnt_exist)
@@ -3662,28 +3799,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             hideKeyboard(activity = activity, view = viewJira)
             if (!arrayListJiraFixVersionsName.contains(
                     RecyclerViewModelFixVersions(
-                        autoTextViewFixVersions.editableText.toString()
+                        autoTextViewJiraFixVersions.editableText.toString()
                     )
                 ) && arrayListJiraFixVersions.contains(
-                    autoTextViewFixVersions.editableText.toString()
+                    autoTextViewJiraFixVersions.editableText.toString()
                 )
             ) {
                 arrayListJiraFixVersionsName.add(
                     RecyclerViewModelFixVersions(
-                        autoTextViewFixVersions.editableText.toString()
+                        autoTextViewJiraFixVersions.editableText.toString()
                     )
                 )
                 jiraAdapterFixVersionsList.notifyDataSetChanged()
                 cardViewJiraFixVersionsList.visibility = View.VISIBLE
             } else if (arrayListJiraFixVersionsName.contains(
-                    RecyclerViewModelFixVersions(autoTextViewFixVersions.editableText.toString())
+                    RecyclerViewModelFixVersions(autoTextViewJiraFixVersions.editableText.toString())
                 )
             ) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_fix_versions_exist)
                 )
-            } else if (!arrayListJiraFixVersions.contains(autoTextViewFixVersions.editableText.toString())) {
+            } else if (!arrayListJiraFixVersions.contains(autoTextViewJiraFixVersions.editableText.toString())) {
                 defaultToast.attachToast(
                     activity = activity,
                     toastMessage = activity.resources.getString(R.string.jira_fix_versions_doesnt_exist)
@@ -3694,58 +3831,78 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
+    /**
+     * This method is used for initializing jira issue recyclerView.
+     */
     private fun initializeJiraIssueRecyclerView() {
         arrayListJiraIssueName.clear()
         recyclerViewJiraIssueList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        jiraAdapterIssueList = RecyclerViewJiraIssueAdapter(
-            arrayListJiraIssueName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        jiraAdapterIssueList =
+            RecyclerViewJiraIssueAdapter(
+                arrayListJiraIssueName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewJiraIssueList.adapter = jiraAdapterIssueList
     }
 
+    /**
+     * This method is used for initializing jira label recyclerView.
+     */
     private fun initializeJiraLabelRecyclerView() {
         arrayListJiraLabelName.clear()
         recyclerViewJiraLabelList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        jiraAdapterLabelList = RecyclerViewJiraLabelAdapter(
-            arrayListJiraLabelName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        jiraAdapterLabelList =
+            RecyclerViewJiraLabelAdapter(
+                arrayListJiraLabelName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewJiraLabelList.adapter = jiraAdapterLabelList
     }
 
+    /**
+     * This method is used for initializing jira component recyclerView.
+     */
     private fun initializeJiraComponentRecyclerView() {
         arrayListJiraComponentName.clear()
         recyclerViewJiraComponentList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        jiraAdapterComponentList = RecyclerViewJiraComponentAdapter(
-            arrayListJiraComponentName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        jiraAdapterComponentList =
+            RecyclerViewJiraComponentAdapter(
+                arrayListJiraComponentName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewJiraComponentList.adapter = jiraAdapterComponentList
     }
 
+    /**
+     * This method is used for initializing jira fix versions recyclerView.
+     */
     private fun initializeJiraFixVersionsRecyclerView() {
         arrayListJiraFixVersionsName.clear()
         recyclerViewJiraFixVersionsList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        jiraAdapterFixVersionsList = RecyclerViewJiraFixVersionsAdapter(
-            arrayListJiraFixVersionsName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        jiraAdapterFixVersionsList =
+            RecyclerViewJiraFixVersionsAdapter(
+                arrayListJiraFixVersionsName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewJiraFixVersionsList.adapter = jiraAdapterFixVersionsList
     }
 
+    /**
+     * This method is used for opening jira issue.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun callJiraTask(filePathMedia: File) {
         if (jiraAuthentication.checkSummaryEmpty(
@@ -3771,154 +3928,153 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //                    attachProgressBar()
             }
 //                hideKeyboard(activity = activity)
-            jiraAuthentication.callJiraIssue(
-                filePathName = filePathMedia,
+            jiraAuthentication.callJira(
+                filePathMedia = filePathMedia,
                 context = context,
                 activity = activity,
-                jiraTask = "create",
+                task = "create",
                 createMethod = "normal"
             )
         }
     }
 
+    /**
+     * This method is used for adding files to jira file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addJiraFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListJiraFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListJiraFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListJiraFileName
     }
 
+    /**
+     * This method is used for initializing jira attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeJiraRecyclerView(filePathMedia: File) {
+    private fun initializeJiraAttachmentRecyclerView(filePathMedia: File) {
         recyclerViewJiraAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        jiraAdapter = RecyclerViewJiraAdapter(
-            addJiraFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewJiraAttachment.adapter = jiraAdapter
+        jiraAttachmentAdapter =
+            RecyclerViewJiraAttachmentAdapter(
+                addJiraFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewJiraAttachment.adapter = jiraAttachmentAdapter
     }
 
-    private fun removeJiraFileNames(): ArrayList<RecyclerViewModel> {
-        arrayListJiraFileName.clear()
-        jiraAdapter.notifyDataSetChanged()
-        arrayListJiraFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
-        return arrayListJiraFileName
-    }
-
-    private fun removeJiraSpinner(
-        arrayListProjectNames: ArrayList<String>,
-        arrayListIssueTypes: ArrayList<String>,
-        arrayListReporterNames: ArrayList<String>,
-        arrayListLinkedIssues: ArrayList<String>,
-        arrayListIssues: ArrayList<String>,
-        arrayListAssignee: ArrayList<String>,
-        arrayListPriority: ArrayList<String>,
-        arrayListComponent: ArrayList<String>,
-        arrayListFixVersions: ArrayList<String>,
-        arrayListLabel: ArrayList<String>,
-        arrayListEpicLink: ArrayList<String>,
-        arrayListSprint: ArrayList<String>,
-        arrayListEpicName: ArrayList<String>
-    ) {
-
-        arrayListProjectNames.clear()
-        arrayListIssueTypes.clear()
-        arrayListReporterNames.clear()
-        arrayListLinkedIssues.clear()
-        arrayListIssues.clear()
-        arrayListAssignee.clear()
-        arrayListPriority.clear()
-        arrayListComponent.clear()
-        arrayListFixVersions.clear()
-        arrayListLabel.clear()
-        arrayListEpicLink.clear()
-        arrayListSprint.clear()
-        arrayListEpicName.clear()
-    }
-
-
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_jira_popup.
+     * @param arrayListJiraProjectNames is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListJiraProjectKeys is used for getting the project key list.
+     * @param arrayListJiraIssueTypes is used for getting the issue type list for issue type autoCompleteTextView.
+     * @param arrayListJiraReporterNames is used for getting the reporter list for reporter autoCompleteTextView.
+     * @param arrayListJiraLinkedIssues is used for getting the linked issues list for linked issues autoCompleteTextView.
+     * @param arrayListJiraIssues is used for getting the issues list for issues autoCompleteTextView.
+     * @param arrayListJiraAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param arrayListJiraPriority is used for getting the priority list for priority autoCompleteTextView.
+     * @param arrayListJiraComponent is used for getting the component list for component autoCompleteTextView.
+     * @param arrayListJiraFixVersions is used for getting the fix versions list for fix versions autoCompleteTextView.
+     * @param arrayListJiraEpicLink is used for getting the epic link list for epic link autoCompleteTextView.
+     * @param arrayListJiraSprint is used for getting the sprint list for sprint autoCompleteTextView.
+     * @param arrayListJiraEpicName is used for getting the epic list for epic autoCompleteTextView.
+     * @param hashMapJiraBoardList is used for getting the board list.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    internal fun initializeJiraSpinner(
-        arrayListProjectNames: ArrayList<String>,
-        arrayListProjectKeys: ArrayList<String>,
-        arrayListIssueTypes: ArrayList<String>,
-        arrayListReporterNames: ArrayList<String>,
-        arrayListLinkedIssues: ArrayList<String>,
-        arrayListIssues: ArrayList<String>,
-        arrayListAssignee: ArrayList<String>,
-        arrayListPriority: ArrayList<String>,
-        arrayListComponent: ArrayList<String>,
-        arrayListFixVersions: ArrayList<String>,
-        arrayListLabel: ArrayList<String>,
-        arrayListEpicLink: ArrayList<String>,
-        arrayListSprint: ArrayList<String>,
-        arrayListEpicName: ArrayList<String>,
-        hashMapBoardList: HashMap<String, String>
+    internal fun initializeJiraAutoTextViews(
+        arrayListJiraProjectNames: ArrayList<String>,
+        arrayListJiraProjectKeys: ArrayList<String>,
+        arrayListJiraIssueTypes: ArrayList<String>,
+        arrayListJiraReporterNames: ArrayList<String>,
+        arrayListJiraLinkedIssues: ArrayList<String>,
+        arrayListJiraIssues: ArrayList<String>,
+        arrayListJiraAssignee: ArrayList<String>,
+        arrayListJiraPriority: ArrayList<String>,
+        arrayListJiraComponent: ArrayList<String>,
+        arrayListJiraFixVersions: ArrayList<String>,
+        arrayListJiraLabel: ArrayList<String>,
+        arrayListJiraEpicLink: ArrayList<String>,
+        arrayListJiraSprint: ArrayList<String>,
+        arrayListJiraEpicName: ArrayList<String>,
+        hashMapJiraBoardList: HashMap<String, String>
     ) {
-
         try {
             this.arrayListJiraIssue.clear()
             this.arrayListJiraLabel
             val sharedPref =
                 PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
-            editTextSummary.setText(sharedPref.getString("jira_summary", null))
-            editTextDescription.setText(sharedPref.getString("jira_description", null))
-            initializeProjectName(
-                arrayListProjectNames = arrayListProjectNames,
+            editTextJiraSummary.setText(sharedPref.getString("jira_summary", null))
+            editTextJiraDescription.setText(sharedPref.getString("jira_description", null))
+            initializeJiraProjectName(
+                arrayListJiraProjectNames = arrayListJiraProjectNames,
                 sharedPref = sharedPref
             )
-            initializeIssueType(
-                arrayListIssueTypes = arrayListIssueTypes,
-                arrayListEpicName = arrayListEpicName,
+            initializeJiraIssueType(
+                arrayListJiraIssueTypes = arrayListJiraIssueTypes,
+                arrayListJiraEpicName = arrayListJiraEpicName,
                 sharedPref = sharedPref
             )
-            initializeReporter(
-                arrayListReporterNames = arrayListReporterNames,
+            initializeJiraReporter(
+                arrayListJiraReporterNames = arrayListJiraReporterNames,
                 sharedPref = sharedPref
             )
-            initializeLinkedIssues(
-                arrayListLinkedIssues = arrayListLinkedIssues,
+            initializeJiraLinkedIssues(
+                arrayListJiraLinkedIssues = arrayListJiraLinkedIssues,
                 sharedPref = sharedPref
             )
-            initializeIssues(arrayListIssues = arrayListIssues, sharedPref = sharedPref)
-            initializeAssignee(arrayListAssignee = arrayListAssignee, sharedPref = sharedPref)
-            initializePriority(arrayListPriority = arrayListPriority, sharedPref = sharedPref)
-            initializeComponent(arrayListComponent = arrayListComponent, sharedPref = sharedPref)
-            initializeFixVersions(
-                arrayListFixVersions = arrayListFixVersions,
+            initializeJiraIssues(arrayListJiraIssues = arrayListJiraIssues, sharedPref = sharedPref)
+            initializeJiraAssignee(
+                arrayListJiraAssignee = arrayListJiraAssignee,
                 sharedPref = sharedPref
             )
-            initializeLabels(arrayListLabel = arrayListLabel, sharedPref = sharedPref)
-            initializeEpicLink(
-                arrayListEpicLink = arrayListEpicLink,
+            initializeJiraPriority(
+                arrayListJiraPriority = arrayListJiraPriority,
                 sharedPref = sharedPref
             )
-            initializeSprint(
-                arrayListSprint = arrayListSprint,
-                hashMapBoardList = hashMapBoardList,
-                arrayListProjectKeys = arrayListProjectKeys,
+            initializeJiraComponent(
+                arrayListJiraComponent = arrayListJiraComponent,
                 sharedPref = sharedPref
             )
-            initializeEpicName(arrayListEpicName = arrayListEpicName, sharedPref = sharedPref)
+            initializeJiraFixVersions(
+                arrayListJiraFixVersions = arrayListJiraFixVersions,
+                sharedPref = sharedPref
+            )
+            initializeJiraLabels(arrayListLabel = arrayListJiraLabel, sharedPref = sharedPref)
+            initializeJiraEpicLink(
+                arrayListJiraEpicLink = arrayListJiraEpicLink,
+                sharedPref = sharedPref
+            )
+            initializeJiraSprint(
+                arrayListJiraSprint = arrayListJiraSprint,
+                hashMapJiraBoardList = hashMapJiraBoardList,
+                arrayListJiraProjectKeys = arrayListJiraProjectKeys,
+                sharedPref = sharedPref
+            )
+            initializeJiraEpicName(
+                arrayListJiraEpicName = arrayListJiraEpicName,
+                sharedPref = sharedPref
+            )
 
             if (checkUnhandledFilePath()) {
-                editTextSummary.setText(activity.resources.getString(R.string.jira_summary_unhandled_exception))
+                editTextJiraSummary.setText(activity.resources.getString(R.string.jira_summary_unhandled_exception))
                 if (checkBoxUnhandledChecked()) {
-                    editTextDescription.setText(
+                    editTextJiraDescription.setText(
                         sharedPref.getString(
                             "unhandled_exception_message",
                             null
                         )
                     )
-                    editTextDescription.isFocusable = false
+                    editTextJiraDescription.isFocusable = false
                 }
             }
 
@@ -3935,212 +4091,247 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing sprint autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraSprint is used for getting the sprint list for sprint autoCompleteTextView.
+     * @param hashMapJiraBoardList is used for getting the board list.
+     * @param arrayListJiraProjectKeys is used for getting project key list.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeSprint(
-        arrayListSprint: ArrayList<String>,
-        hashMapBoardList: HashMap<String, String>,
-        arrayListProjectKeys: ArrayList<String>,
+    private fun initializeJiraSprint(
+        arrayListJiraSprint: ArrayList<String>,
+        hashMapJiraBoardList: HashMap<String, String>,
+        arrayListJiraProjectKeys: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        if (!controlProjectPosition) {
-            projectPosition = sharedPref.getInt("jira_project_position", 0)
+        if (!controlProjectJiraPosition) {
+            projectJiraPosition = sharedPref.getInt("jira_project_position", 0)
         }
-        controlProjectPosition = false
-        if (hashMapBoardList[arrayListProjectKeys[projectPosition]] == "scrum") {
-            cardViewSprint.visibility = View.VISIBLE
-            cardViewStartDate.visibility = View.VISIBLE
-            autoTextViewSprintAdapter =
+        controlProjectJiraPosition = false
+        if (hashMapJiraBoardList[arrayListJiraProjectKeys[projectJiraPosition]] == "scrum") {
+            cardViewJiraSprint.visibility = View.VISIBLE
+            cardViewJiraStartDate.visibility = View.VISIBLE
+            autoTextViewJiraSprintAdapter =
                 ArrayAdapter(
                     this,
                     android.R.layout.simple_dropdown_item_1line,
-                    arrayListSprint
+                    arrayListJiraSprint
                 )
-            autoTextViewSprint.setAdapter(autoTextViewSprintAdapter)
-            if (arrayListSprint.isNotEmpty()) {
+            autoTextViewJiraSprint.setAdapter(autoTextViewJiraSprintAdapter)
+            if (arrayListJiraSprint.isNotEmpty()) {
                 if (sharedPref.getString("jira_sprint", null) != null) {
-                    autoTextViewSprint.setText(
+                    autoTextViewJiraSprint.setText(
                         sharedPref.getString("jira_sprint", null),
                         false
                     )
                 }
 //                autoTextViewSprint.setText(arrayListSprint[0], false)
             }
-            autoTextViewSprint.setOnTouchListener { v, event ->
-                autoTextViewSprint.showDropDown()
+            autoTextViewJiraSprint.setOnTouchListener { v, event ->
+                autoTextViewJiraSprint.showDropDown()
                 false
             }
-            autoTextViewSprint.setOnItemClickListener { parent, view, position, id ->
+            autoTextViewJiraSprint.setOnItemClickListener { parent, view, position, id ->
                 jiraAuthentication.setSprintPosition(sprintPosition = position)
                 hideKeyboard(activity = activity, view = viewJira)
             }
         } else {
-            cardViewSprint.visibility = View.GONE
-            cardViewStartDate.visibility = View.GONE
+            cardViewJiraSprint.visibility = View.GONE
+            cardViewJiraStartDate.visibility = View.GONE
         }
     }
 
+    /**
+     * This method is used for initializing epic link autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraEpicLink is used for getting the epic link list for epic link autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeEpicLink(
-        arrayListEpicLink: ArrayList<String>,
+    private fun initializeJiraEpicLink(
+        arrayListJiraEpicLink: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewEpicLinkAdapter =
+        autoTextViewJiraEpicLinkAdapter =
             ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListEpicLink
+                arrayListJiraEpicLink
             )
-        autoTextViewEpicLink.setAdapter(autoTextViewEpicLinkAdapter)
-        if (arrayListEpicLink.isNotEmpty()) {
+        autoTextViewJiraEpicLink.setAdapter(autoTextViewJiraEpicLinkAdapter)
+        if (arrayListJiraEpicLink.isNotEmpty()) {
             if (sharedPref.getString("jira_epic_link", null) != null) {
-                autoTextViewEpicLink.setText(
+                autoTextViewJiraEpicLink.setText(
                     sharedPref.getString("jira_epic_link", null),
                     false
                 )
             }
 //                autoTextViewEpicLink.setText(arrayListEpicLink[0], false)
         }
-        autoTextViewEpicLink.setOnTouchListener { v, event ->
-            autoTextViewEpicLink.showDropDown()
+        autoTextViewJiraEpicLink.setOnTouchListener { v, event ->
+            autoTextViewJiraEpicLink.showDropDown()
             false
         }
-        autoTextViewEpicLink.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraEpicLink.setOnItemClickListener { parent, view, position, id ->
             hideKeyboard(activity = activity, view = viewJira)
         }
     }
 
+    /**
+     * This method is used for initializing label autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraLabel is used for getting the label list for label autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeLabels(arrayListLabel: ArrayList<String>, sharedPref: SharedPreferences) {
-        autoTextViewLabelAdapter =
+    private fun initializeJiraLabels(
+        arrayListLabel: ArrayList<String>,
+        sharedPref: SharedPreferences
+    ) {
+        autoTextViewJiraLabelAdapter =
             ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, arrayListLabel)
-        autoTextViewLabel.setAdapter(autoTextViewLabelAdapter)
+        autoTextViewJiraLabel.setAdapter(autoTextViewJiraLabelAdapter)
         if (arrayListLabel.isNotEmpty()) {
             if (sharedPref.getString("jira_labels", null) != null) {
-                autoTextViewLabel.setText(sharedPref.getString("jira_labels", null), false)
+                autoTextViewJiraLabel.setText(sharedPref.getString("jira_labels", null), false)
             }
 //                autoTextViewLabel.setText(arrayListLabel[0], false)
         }
-        autoTextViewLabel.setOnTouchListener { v, event ->
-            autoTextViewLabel.showDropDown()
+        autoTextViewJiraLabel.setOnTouchListener { v, event ->
+            autoTextViewJiraLabel.showDropDown()
             false
         }
-        autoTextViewLabel.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraLabel.setOnItemClickListener { parent, view, position, id ->
             hideKeyboard(activity = activity, view = viewJira)
         }
         this.arrayListJiraLabel = arrayListLabel
     }
 
+    /**
+     * This method is used for initializing fix versions autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraFixVersions is used for getting the fix versions list for fix versions autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeFixVersions(
-        arrayListFixVersions: ArrayList<String>,
+    private fun initializeJiraFixVersions(
+        arrayListJiraFixVersions: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewFixVersionsAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListFixVersions
+            arrayListJiraFixVersions
         )
-        autoTextViewFixVersions.setAdapter(autoTextViewFixVersionsAdapter)
-        if (arrayListFixVersions.isNotEmpty()) {
+        autoTextViewJiraFixVersions.setAdapter(autoTextViewFixVersionsAdapter)
+        if (arrayListJiraFixVersions.isNotEmpty()) {
             if (sharedPref.getString("jira_fix_versions", null) != null) {
-                autoTextViewFixVersions.setText(
+                autoTextViewJiraFixVersions.setText(
                     sharedPref.getString("jira_fix_versions", null),
                     false
                 )
             }
 //                autoTextViewFixVersions.setText(arrayListFixVersions[0], false)
         }
-        autoTextViewFixVersions.setOnTouchListener { v, event ->
-            autoTextViewFixVersions.showDropDown()
+        autoTextViewJiraFixVersions.setOnTouchListener { v, event ->
+            autoTextViewJiraFixVersions.showDropDown()
             false
         }
-        autoTextViewFixVersions.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraFixVersions.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setFixVersionsPosition(fixVersionsPosition = position)
             hideKeyboard(activity = activity, view = viewJira)
         }
-        this.arrayListJiraFixVersions = arrayListFixVersions
+        this.arrayListJiraFixVersions = arrayListJiraFixVersions
     }
 
+    /**
+     * This method is used for initializing component autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraComponent is used for getting the component list for component autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeComponent(
-        arrayListComponent: ArrayList<String>,
+    private fun initializeJiraComponent(
+        arrayListJiraComponent: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewComponentAdapter =
+        autoTextViewJiraComponentAdapter =
             ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListComponent
+                arrayListJiraComponent
             )
-        autoTextViewComponent.setAdapter(autoTextViewComponentAdapter)
-        if (arrayListComponent.isNotEmpty()) {
+        autoTextViewJiraComponent.setAdapter(autoTextViewJiraComponentAdapter)
+        if (arrayListJiraComponent.isNotEmpty()) {
             if (sharedPref.getString("jira_component", null) != null) {
-                autoTextViewComponent.setText(
+                autoTextViewJiraComponent.setText(
                     sharedPref.getString("jira_component", null),
                     false
                 )
             }
 //                autoTextViewComponent.setText(arrayListComponent[0], false)
         }
-        autoTextViewComponent.setOnTouchListener { v, event ->
-            autoTextViewComponent.showDropDown()
+        autoTextViewJiraComponent.setOnTouchListener { v, event ->
+            autoTextViewJiraComponent.showDropDown()
             false
         }
-        autoTextViewComponent.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraComponent.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setComponentPosition(componentPosition = position)
         }
-        this.arrayListJiraComponent = arrayListComponent
+        this.arrayListJiraComponent = arrayListJiraComponent
     }
 
+    /**
+     * This method is used for initializing priority autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraPriority is used for getting the priority list for priority autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializePriority(
-        arrayListPriority: ArrayList<String>,
+    private fun initializeJiraPriority(
+        arrayListJiraPriority: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewPriorityAdapter =
+        autoTextViewJiraPriorityAdapter =
             ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListPriority
+                arrayListJiraPriority
             )
-        autoTextViewPriority.setAdapter(autoTextViewPriorityAdapter)
-        if (arrayListPriority.isNotEmpty()) {
+        autoTextViewJiraPriority.setAdapter(autoTextViewJiraPriorityAdapter)
+        if (arrayListJiraPriority.isNotEmpty()) {
             if (sharedPref.getString("jira_priority", null) != null) {
-                autoTextViewPriority.setText(
+                autoTextViewJiraPriority.setText(
                     sharedPref.getString("jira_priority", null),
                     false
                 )
             } else {
-                autoTextViewPriority.setText(arrayListPriority[0], false)
+                autoTextViewJiraPriority.setText(arrayListJiraPriority[0], false)
             }
         }
-        autoTextViewPriority.setOnTouchListener { v, event ->
-            autoTextViewPriority.showDropDown()
+        autoTextViewJiraPriority.setOnTouchListener { v, event ->
+            autoTextViewJiraPriority.showDropDown()
             false
         }
-        autoTextViewPriority.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraPriority.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setPriorityPosition(priorityPosition = position)
             hideKeyboard(activity = activity, view = viewJira)
         }
-        autoTextViewPriority.setOnFocusChangeListener { v, hasFocus ->
+        autoTextViewJiraPriority.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (!arrayListPriority.contains(autoTextViewPriority.editableText.toString())) {
-                    if (arrayListPriority.isNotEmpty()) {
+                if (!arrayListJiraPriority.contains(autoTextViewJiraPriority.editableText.toString())) {
+                    if (arrayListJiraPriority.isNotEmpty()) {
                         if (sharedPref.getString("jira_priority", null) != null) {
-                            autoTextViewPriority.setText(
+                            autoTextViewJiraPriority.setText(
                                 sharedPref.getString(
                                     "jira_priority",
                                     null
                                 ), false
                             )
                         } else {
-                            autoTextViewPriority.setText(arrayListPriority[0], false)
+                            autoTextViewJiraPriority.setText(arrayListJiraPriority[0], false)
                         }
                     }
                 }
@@ -4148,106 +4339,121 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing assignee autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeAssignee(
-        arrayListAssignee: ArrayList<String>,
+    private fun initializeJiraAssignee(
+        arrayListJiraAssignee: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewAssigneeAdapter =
+        autoTextViewJiraAssigneeAdapter =
             ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListAssignee
+                arrayListJiraAssignee
             )
-        autoTextViewAssignee.setAdapter(autoTextViewAssigneeAdapter)
-        if (arrayListAssignee.isNotEmpty()) {
+        autoTextViewJiraAssignee.setAdapter(autoTextViewJiraAssigneeAdapter)
+        if (arrayListJiraAssignee.isNotEmpty()) {
             if (sharedPref.getString("jira_assignee", null) != null) {
-                autoTextViewAssignee.setText(
+                autoTextViewJiraAssignee.setText(
                     sharedPref.getString("jira_assignee", null),
                     false
                 )
             }
 //                autoTextViewAssignee.setText(arrayListAssignee[0], false)
         }
-        autoTextViewAssignee.setOnTouchListener { v, event ->
-            autoTextViewAssignee.showDropDown()
+        autoTextViewJiraAssignee.setOnTouchListener { v, event ->
+            autoTextViewJiraAssignee.showDropDown()
             false
         }
-        autoTextViewAssignee.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraAssignee.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setAssigneePosition(assigneePosition = position)
             hideKeyboard(activity = activity, view = viewJira)
         }
     }
 
+    /**
+     * This method is used for initializing issues autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraIssues is used for getting the issues list for issues autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeIssues(
-        arrayListIssues: ArrayList<String>,
+    private fun initializeJiraIssues(
+        arrayListJiraIssues: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewIssueAdapter =
-            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, arrayListIssues)
-        autoTextViewIssue.setAdapter(autoTextViewIssueAdapter)
-        if (arrayListIssues.isNotEmpty()) {
+        autoTextViewJiraIssueAdapter =
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, arrayListJiraIssues)
+        autoTextViewJiraIssue.setAdapter(autoTextViewJiraIssueAdapter)
+        if (arrayListJiraIssues.isNotEmpty()) {
             if (sharedPref.getString("jira_issue", null) != null) {
-                autoTextViewIssue.setText(sharedPref.getString("jira_issue", null), false)
+                autoTextViewJiraIssue.setText(sharedPref.getString("jira_issue", null), false)
             }
 //                autoTextViewIssue.setText(arrayListIssues[0], false)
         }
-        autoTextViewIssue.setOnTouchListener { v, event ->
-            autoTextViewIssue.showDropDown()
+        autoTextViewJiraIssue.setOnTouchListener { v, event ->
+            autoTextViewJiraIssue.showDropDown()
             false
         }
-        autoTextViewIssue.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraIssue.setOnItemClickListener { parent, view, position, id ->
             hideKeyboard(activity = activity, view = viewJira)
         }
-        this.arrayListJiraIssue = arrayListIssues
+        this.arrayListJiraIssue = arrayListJiraIssues
     }
 
+    /**
+     * This method is used for initializing linked issues autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraIssueTypes is used for getting the linked issues list for linked issues autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private fun initializeLinkedIssues(
-        arrayListLinkedIssues: ArrayList<String>,
+    private fun initializeJiraLinkedIssues(
+        arrayListJiraLinkedIssues: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewLinkedIssueAdapter = ArrayAdapter(
+        autoTextViewJiraLinkedIssueAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListLinkedIssues
+            arrayListJiraLinkedIssues
         )
-        autoTextViewLinkedIssue.setAdapter(autoTextViewLinkedIssueAdapter)
-        if (arrayListLinkedIssues.isNotEmpty()) {
+        autoTextViewJiraLinkedIssue.setAdapter(autoTextViewJiraLinkedIssueAdapter)
+        if (arrayListJiraLinkedIssues.isNotEmpty()) {
             if (sharedPref.getString("jira_linked_issue", null) != null) {
-                autoTextViewLinkedIssue.setText(
+                autoTextViewJiraLinkedIssue.setText(
                     sharedPref.getString("jira_linked_issue", null),
                     false
                 )
             } else {
-                autoTextViewLinkedIssue.setText(arrayListLinkedIssues[0], false)
+                autoTextViewJiraLinkedIssue.setText(arrayListJiraLinkedIssues[0], false)
             }
         }
-        autoTextViewLinkedIssue.setOnTouchListener { v, event ->
-            autoTextViewLinkedIssue.showDropDown()
+        autoTextViewJiraLinkedIssue.setOnTouchListener { v, event ->
+            autoTextViewJiraLinkedIssue.showDropDown()
             false
         }
-        autoTextViewLinkedIssue.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraLinkedIssue.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setLinkedIssueTypePosition(linkedIssueTypePosition = position)
             hideKeyboard(activity = activity, view = viewJira)
         }
-        autoTextViewLinkedIssue.setOnFocusChangeListener { v, hasFocus ->
+        autoTextViewJiraLinkedIssue.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (!arrayListLinkedIssues.contains(autoTextViewLinkedIssue.editableText.toString())) {
-                    if (arrayListLinkedIssues.isNotEmpty()) {
+                if (!arrayListJiraLinkedIssues.contains(autoTextViewJiraLinkedIssue.editableText.toString())) {
+                    if (arrayListJiraLinkedIssues.isNotEmpty()) {
                         if (sharedPref.getString("jira_linked_issue", null) != null) {
-                            autoTextViewLinkedIssue.setText(
+                            autoTextViewJiraLinkedIssue.setText(
                                 sharedPref.getString(
                                     "jira_linked_issue",
                                     null
                                 ), false
                             )
                         } else {
-                            autoTextViewLinkedIssue.setText(arrayListLinkedIssues[0], false)
+                            autoTextViewJiraLinkedIssue.setText(arrayListJiraLinkedIssues[0], false)
                         }
                     }
                 }
@@ -4255,89 +4461,103 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing reporter autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraReporterNames is used for getting the reporter list for reporter autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private fun initializeReporter(
-        arrayListReporterNames: ArrayList<String>,
+    private fun initializeJiraReporter(
+        arrayListJiraReporterNames: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewReporterAdapter = ArrayAdapter(
+        autoTextViewJiraReporterAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListReporterNames
+            arrayListJiraReporterNames
         )
-        autoTextViewReporter.setAdapter(autoTextViewReporterAdapter)
-        if (arrayListReporterNames.isNotEmpty()) {
+        autoTextViewJiraReporter.setAdapter(autoTextViewJiraReporterAdapter)
+        if (arrayListJiraReporterNames.isNotEmpty()) {
             if (sharedPref.getString("jira_reporter", null) != null) {
-                autoTextViewReporter.setText(
+                autoTextViewJiraReporter.setText(
                     sharedPref.getString("jira_reporter", null),
                     false
                 )
             }
 //                autoTextViewReporter.setText(arrayListReporterNames[0], false)
         }
-        autoTextViewReporter.setOnTouchListener { v, event ->
-            autoTextViewReporter.showDropDown()
+        autoTextViewJiraReporter.setOnTouchListener { v, event ->
+            autoTextViewJiraReporter.showDropDown()
             false
         }
-        autoTextViewReporter.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraReporter.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setReporterPosition(reporterPosition = position)
             hideKeyboard(activity = activity, view = viewJira)
         }
     }
 
 
+    /**
+     * This method is used for initializing issue type autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraIssueTypes is used for getting the issue type list for issue type autoCompleteTextView.
+     * @param arrayListJiraEpicName is used for getting the epic list.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private fun initializeIssueType(
-        arrayListIssueTypes: ArrayList<String>,
-        arrayListEpicName: ArrayList<String>,
+    private fun initializeJiraIssueType(
+        arrayListJiraIssueTypes: ArrayList<String>,
+        arrayListJiraEpicName: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewIssueTypeAdapter =
+        autoTextViewJiraIssueTypeAdapter =
             ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListIssueTypes
+                arrayListJiraIssueTypes
             )
-        autoTextViewIssueType.setAdapter(autoTextViewIssueTypeAdapter)
+        autoTextViewJiraIssueType.setAdapter(autoTextViewJiraIssueTypeAdapter)
         if (checkUnhandledFilePath()) {
-            autoTextViewIssueType.setText(arrayListIssueTypes[2], false)
+            autoTextViewJiraIssueType.setText(arrayListJiraIssueTypes[2], false)
             jiraAuthentication.setIssueTypePosition(issueTypePosition = 2)
         } else {
-            if (arrayListIssueTypes.isNotEmpty()) {
+            if (arrayListJiraIssueTypes.isNotEmpty()) {
                 if (sharedPref.getString("jira_issue_type", null) != null) {
-                    autoTextViewIssueType.setText(
+                    autoTextViewJiraIssueType.setText(
                         sharedPref.getString("jira_issue_type", null),
                         false
                     )
                 } else {
-                    autoTextViewIssueType.setText(arrayListIssueTypes[0], false)
+                    autoTextViewJiraIssueType.setText(arrayListJiraIssueTypes[0], false)
                 }
             }
         }
-        autoTextViewIssueType.setOnTouchListener { v, event ->
-            autoTextViewIssueType.showDropDown()
+        autoTextViewJiraIssueType.setOnTouchListener { v, event ->
+            autoTextViewJiraIssueType.showDropDown()
             false
         }
-        autoTextViewIssueType.setOnItemClickListener { parent, view, position, id ->
+        autoTextViewJiraIssueType.setOnItemClickListener { parent, view, position, id ->
             jiraAuthentication.setIssueTypePosition(issueTypePosition = position)
             hideKeyboard(activity = activity, view = viewJira)
-            initializeEpicName(arrayListEpicName = arrayListEpicName, sharedPref = sharedPref)
+            initializeJiraEpicName(
+                arrayListJiraEpicName = arrayListJiraEpicName,
+                sharedPref = sharedPref
+            )
         }
-        autoTextViewIssueType.setOnFocusChangeListener { v, hasFocus ->
+        autoTextViewJiraIssueType.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (!arrayListIssueTypes.contains(autoTextViewIssueType.editableText.toString())) {
-                    if (arrayListIssueTypes.isNotEmpty()) {
+                if (!arrayListJiraIssueTypes.contains(autoTextViewJiraIssueType.editableText.toString())) {
+                    if (arrayListJiraIssueTypes.isNotEmpty()) {
                         if (sharedPref.getString("jira_issue_type", null) != null) {
-                            autoTextViewIssueType.setText(
+                            autoTextViewJiraIssueType.setText(
                                 sharedPref.getString(
                                     "jira_issue_type",
                                     null
                                 ), false
                             )
                         } else {
-                            autoTextViewIssueType.setText(arrayListIssueTypes[0], false)
+                            autoTextViewJiraIssueType.setText(arrayListJiraIssueTypes[0], false)
                         }
                     }
                 }
@@ -4345,35 +4565,40 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraProjectNames is used for getting the project list for project autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    private fun initializeProjectName(
-        arrayListProjectNames: ArrayList<String>,
+    private fun initializeJiraProjectName(
+        arrayListJiraProjectNames: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewProjectAdapter = ArrayAdapter(
+        autoTextViewJiraProjectAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListProjectNames
+            arrayListJiraProjectNames
         )
-        autoTextViewProject.setAdapter(autoTextViewProjectAdapter)
-        if (arrayListProjectNames.isNotEmpty() && autoTextViewProject.text.isEmpty()) {
+        autoTextViewJiraProject.setAdapter(autoTextViewJiraProjectAdapter)
+        if (arrayListJiraProjectNames.isNotEmpty() && autoTextViewJiraProject.text.isEmpty()) {
             if (sharedPref.getString("jira_project", null) != null) {
-                autoTextViewProject.setText(
+                autoTextViewJiraProject.setText(
                     sharedPref.getString("jira_project", null),
                     false
                 )
             } else {
-                autoTextViewProject.setText(arrayListProjectNames[0], false)
+                autoTextViewJiraProject.setText(arrayListJiraProjectNames[0], false)
             }
         }
-        autoTextViewProject.setOnTouchListener { v, event ->
-            autoTextViewProject.showDropDown()
+        autoTextViewJiraProject.setOnTouchListener { v, event ->
+            autoTextViewJiraProject.showDropDown()
             false
         }
-        autoTextViewProject.setOnItemClickListener { parent, view, position, id ->
-            projectPosition = position
-            controlProjectPosition = true
+        autoTextViewJiraProject.setOnItemClickListener { parent, view, position, id ->
+            projectJiraPosition = position
+            controlProjectJiraPosition = true
             jiraAuthentication.setProjectPosition(projectPosition = position)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 progressBarJira.visibility = View.VISIBLE
@@ -4381,24 +4606,24 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //                    attachProgressBar()
             }
             hideKeyboard(activity = activity, view = viewJira)
-            jiraAuthentication.callJiraIssue(
+            jiraAuthentication.callJira(
                 context = context,
                 activity = activity,
-                jiraTask = "get",
+                task = "get",
                 createMethod = "normal"
             )
         }
-        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
+        autoTextViewJiraProject.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-                    if (arrayListProjectNames.isNotEmpty()) {
+                if (!arrayListJiraProjectNames.contains(autoTextViewJiraProject.editableText.toString())) {
+                    if (arrayListJiraProjectNames.isNotEmpty()) {
                         if (sharedPref.getString("jira_project", null) != null) {
-                            autoTextViewProject.setText(
+                            autoTextViewJiraProject.setText(
                                 sharedPref.getString("jira_project", null),
                                 false
                             )
                         } else {
-                            autoTextViewProject.setText(arrayListProjectNames[0], false)
+                            autoTextViewJiraProject.setText(arrayListJiraProjectNames[0], false)
                         }
                     }
                 }
@@ -4406,100 +4631,74 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing epic autoCompleteTextView in the loggerbird_jira_popup.
+     * @param arrayListJiraEpicName is used for getting the epic list for epic autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint("ClickableViewAccessibility")
-    private fun initializeEpicName(
-        arrayListEpicName: ArrayList<String>,
+    private fun initializeJiraEpicName(
+        arrayListJiraEpicName: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        if (autoTextViewIssueType.editableText.toString() == "Epic") {
-            cardViewEpicName.visibility = View.VISIBLE
-            cardViewEpicLink.visibility = View.GONE
-            autoTextViewEpicNameAdapter = ArrayAdapter(
+        if (autoTextViewJiraIssueType.editableText.toString() == "Epic") {
+            cardViewJiraEpicName.visibility = View.VISIBLE
+            cardViewJiraEpicLink.visibility = View.GONE
+            autoTextViewJiraEpicNameAdapter = ArrayAdapter(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
-                arrayListEpicName
+                arrayListJiraEpicName
             )
-            autoTextViewEpicName.setAdapter(autoTextViewEpicNameAdapter)
-            if (arrayListEpicName.isNotEmpty()) {
+            autoTextViewJiraEpicName.setAdapter(autoTextViewJiraEpicNameAdapter)
+            if (arrayListJiraEpicName.isNotEmpty()) {
                 if (sharedPref.getString("jira_epic_name", null) != null) {
-                    autoTextViewEpicName.setText(
+                    autoTextViewJiraEpicName.setText(
                         sharedPref.getString("jira_epic_name", null),
                         false
                     )
                 } else {
-                    autoTextViewEpicName.setText(arrayListEpicName[0], false)
+                    autoTextViewJiraEpicName.setText(arrayListJiraEpicName[0], false)
                 }
             }
-            autoTextViewEpicName.setOnTouchListener { v, event ->
-                autoTextViewEpicName.showDropDown()
+            autoTextViewJiraEpicName.setOnTouchListener { v, event ->
+                autoTextViewJiraEpicName.showDropDown()
                 false
             }
-            autoTextViewEpicName.setOnItemClickListener { parentEpic, viewEpic, positionEpic, idEpic ->
+            autoTextViewJiraEpicName.setOnItemClickListener { parentEpic, viewEpic, positionEpic, idEpic ->
                 jiraAuthentication.setEpicNamePosition(epicNamePosition = positionEpic)
                 hideKeyboard(activity = activity, view = viewJira)
             }
-            autoTextViewEpicName.setOnFocusChangeListener { v, hasFocus ->
-                if (!hasFocus && autoTextViewEpicName.text.toString().isEmpty()) {
-                    if (!arrayListEpicName.contains(autoTextViewEpicName.editableText.toString())) {
-                        if (arrayListEpicName.isNotEmpty()) {
+            autoTextViewJiraEpicName.setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus && autoTextViewJiraEpicName.text.toString().isEmpty()) {
+                    if (!arrayListJiraEpicName.contains(autoTextViewJiraEpicName.editableText.toString())) {
+                        if (arrayListJiraEpicName.isNotEmpty()) {
                             if (sharedPref.getString("jira_epic_name", null) != null) {
-                                autoTextViewEpicName.setText(
+                                autoTextViewJiraEpicName.setText(
                                     sharedPref.getString(
                                         "jira_epic_name",
                                         null
                                     ), false
                                 )
                             } else {
-                                autoTextViewEpicName.setText(arrayListEpicName[0], false)
+                                autoTextViewJiraEpicName.setText(arrayListJiraEpicName[0], false)
                             }
                         }
                     }
                 }
             }
         } else {
-            cardViewEpicName.visibility = View.GONE
-            cardViewEpicLink.visibility = View.VISIBLE
+            cardViewJiraEpicName.visibility = View.GONE
+            cardViewJiraEpicLink.visibility = View.VISIBLE
         }
     }
 
-
-//    private fun addJiraProjectNames(): ArrayList<String> {
-//        arrayListJiraProject.add("project_a")
-//        arrayListJiraProject.add("project_b")
-//        return arrayListJiraProject
-//    }
-//
-//    private fun addJiraIssueTypes(): ArrayList<String> {
-//        arrayListJiraIssueType.add("issue_type_a")
-//        arrayListJiraIssueType.add("issue_type_b")
-//        return arrayListJiraIssueType
-//    }
-//
-//    private fun addJiraReporterNames(): ArrayList<String> {
-//        arrayListJiraReporter.add("reporter_a")
-//        arrayListJiraReporter.add("reporter_b")
-//        return arrayListJiraReporter
-//    }
-//
-//    private fun addJiraLinkedIssues(): ArrayList<String> {
-//        arrayListJiraLinkedIssue.add("linked_issues_a")
-//        arrayListJiraLinkedIssue.add("linked_issues_b")
-//        return arrayListJiraLinkedIssue
-//    }
-//
-//    private fun addJiraAssignee(): ArrayList<String> {
-//        arrayListJiraAssignee.add("assignee_a")
-//        arrayListJiraAssignee.add("assignee_b")
-//        return arrayListJiraAssignee
-//    }
-//
-//    private fun addJiraPriority(): ArrayList<String> {
-//        arrayListJiraPriority.add("priority_a")
-//        arrayListJiraPriority.add("priority_b")
-//        return arrayListJiraPriority
-//    }
-
+    //Slack
+    /**
+     * This method is used for creating slack layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeSlackLayout(filePathMedia: File) {
         try {
@@ -4581,10 +4780,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()
-            LoggerBird.callExceptionDetails(exception = e, tag = Constants.jiraTag)
+            LoggerBird.callExceptionDetails(exception = e, tag = Constants.slackTag)
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_slack_popup from window.
+     */
     private fun removeSlackLayout() {
         if (windowManagerSlack != null && this::viewSlack.isInitialized) {
             (windowManagerSlack as WindowManager).removeViewImmediate(viewSlack)
@@ -4593,6 +4795,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_slack_popup.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun buttonClicksSlack(filePathMedia: File) {
         buttonSlackCreate.setSafeOnClickListener {
@@ -4692,46 +4897,60 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing slack attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     private fun initializeSlackRecyclerView(filePathMedia: File) {
-
         recyclerViewSlackAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         recyclerViewSlackAttachmentUser.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         if (filePathMedia.exists()) {
-            slackAdapter = RecyclerViewSlackAdapter(
-                addSlackFileNames(filePathMedia = filePathMedia),
-                context = context,
-                activity = activity,
-                rootView = rootView
-            )
+            slackAttachmentAdapter =
+                RecyclerViewSlackAttachmentAdapter(
+                    addSlackFileNames(filePathMedia = filePathMedia),
+                    context = context,
+                    activity = activity,
+                    rootView = rootView
+                )
         }
 
-        recyclerViewSlackAttachment.adapter = slackAdapter
-        recyclerViewSlackAttachmentUser.adapter = slackAdapter
+        recyclerViewSlackAttachment.adapter = slackAttachmentAdapter
+        recyclerViewSlackAttachmentUser.adapter = slackAttachmentAdapter
 
     }
 
+    /**
+     * This method is used for adding files to slack file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     private fun addSlackFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         arrayListSlackFileName.add(RecyclerViewModel(file = filePathMedia))
         arrayListSlackFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         return arrayListSlackFileName
     }
 
+    /**
+     * This method is used for initializing spinners in the loggerbird_slack_popup.
+     * @param arrayListSlackChannels is used for getting the channels list for channels autoCompleteTextView.
+     * @param arrayListSlackUsers is used for getting the users list for users autoCompleteTextView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun initializeSlackSpinner(
-        arrayListChannels: ArrayList<String>,
-        arrayListUsers: ArrayList<String>
+        arrayListSlackChannels: ArrayList<String>,
+        arrayListSlackUsers: ArrayList<String>
     ) {
 
         spinnerChannelsAdapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListChannels)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListSlackChannels)
         spinnerChannelsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerChannels.adapter = spinnerChannelsAdapter
 
         spinnerUsersAdapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListUsers)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListSlackUsers)
         spinnerUsersAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerUsers.adapter = spinnerUsersAdapter
 
@@ -4740,15 +4959,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
-
+    /**
+     * This method is used for hiding the keyboard from the window.
+     */
     private fun hideKeyboard(activity: Activity, view: View) {
         val inputMethodManager =
             (activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
         inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-
-    private fun initializeStartDatePicker() {
+    /**
+     * This method is used for initializing components of jira_calendar_view.
+     */
+    private fun initializeJiraStartDatePicker() {
         val calendar = Calendar.getInstance()
         val mYear = calendar.get(Calendar.YEAR)
         val mMonth = calendar.get(Calendar.MONTH)
@@ -4756,15 +4979,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         var startDate = "$mYear-$mMonth-$mDayOfMonth"
         calendarViewJiraLayout =
             calendarViewJiraView.findViewById(R.id.jira_calendar_view_layout)
-        calendarViewStartDate = calendarViewJiraView.findViewById(R.id.calendarView_start_date)
+        calendarViewJiraStartDate = calendarViewJiraView.findViewById(R.id.calendarView_start_date)
         buttonCalendarViewJiraCancel =
             calendarViewJiraView.findViewById(R.id.button_jira_calendar_cancel)
         buttonCalendarViewJiraOk =
             calendarViewJiraView.findViewById(R.id.button_jira_calendar_ok)
 
-        calendarViewStartDate.minDate = System.currentTimeMillis()
+        calendarViewJiraStartDate.minDate = System.currentTimeMillis()
         if (calendarViewJiraDate != null) {
-            calendarViewStartDate.setDate(calendarViewJiraDate!!, true, true)
+            calendarViewJiraStartDate.setDate(calendarViewJiraDate!!, true, true)
         }
         calendarViewJiraLayout.setOnClickListener {
             detachJiraDatePicker()
@@ -4776,16 +4999,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonCalendarViewJiraOk.setOnClickListener {
             jiraAuthentication.setStartDate(startDate = startDate)
             detachJiraDatePicker()
-//            textViewRemoveDate.visibility = View.VISIBLE
             imageButtonRemoveDate.visibility = View.VISIBLE
         }
-        calendarViewStartDate.setOnDateChangeListener { viewStartDate, year, month, dayOfMonth ->
+        calendarViewJiraStartDate.setOnDateChangeListener { viewStartDate, year, month, dayOfMonth ->
             calendarViewJiraDate = viewStartDate.date
             startDate = "$year-$month-$dayOfMonth"
         }
 
     }
 
+    /**
+     * This method is used for creating custom jira date-picker layout which is attached to application overlay.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun attachJiraDatePicker() {
         try {
             val rootView: ViewGroup =
@@ -4816,7 +5042,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 calendarViewJiraView,
                 windowManagerParamsJiraDatePicker
             )
-            initializeStartDatePicker()
+            initializeJiraStartDatePicker()
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()
@@ -4824,6 +5050,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing jira_calendar_view from window.
+     */
     private fun detachJiraDatePicker() {
         if (this::calendarViewJiraView.isInitialized) {
             (windowManagerJiraDatePicker as WindowManager).removeViewImmediate(
@@ -4832,6 +5061,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for gathering unhandled exception details.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun gatherUnhandledExceptionDetails() {
         try {
@@ -4843,12 +5076,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 .setCustomViewInitializer {
                     val textViewDiscard =
                         it.findViewById<TextView>(R.id.textView_unhandled_discard)
-                    val textViewShareWithJira =
-                        it.findViewById<TextView>(R.id.textView_unhandled_share_jira)
-                    val textViewCustomizeJira =
-                        it.findViewById<TextView>(R.id.textView_unhandled_jira_customize)
+                    val textViewShare =
+                        it.findViewById<TextView>(R.id.textView_unhandled_share_title)
+//                    val textViewCustomizeJira =
+//                        it.findViewById<TextView>(R.id.textView_unhandled_jira_customize)
                     val checkBoxDuplication =
-                        it.findViewById<CheckBox>(R.id.checkBox_unhandled_jira)
+                        it.findViewById<CheckBox>(R.id.checkBox_unhandled)
                     if (sharedPref.getBoolean("duplication_enabled", false)) {
                         checkBoxDuplication.isChecked = true
                     }
@@ -4886,45 +5119,40 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         )
                         CookieBar.dismiss(activity)
                     }
-                    textViewShareWithJira.setSafeOnClickListener {
-                        if (checkBoxDuplication.isChecked) {
-                            attachProgressBar()
-                            jiraAuthentication.callJiraIssue(
-                                filePathName = filePath,
-                                context = context,
-                                activity = activity,
-                                jiraTask = "unhandled_duplication",
-                                createMethod = "default"
-                            )
-                        } else {
-                            createDefaultUnhandledJiraIssue(filePath = filePath)
-                        }
+                    textViewShare.setSafeOnClickListener {
+                        initializeFloatingActionButton(activity = this.activity)
+                        shareView(filePathMedia = filePath)
+//                        if (checkBoxDuplication.isChecked) {
+//                            attachProgressBar()
+//                            jiraAuthentication.callJira(
+//                                filePathMedia = filePath,
+//                                context = context,
+//                                activity = activity,
+//                                task = "unhandled_duplication",
+//                                createMethod = "default"
+//                            )
+//                        } else {
+//                            createDefaultUnhandledJiraIssue(filePath = filePath)
+//                        }
                     }
-                    textViewCustomizeJira.setSafeOnClickListener {
-                        if (checkBoxDuplication.isChecked) {
-                            attachProgressBar()
-                            jiraAuthentication.callJiraIssue(
-                                filePathName = filePath,
-                                context = context,
-                                activity = activity,
-                                jiraTask = "unhandled_duplication",
-                                createMethod = "customize"
-                            )
-                        } else {
-                            createCustomizedUnhandledJiraIssue(filePath = filePath)
-                        }
-                    }
+//                    textViewCustomizeJira.setSafeOnClickListener {
+//                        if (checkBoxDuplication.isChecked) {
+//                            attachProgressBar()
+//                            jiraAuthentication.callJira(
+//                                filePathMedia = filePath,
+//                                context = context,
+//                                activity = activity,
+//                                task = "unhandled_duplication",
+//                                createMethod = "customize"
+//                            )
+//                        } else {
+//                            createCustomizedUnhandledJiraIssue(filePath = filePath)
+//                        }
+//                    }
                 }.setSwipeToDismiss(false)
                 .setEnableAutoDismiss(false)
                 .show()
 
-
-//            jiraAuthentication.callJiraIssue(
-//                context = context,
-//                activity = activity,
-//                jiraTask = "duplicate_file",
-//                createMethod = "duplicate_file"
-//            )
         } catch (e: Exception) {
             detachProgressBar()
             e.printStackTrace()
@@ -4936,6 +5164,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for sending default unhandled jira issue.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     internal fun createDefaultUnhandledJiraIssue(filePath: File) {
         attachProgressBar()
@@ -4950,6 +5182,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         CookieBar.dismiss(activity)
     }
 
+    /**
+     * This method is used for creating unhandled jira layout.
+     */
     internal fun createCustomizedUnhandledJiraIssue(filePath: File) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (controlFloatingActionButtonView()) {
@@ -4959,6 +5194,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for checking the file exist when sending an unhandled action.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun checkUnhandledFilePath(): Boolean {
         val sharedPref =
@@ -4980,6 +5219,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used for if duplication checkbox is checked or not for enabling the duplication check.
+     * @return Boolean value.
+     */
     private fun checkBoxUnhandledChecked(): Boolean {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
@@ -4989,8 +5232,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used after an successful unhandled exception jira issue opened.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    internal fun unhandledExceptionCustomizeIssueSent() {
+    internal fun unhandledExceptionCustomizeJiraIssueSent() {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         val editor: SharedPreferences.Editor = sharedPref.edit()
@@ -5035,6 +5281,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //            }
 //        }
 //    }
+    /**
+     * This method is used for adding unhandled exception message.
+     * @param context is for getting reference from the application context.
+     * @param unhandledExceptionMessage is for getting reference of the unhandled exception message.
+     */
     internal fun addUnhandledExceptionMessage(
         context: Context,
         unhandledExceptionMessage: String
@@ -5090,7 +5341,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //        }
 //        return false
 //    }
-
+    //Unhandled duplication
+    /**
+     * This method is used for creating unhandled duplcation layout which is attached to application overlay.
+     * @param unhandledExceptionIssueMethod is used for getting the reference of method type for unhandled duplication exception.
+     * @param filePath is used for getting the reference of current  file.
+     */
     internal fun attachUnhandledDuplicationLayout(
         unhandledExceptionIssueMethod: String,
         filePath: File
@@ -5128,6 +5384,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         )
     }
 
+
+    /**
+     * This method is used for removing unhandled_duplication_popup from window.
+     */
     private fun detachUnhandledDuplicationLayout() {
         if (this::viewUnhandledDuplication.isInitialized) {
             (windowManagerUnhandledDuplication as WindowManager).removeViewImmediate(
@@ -5136,6 +5396,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the unhandled_duplication_popup.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeUnhandledDuplicationButtons(
         unhandledExceptionIssueMethod: String,
@@ -5157,6 +5420,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for controlling the media file actions.
+     * @return Boolean values.
+     */
     private fun controlMedialFile(): Boolean {
         if (this@LoggerBirdService::filePathVideo.isInitialized) {
             return if (filePathVideo.exists()) {
@@ -5185,6 +5452,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    //Email
+    /**
+     * This method is used for creating email layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeEmailLayout(filePathMedia: File) {
         arrayListEmailFileName.clear()
@@ -5229,12 +5501,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewEmail.findViewById(R.id.recycler_view_email_attachment)
         recyclerViewEmailToList = viewEmail.findViewById(R.id.recycler_view_email_to_list)
         cardViewToList = viewEmail.findViewById(R.id.cardView_to_list)
-        initializeEmailRecyclerView(filePathMedia = filePathMedia)
+        initializeEmailAttachmentRecyclerView(filePathMedia = filePathMedia)
         initializeEmailToRecyclerView()
         initializeEmailButtons(filePathMedia = filePathMedia)
-//        detachProgressBar()
     }
 
+
+    /**
+     * This method is used for removing loggerbird_email_popup from window.
+     */
     internal fun removeEmailLayout() {
         if (this::viewEmail.isInitialized && windowManagerEmail != null) {
             (windowManagerEmail as WindowManager).removeViewImmediate(
@@ -5245,6 +5520,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_email_popup.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeEmailButtons(filePathMedia: File) {
         try {
@@ -5313,6 +5592,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for sending email in a future time.
+     */
     private fun createFutureTaskEmail() {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
@@ -5334,6 +5616,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         controlFutureTask = true
     }
 
+    /**
+     * This method is used for sending email with attachment.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @param to is used for getting reference of email address.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun createEmailTask(filePathMedia: File, to: String) {
         try {
             attachProgressBar()
@@ -5346,7 +5634,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            resetEnqueueMail()
+            resetEnqueueEmail()
             detachProgressBar()
             removeEmailLayout()
             LoggerBird.callEnqueue()
@@ -5354,37 +5642,52 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+
+    /**
+     * This method is used for initializing email attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeEmailRecyclerView(filePathMedia: File) {
+    private fun initializeEmailAttachmentRecyclerView(filePathMedia: File) {
         recyclerViewEmailAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        emailAdapter = RecyclerViewEmailAdapter(
-            addEmailFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewEmailAttachment.adapter = emailAdapter
+        emailAttachmentAdapter =
+            RecyclerViewEmailAttachmentAdapter(
+                addEmailFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewEmailAttachment.adapter = emailAttachmentAdapter
     }
 
+
+    /**
+     * This method is used for initializing email to recyclerView.
+     */
     private fun initializeEmailToRecyclerView() {
         recyclerViewEmailToList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        emailToListAdapter = RecyclerViewEmaiToListAdapter(
-            arraylistEmailToUsername,
-            cardView = cardViewToList,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewEmailToList.adapter = emailToListAdapter
+        emailToListAttachmentAdapter =
+            RecyclerViewEmaiToListAttachmentAdapter(
+                arraylistEmailToUsername,
+                cardView = cardViewToList,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewEmailToList.adapter = emailToListAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding email to email user list.
+     * @param email is used for getting the reference of current user email address.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addEmailToUser(email: String) {
         if (!arraylistEmailToUsername.contains(RecyclerViewModelTo(email = email))) {
             arraylistEmailToUsername.add(RecyclerViewModelTo(email = email))
-            emailToListAdapter.notifyDataSetChanged()
+            emailToListAttachmentAdapter.notifyDataSetChanged()
         } else {
             defaultToast.attachToast(
                 activity = activity,
@@ -5394,17 +5697,26 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
+    /**
+     * This method is used for adding files to email file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addEmailFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListEmailFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListEmailFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListEmailFileName
     }
 
+    /**
+     * This method is used for that are in the correct format.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkEmailFormat(to: String): Boolean {
         return if (android.util.Patterns.EMAIL_ADDRESS.matcher(to).matches()) {
@@ -5418,6 +5730,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    //not used!
     private fun checkBoxFutureTaskIsChecked(filePathMedia: File): Boolean {
         if (checkBoxFutureTask.isChecked) {
             initializeFutureTaskLayout(filePathMedia = filePathMedia)
@@ -5425,7 +5738,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
         return false
     }
-
+    //Future task
+    /**
+     * This method is used for creating future task layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     private fun initializeFutureTaskLayout(filePathMedia: File) {
         removeFutureLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -5467,6 +5784,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonClicksFuture(filePathMedia = filePathMedia)
     }
 
+    /**
+     * This method is used for removing loggerbird_future_task_popup from window.
+     */
     private fun removeFutureLayout() {
         if (this::viewFutureTask.isInitialized && windowManagerFutureTask != null) {
             (windowManagerFutureTask as WindowManager).removeViewImmediate(
@@ -5476,6 +5796,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_future_task_popup.
+     */
     private fun buttonClicksFuture(filePathMedia: File) {
         imageViewFutureCalendar.setSafeOnClickListener {
             initializeFutureDateLayout()
@@ -5513,6 +5836,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for creating future date layout which is attached to application overlay.
+     */
     private fun initializeFutureDateLayout() {
         removeFutureDateLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -5551,6 +5877,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
+    /**
+     * This method is used for removing future_calendar_view from window.
+     */
     private fun removeFutureDateLayout() {
         if (this::viewFutureDate.isInitialized && windowManagerFutureDate != null) {
             (windowManagerFutureDate as WindowManager).removeViewImmediate(
@@ -5560,6 +5889,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the future_calendar_view.
+     */
     private fun buttonClicksFutureDate() {
         val calendar = Calendar.getInstance()
         val mYear = calendar.get(Calendar.YEAR)
@@ -5572,7 +5904,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
         calendarViewFutureTask.setOnDateChangeListener { view, year, month, dayOfMonth ->
             calendarFuture.set(year, month, dayOfMonth)
-//            startDate = "$year-$month-$dayOfMonth"
         }
         buttonFutureTaskDateCreate.setSafeOnClickListener {
             futureStartDate = calendarViewFutureTask.date
@@ -5586,6 +5917,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for creating future time layout which is attached to application overlay.
+     */
     private fun initializeFutureTimeLayout() {
         removeFutureTimeLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -5624,6 +5958,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
+    /**
+     * This method is used for removing future_time_picker from window.
+     */
     private fun removeFutureTimeLayout() {
         if (this::viewFutureTime.isInitialized && windowManagerFutureTime != null) {
             (windowManagerFutureTime as WindowManager).removeViewImmediate(
@@ -5633,13 +5970,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the future_time_picker.
+     */
     private fun buttonClicksFutureTime() {
         frameLayoutFutureTime.setOnClickListener {
             removeFutureTimeLayout()
         }
-//        timePickerFutureTask.setOnTimeChangedListener { view, hourOfDay, minute ->
-//
-//        }
         buttonFutureTaskTimeCreate.setSafeOnClickListener {
             calendarFuture.set(Calendar.HOUR_OF_DAY, timePickerFutureTask.hour)
             calendarFuture.set(Calendar.MINUTE, timePickerFutureTask.minute)
@@ -5653,6 +5990,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+
+    /**
+     * This method is used for start date and start time is not null in future task layout.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     private fun checkFutureDateAndTimeEmpty(filePathMedia: File) {
         if (futureStartDate != null && futureStartTime != null) {
             defaultToast.attachToast(
@@ -5675,9 +6017,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    //This method is used for adding selected files in email layout for future task.
     private fun addFutureFileList() {
         val arrayListFileNames: ArrayList<String> = ArrayList()
-        RecyclerViewEmailAdapter.ViewHolder.arrayListFilePaths.forEach {
+        RecyclerViewEmailAttachmentAdapter.ViewHolder.arrayListFilePaths.forEach {
             if (it.file.name == "logger_bird_details.txt") {
                 val futureLoggerBirdFile = File(context.filesDir, "logger_bird_details_future.txt")
                 if (!futureLoggerBirdFile.exists()) {
@@ -5706,6 +6049,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    //This method is used for adding selected users in email layout for future task.
     private fun addFutureUserList() {
         val arrayListUsers: ArrayList<String> = ArrayList()
         arraylistEmailToUsername.forEach {
@@ -5721,6 +6065,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    //Github
+    /**
+     * This method is used for creating github layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeGithubLayout(filePathMedia: File) {
@@ -5803,7 +6153,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                                     "github_repo",
                                     autoTextViewGithubRepo.editableText.toString()
                                 )
-//                                putInt("jira_project_position", projectPosition)
                                 putString(
                                     "github_project",
                                     autoTextViewGithubProject.editableText.toString()
@@ -5846,7 +6195,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                             editor.remove("github_labels")
                             editor.remove("github_pull_requests")
                             editor.apply()
-//                            projectPosition = 0
                             clearGithubComponents()
                             defaultToast.attachToast(
                                 activity = activity,
@@ -5864,7 +6212,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     }
                 }
 
-                initializeGithubRecyclerView(filePathMedia = filePathMedia)
+                initializeGithubAttachmentRecyclerView(filePathMedia = filePathMedia)
                 initializeGithubAssigneeRecyclerView()
                 initializeGithubLabelRecyclerView()
                 buttonClicksGithub(filePathMedia = filePathMedia)
@@ -5875,8 +6223,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     filePathMedia = filePathMedia
                 )
                 attachProgressBar()
-//                    progressBarSlackLayout.visibility = View.VISIBLE
-//                    progressBarSlack.visibility = View.VISIBLE
 
             }
         } catch (e: Exception) {
@@ -5886,6 +6232,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for clearing github components.
+     */
     private fun clearGithubComponents() {
         cardViewGithubAssigneeList.visibility = View.GONE
         cardViewGithubLabelList.visibility = View.GONE
@@ -5902,6 +6251,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         autoTextViewGithubLinkedRequests.setText("", false)
     }
 
+    /**
+     * This method is used for removing loggerbird_github_popup from window.
+     */
     internal fun removeGithubLayout() {
         if (this::viewGithub.isInitialized && windowManagerGithub != null) {
             (windowManagerGithub as WindowManager).removeViewImmediate(
@@ -5911,17 +6263,20 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_github_popup.
+     */
     private fun buttonClicksGithub(filePathMedia: File) {
         buttonGithubCreate.setSafeOnClickListener {
             if (checkGithubTitleEmpty() && githubAuthentication.checkGithubRepoEmpty(
                     activity = activity,
-                    autoTextViewGithubRepo = autoTextViewGithubRepo
+                    autoTextViewRepo = autoTextViewGithubRepo
                 ) && githubAuthentication.checkGithubAssignee(
                     activity = activity,
                     autoTextViewAssignee = autoTextViewGithubAssignee
                 ) && githubAuthentication.checkGithubLabel(
                     activity = activity,
-                    autoTextViewGithubLabels = autoTextViewGithubLabels
+                    autoTextViewLabels = autoTextViewGithubLabels
                 ) && githubAuthentication.checkGithubMileStone(
                     activity = activity,
                     autoTextViewMileStone = autoTextViewGithubMileStone
@@ -6014,59 +6369,81 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing github attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeGithubRecyclerView(filePathMedia: File) {
+    private fun initializeGithubAttachmentRecyclerView(filePathMedia: File) {
         arrayListGithubFileName.clear()
         recyclerViewGithubAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        githubAdapter = RecyclerViewGithubAdapter(
-            addGithubFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewGithubAttachment.adapter = githubAdapter
+        githubAttachmentAdapter =
+            RecyclerViewGithubAttachmentAdapter(
+                addGithubFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewGithubAttachment.adapter = githubAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding files to github file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addGithubFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListGithubFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListGithubFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListGithubFileName
     }
 
+    /**
+     * This method is used for initializing github assignee recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeGithubAssigneeRecyclerView() {
         arrayListGithubAssigneeName.clear()
         recyclerViewGithubAssignee.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        githubAssigneeAdapter = RecyclerViewGithubAssigneeAdapter(
-            arrayListGithubAssigneeName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        githubAssigneeAdapter =
+            RecyclerViewGithubAssigneeAdapter(
+                arrayListGithubAssigneeName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewGithubAssignee.adapter = githubAssigneeAdapter
     }
 
+    /**
+     * This method is used for initializing github label recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeGithubLabelRecyclerView() {
         arrayListGithubLabelName.clear()
         recyclerViewGithubLabel.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        githubLabelAdapter = RecyclerViewGithubLabelAdapter(
-            arrayListGithubLabelName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        githubLabelAdapter =
+            RecyclerViewGithubLabelAdapter(
+                arrayListGithubLabelName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewGithubLabel.adapter = githubLabelAdapter
     }
 
+    /**
+     * This method is used for title field is not empty in github layout.
+     * @return Boolean value.
+     */
     private fun checkGithubTitleEmpty(): Boolean {
         if (editTextGithubTitle.text.toString().isNotEmpty()) {
             return true
@@ -6079,56 +6456,79 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_github_popup.
+     * @param arrayListGithubRepos is used for getting the repository list for repository autoCompleteTextView.
+     * @param arrayListGithubProject is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListGithubAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param arrayListGithubMileStones is used for getting the milestone list for milestone autoCompleteTextView.
+     * @param arrayListGithubLinkedRequests is used for getting the linked request list for linked request autoCompleteTextView.
+     * @param arrayListGithubLabels is used for getting the label list for label autoCompleteTextView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     internal fun initializeGithubAutoTextViews(
-        arrayListRepos: ArrayList<String>,
-        arrayListProject: ArrayList<String>,
-        arrayListAssignee: ArrayList<String>,
-        arrayListMileStones: ArrayList<String>,
-        arrayListLinkedRequests: ArrayList<String>,
-        arrayListLabels: ArrayList<String>
+        arrayListGithubRepos: ArrayList<String>,
+        arrayListGithubProject: ArrayList<String>,
+        arrayListGithubAssignee: ArrayList<String>,
+        arrayListGithubMileStones: ArrayList<String>,
+        arrayListGithubLinkedRequests: ArrayList<String>,
+        arrayListGithubLabels: ArrayList<String>
     ) {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         editTextGithubTitle.setText(sharedPref.getString("github_title", null))
         editTextGithubComment.setText(sharedPref.getString("github_comment", null))
-        initializeGithubRepos(arrayListRepos = arrayListRepos, sharedPref = sharedPref)
-        initializeGithubProject(arrayListProject = arrayListProject, sharedPref = sharedPref)
-        initializeGithubAssignee(arrayListAssignee = arrayListAssignee, sharedPref = sharedPref)
+        initializeGithubRepos(arrayListGithubRepos = arrayListGithubRepos, sharedPref = sharedPref)
+        initializeGithubProject(
+            arrayListGithubProject = arrayListGithubProject,
+            sharedPref = sharedPref
+        )
+        initializeGithubAssignee(
+            arrayListGithubAssignee = arrayListGithubAssignee,
+            sharedPref = sharedPref
+        )
         initializeGithubMileStones(
-            arrayListMileStones = arrayListMileStones,
+            arrayListGithubMileStones = arrayListGithubMileStones,
             sharedPref = sharedPref
         )
         initializeGithubLinkedRequests(
-            arrayListLinkedRequests = arrayListLinkedRequests,
+            arrayListGithubLinkedRequests = arrayListGithubLinkedRequests,
             sharedPref = sharedPref
         )
-        initializeGithubLabels(arrayListLabels = arrayListLabels, sharedPref = sharedPref)
-        this.arrayListGithubAssignee = arrayListAssignee
-        this.arrayListGithubLabel = arrayListLabels
+        initializeGithubLabels(
+            arrayListGithubLabels = arrayListGithubLabels,
+            sharedPref = sharedPref
+        )
+        this.arrayListGithubAssignee = arrayListGithubAssignee
+        this.arrayListGithubLabel = arrayListGithubLabels
         detachProgressBar()
     }
 
+    /**
+     * This method is used for initializing repository autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubRepos is used for getting the repository list for repository autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubRepos(
-        arrayListRepos: ArrayList<String>,
+        arrayListGithubRepos: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubRepoAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListRepos
+            arrayListGithubRepos
         )
         autoTextViewGithubRepo.setAdapter(autoTextViewGithubRepoAdapter)
-        if (arrayListRepos.isNotEmpty() && autoTextViewGithubRepo.editableText.isEmpty()) {
+        if (arrayListGithubRepos.isNotEmpty() && autoTextViewGithubRepo.editableText.isEmpty()) {
             if (sharedPref.getString("github_repo", null) != null) {
                 autoTextViewGithubRepo.setText(
                     sharedPref.getString("github_repo", null),
                     false
                 )
             } else {
-                autoTextViewGithubRepo.setText(arrayListRepos[0], false)
+                autoTextViewGithubRepo.setText(arrayListGithubRepos[0], false)
             }
         }
         autoTextViewGithubRepo.setOnTouchListener { v, event ->
@@ -6136,12 +6536,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewGithubRepo.setOnItemClickListener { parent, view, position, id ->
-            //            projectPosition = position
-//            controlProjectPosition = true
             githubAuthentication.setRepoPosition(repoPosition = position)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                progressBarJira.visibility = View.VISIBLE
-//                progressBarJiraLayout.visibility = View.VISIBLE
                 attachProgressBar()
             }
             hideKeyboard(activity = activity, view = viewGithub)
@@ -6154,10 +6550,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
         autoTextViewGithubRepo.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus) {
-                if (!arrayListRepos.contains(autoTextViewGithubRepo.editableText.toString())) {
-                    if (arrayListRepos.isNotEmpty()) {
+                if (!arrayListGithubRepos.contains(autoTextViewGithubRepo.editableText.toString())) {
+                    if (arrayListGithubRepos.isNotEmpty()) {
                         if (sharedPref.getString("github_repo", null) != null) {
-                            if (arrayListRepos.contains(
+                            if (arrayListGithubRepos.contains(
                                     sharedPref.getString(
                                         "github_repo",
                                         null
@@ -6169,10 +6565,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                                     false
                                 )
                             } else {
-                                autoTextViewGithubRepo.setText(arrayListRepos[0], false)
+                                autoTextViewGithubRepo.setText(arrayListGithubRepos[0], false)
                             }
                         } else {
-                            autoTextViewGithubRepo.setText(arrayListRepos[0], false)
+                            autoTextViewGithubRepo.setText(arrayListGithubRepos[0], false)
                         }
                     }
                 }
@@ -6180,27 +6576,38 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing assignee autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubAssignee(
-        arrayListAssignee: ArrayList<String>,
+        arrayListGithubAssignee: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubAssigneeAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListAssignee
+            arrayListGithubAssignee
         )
         autoTextViewGithubAssignee.setAdapter(autoTextViewGithubAssigneeAdapter)
-        if (arrayListAssignee.isNotEmpty() && autoTextViewGithubAssignee.editableText.isEmpty()) {
+        if (arrayListGithubAssignee.isNotEmpty() && autoTextViewGithubAssignee.editableText.isEmpty()) {
             if (sharedPref.getString("github_assignee", null) != null) {
-                if (arrayListAssignee.contains(sharedPref.getString("github_assignee", null)!!)) {
+                if (arrayListGithubAssignee.contains(
+                        sharedPref.getString(
+                            "github_assignee",
+                            null
+                        )!!
+                    )
+                ) {
                     autoTextViewGithubAssignee.setText(
                         sharedPref.getString("github_assignee", null),
                         false
                     )
                 } else {
-                    autoTextViewGithubAssignee.setText(arrayListAssignee[0], false)
+                    autoTextViewGithubAssignee.setText(arrayListGithubAssignee[0], false)
                 }
             }
         }
@@ -6208,56 +6615,31 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             autoTextViewGithubAssignee.showDropDown()
             false
         }
-//        autoTextViewProject.setOnItemClickListener { parent, view, position, id ->
-//            projectPosition = position
-//            controlProjectPosition = true
-//            jiraAuthentication.setProjectPosition(projectPosition = position)
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                progressBarJira.visibility = View.VISIBLE
-//                progressBarJiraLayout.visibility = View.VISIBLE
-////                    attachProgressBar()
-//            }
-//            hideKeyboard(activity = activity)
-//            jiraAuthentication.callJiraIssue(
-//                context = context,
-//                activity = activity,
-//                jiraTask = "get",
-//                createMethod = "normal"
-//            )
-//        }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        autoTextViewGithubAssignee.setOnDismissListener {
+            hideKeyboard(activity = activity, view = viewGithub)
+        }
     }
 
+    /**
+     * This method is used for initializing milestone autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubMileStones is used for getting the milestone list for milestone autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubMileStones(
-        arrayListMileStones: ArrayList<String>,
+        arrayListGithubMileStones: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubMileStoneAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListMileStones
+            arrayListGithubMileStones
         )
         autoTextViewGithubMileStone.setAdapter(autoTextViewGithubMileStoneAdapter)
-        if (arrayListMileStones.isNotEmpty() && autoTextViewGithubMileStone.editableText.isEmpty()) {
+        if (arrayListGithubMileStones.isNotEmpty() && autoTextViewGithubMileStone.editableText.isEmpty()) {
             if (sharedPref.getString("github_milestone", null) != null) {
-                if (arrayListMileStones.contains(
+                if (arrayListGithubMileStones.contains(
                         sharedPref.getString(
                             "github_milestone",
                             null
@@ -6269,7 +6651,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewGithubMileStone.setText(arrayListMileStones[0], false)
+                    autoTextViewGithubMileStone.setText(arrayListGithubMileStones[0], false)
                 }
             }
         }
@@ -6281,39 +6663,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             githubAuthentication.setMileStonePosition(mileStonePosition = position)
             hideKeyboard(activity = activity, view = viewGithub)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubProject is used for getting the project list for project autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubProject(
-        arrayListProject: ArrayList<String>,
+        arrayListGithubProject: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubProjectAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListProject
+            arrayListGithubProject
         )
         autoTextViewGithubProject.setAdapter(autoTextViewGithubProjectAdapter)
-        if (arrayListProject.isNotEmpty() && autoTextViewGithubProject.editableText.isEmpty()) {
+        if (arrayListGithubProject.isNotEmpty() && autoTextViewGithubProject.editableText.isEmpty()) {
             if (sharedPref.getString("github_project", null) != null) {
-                if (arrayListProject.contains(
+                if (arrayListGithubProject.contains(
                         sharedPref.getString(
                             "github_project",
                             null
@@ -6325,7 +6696,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewGithubProject.setText(arrayListProject[0], false)
+                    autoTextViewGithubProject.setText(arrayListGithubProject[0], false)
                 }
             }
         }
@@ -6337,45 +6708,34 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             githubAuthentication.setProjectPosition(projectPosition = position)
             hideKeyboard(activity = activity, view = viewGithub)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing label autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubLabels is used for getting the label list for label autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubLabels(
-        arrayListLabels: ArrayList<String>,
+        arrayListGithubLabels: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubLabelsAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListLabels
+            arrayListGithubLabels
         )
         autoTextViewGithubLabels.setAdapter(autoTextViewGithubLabelsAdapter)
-        if (arrayListLabels.isNotEmpty() && autoTextViewGithubLabels.editableText.isEmpty()) {
+        if (arrayListGithubLabels.isNotEmpty() && autoTextViewGithubLabels.editableText.isEmpty()) {
             if (sharedPref.getString("github_labels", null) != null) {
-                if (arrayListLabels.contains(sharedPref.getString("github_labels", null)!!)) {
+                if (arrayListGithubLabels.contains(sharedPref.getString("github_labels", null)!!)) {
                     autoTextViewGithubLabels.setText(
                         sharedPref.getString("github_labels", null),
                         false
                     )
                 } else {
-                    autoTextViewGithubLabels.setText(arrayListLabels[0], false)
+                    autoTextViewGithubLabels.setText(arrayListGithubLabels[0], false)
                 }
             }
         }
@@ -6383,56 +6743,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             autoTextViewGithubLabels.showDropDown()
             false
         }
-//        autoTextViewProject.setOnItemClickListener { parent, view, position, id ->
-//            projectPosition = position
-//            controlProjectPosition = true
-//            jiraAuthentication.setProjectPosition(projectPosition = position)
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//                progressBarJira.visibility = View.VISIBLE
-//                progressBarJiraLayout.visibility = View.VISIBLE
-////                    attachProgressBar()
-//            }
-//            hideKeyboard(activity = activity)
-//            jiraAuthentication.callJiraIssue(
-//                context = context,
-//                activity = activity,
-//                jiraTask = "get",
-//                createMethod = "normal"
-//            )
-//        }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing linked requests autoCompleteTextView in the loggerbird_github_popup.
+     * @param arrayListGithubLinkedRequests is used for getting the linked request list for linked request autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeGithubLinkedRequests(
-        arrayListLinkedRequests: ArrayList<String>,
+        arrayListGithubLinkedRequests: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewGithubLinkedRequestsAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListLinkedRequests
+            arrayListGithubLinkedRequests
         )
         autoTextViewGithubLinkedRequests.setAdapter(autoTextViewGithubLinkedRequestsAdapter)
-        if (arrayListLinkedRequests.isNotEmpty() && autoTextViewGithubLinkedRequests.editableText.isEmpty()) {
+        if (arrayListGithubLinkedRequests.isNotEmpty() && autoTextViewGithubLinkedRequests.editableText.isEmpty()) {
             if (sharedPref.getString("github_pull_requests", null) != null) {
-                if (arrayListLinkedRequests.contains(
+                if (arrayListGithubLinkedRequests.contains(
                         sharedPref.getString(
                             "github_pull_requests",
                             null
@@ -6444,7 +6776,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewGithubLinkedRequests.setText(arrayListLinkedRequests[0], false)
+                    autoTextViewGithubLinkedRequests.setText(
+                        arrayListGithubLinkedRequests[0],
+                        false
+                    )
                 }
             }
         }
@@ -6456,24 +6791,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             githubAuthentication.setLinkedRequestPosition(linkedRequestPosition = position)
             hideKeyboard(activity = activity, view = viewGithub)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    //Trello
+    /**
+     * This method is used for creating trello layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeTrelloLayout(filePathMedia: File) {
@@ -6615,6 +6940,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_trello_popup from window.
+     */
     internal fun removeTrelloLayout() {
         if (this::viewTrello.isInitialized && windowManagerTrello != null) {
             (windowManagerTrello as WindowManager).removeViewImmediate(
@@ -6624,6 +6952,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_trello_popup.
+     */
     private fun buttonClicksTrello() {
         buttonTrelloCreate.setSafeOnClickListener {
             trelloAuthentication.gatherAutoTextDetails(
@@ -6636,19 +6967,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             trelloAuthentication.gatherCalendarDetails(calendar = calendarTrello)
             if (trelloAuthentication.checkTitle(
                     activity = activity,
-                    context = context
+                    editTextTitle = editTextTrelloTitle
                 ) && trelloAuthentication.checkTrelloBoardEmpty(
                     activity = activity,
-                    autoTextViewTrelloBoard = autoTextViewTrelloBoard
+                    autoTextViewBoard = autoTextViewTrelloBoard
                 ) && trelloAuthentication.checkTrelloLabel(
                     activity = activity,
-                    autoTextViewTrelloLabel = autoTextViewTrelloLabel
+                    autoTextViewLabel = autoTextViewTrelloLabel
                 ) && trelloAuthentication.checkTrelloMember(
                     activity = activity,
-                    autoTextViewTrelloMember = autoTextViewTrelloMember
+                    autoTextViewMember = autoTextViewTrelloMember
                 ) && trelloAuthentication.checkTrelloProjectEmpty(
                     activity = activity,
-                    autoTextViewTrelloProject = autoTextViewTrelloProject
+                    autoTextViewProject = autoTextViewTrelloProject
                 )
             ) {
                 attachProgressBar()
@@ -6735,45 +7066,67 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_trello_popup.
+     * @param arrayListTrelloProject is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListTrelloBoards is used for getting the board list for board autoCompleteTextView.
+     * @param arrayListTrelloMember is used for getting the member list for member autoCompleteTextView.
+     * @param arrayListTrelloLabel is used for getting the label list for label autoCompleteTextView.
+     * @param arrayListTrelloLabelColor is used for getting the label color list.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     internal fun initializeTrelloAutoTextViews(
-        arrayListProject: ArrayList<String>,
-        arrayListBoards: ArrayList<String>,
-        arrayListMember: ArrayList<String>,
-        arrayListLabel: ArrayList<String>,
-        arrayListLabelColor: ArrayList<String>
+        arrayListTrelloProject: ArrayList<String>,
+        arrayListTrelloBoards: ArrayList<String>,
+        arrayListTrelloMember: ArrayList<String>,
+        arrayListTrelloLabel: ArrayList<String>,
+        arrayListTrelloLabelColor: ArrayList<String>
     ) {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
         editTextTrelloTitle.setText(sharedPref.getString("trello_title", null))
-        initializeTrelloProject(arrayListProject = arrayListProject, sharedPref = sharedPref)
-        initializeTrelloBoard(arrayListBoards = arrayListBoards, sharedPref = sharedPref)
-        initializeTrelloMember(arrayListMember = arrayListMember, sharedPref = sharedPref)
-        initializeTrelloLabel(
-            arrayListLabel = arrayListLabel,
-            arrayListLabelColor = arrayListLabelColor,
+        initializeTrelloProject(
+            arrayListTrelloProject = arrayListTrelloProject,
             sharedPref = sharedPref
         )
-        this.arrayListTrelloLabel = arrayListLabel
-        this.arrayListTrelloMember = arrayListMember
+        initializeTrelloBoard(
+            arrayListTrelloBoards = arrayListTrelloBoards,
+            sharedPref = sharedPref
+        )
+        initializeTrelloMember(
+            arrayListTrelloMember = arrayListTrelloMember,
+            sharedPref = sharedPref
+        )
+        initializeTrelloLabel(
+            arrayListTrelloLabel = arrayListTrelloLabel,
+            arrayListTrelloLabelColor = arrayListTrelloLabelColor,
+            sharedPref = sharedPref
+        )
+        this.arrayListTrelloLabel = arrayListTrelloLabel
+        this.arrayListTrelloMember = arrayListTrelloMember
         detachProgressBar()
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_trello_popup.
+     * @param arrayListTrelloProject is used for getting the project list for project autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeTrelloProject(
-        arrayListProject: ArrayList<String>,
+        arrayListTrelloProject: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewTrelloProjectAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListProject
+            arrayListTrelloProject
         )
         autoTextViewTrelloProject.setAdapter(autoTextViewTrelloProjectAdapter)
-        if (arrayListProject.isNotEmpty() && autoTextViewTrelloProject.editableText.isEmpty()) {
+        if (arrayListTrelloProject.isNotEmpty() && autoTextViewTrelloProject.editableText.isEmpty()) {
             if (sharedPref.getString("trello_project", null) != null) {
-                if (arrayListProject.contains(
+                if (arrayListTrelloProject.contains(
                         sharedPref.getString(
                             "trello_project",
                             null
@@ -6785,10 +7138,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewTrelloProject.setText(arrayListProject[0], false)
+                    autoTextViewTrelloProject.setText(arrayListTrelloProject[0], false)
                 }
             } else {
-                autoTextViewTrelloProject.setText(arrayListProject[0], false)
+                autoTextViewTrelloProject.setText(arrayListTrelloProject[0], false)
             }
         }
         autoTextViewTrelloProject.setOnTouchListener { v, event ->
@@ -6806,39 +7159,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             attachProgressBar()
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing board autoCompleteTextView in the loggerbird_trello_popup.
+     * @param arrayListTrelloBoards is used for getting the board list for board autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeTrelloBoard(
-        arrayListBoards: ArrayList<String>,
+        arrayListTrelloBoards: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewTrelloBoardAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListBoards
+            arrayListTrelloBoards
         )
         autoTextViewTrelloBoard.setAdapter(autoTextViewTrelloBoardAdapter)
-        if (arrayListBoards.isNotEmpty() && autoTextViewTrelloBoard.editableText.isEmpty()) {
+        if (arrayListTrelloBoards.isNotEmpty() && autoTextViewTrelloBoard.editableText.isEmpty()) {
             if (sharedPref.getString("trello_board", null) != null) {
-                if (arrayListBoards.contains(
+                if (arrayListTrelloBoards.contains(
                         sharedPref.getString(
                             "trello_board",
                             null
@@ -6850,10 +7192,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewTrelloBoard.setText(arrayListBoards[0], false)
+                    autoTextViewTrelloBoard.setText(arrayListTrelloBoards[0], false)
                 }
             } else {
-                autoTextViewTrelloBoard.setText(arrayListBoards[0], false)
+                autoTextViewTrelloBoard.setText(arrayListTrelloBoards[0], false)
             }
         }
         autoTextViewTrelloBoard.setOnTouchListener { v, event ->
@@ -6864,39 +7206,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewTrello)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+
+    /**
+     * This method is used for initializing member autoCompleteTextView in the loggerbird_trello_popup.
+     * @param arrayListTrelloMember is used for getting the member list for member autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeTrelloMember(
-        arrayListMember: ArrayList<String>,
+        arrayListTrelloMember: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewTrelloMemberAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListMember
+            arrayListTrelloMember
         )
         autoTextViewTrelloMember.setAdapter(autoTextViewTrelloMemberAdapter)
-        if (arrayListMember.isNotEmpty() && autoTextViewTrelloMember.editableText.isEmpty()) {
+        if (arrayListTrelloMember.isNotEmpty() && autoTextViewTrelloMember.editableText.isEmpty()) {
             if (sharedPref.getString("trello_member", null) != null) {
-                if (arrayListMember.contains(
+                if (arrayListTrelloMember.contains(
                         sharedPref.getString(
                             "trello_member",
                             null
@@ -6908,7 +7240,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewTrelloMember.setText(arrayListMember[0], false)
+                    autoTextViewTrelloMember.setText(arrayListTrelloMember[0], false)
                 }
             }
         }
@@ -6917,41 +7249,35 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewTrelloMember.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewTrello)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+
+    /**
+     * This method is used for initializing label autoCompleteTextView in the loggerbird_label_popup.
+     * @param arrayListTrelloLabel is used for getting the label list for label autoCompleteTextView.
+     * @param arrayListTrelloLabelColor is used for getting the label color.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeTrelloLabel(
-        arrayListLabel: ArrayList<String>,
-        arrayListLabelColor: ArrayList<String>,
+        arrayListTrelloLabel: ArrayList<String>,
+        arrayListTrelloLabelColor: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
-        autoTextViewTrelloLabelAdapter = AutoCompleteTextViewTrelloAdapter(
-            this, R.layout.auto_text_view_trello_label_item, arrayListLabel, arrayListLabelColor
-        )
-        autoTextViewTrelloLabel.setAdapter(autoTextViewTrelloLabelAdapter)
-        if (arrayListLabel.isNotEmpty() && autoTextViewTrelloLabel.editableText.isEmpty()) {
+        autoTextViewTrelloLabelLabelAdapter =
+            AutoCompleteTextViewTrelloLabelAdapter(
+                this,
+                R.layout.auto_text_view_trello_label_item,
+                arrayListTrelloLabel,
+                arrayListTrelloLabelColor
+            )
+        autoTextViewTrelloLabel.setAdapter(autoTextViewTrelloLabelLabelAdapter)
+        if (arrayListTrelloLabel.isNotEmpty() && autoTextViewTrelloLabel.editableText.isEmpty()) {
             if (sharedPref.getString("trello_label", null) != null) {
-                if (arrayListLabel.contains(
+                if (arrayListTrelloLabel.contains(
                         sharedPref.getString(
                             "trello_label",
                             null
@@ -6963,7 +7289,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewTrelloLabel.setText(arrayListLabel[0], false)
+                    autoTextViewTrelloLabel.setText(arrayListTrelloLabel[0], false)
                 }
             }
         }
@@ -6975,77 +7301,82 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             trelloAuthentication.setLabelPosition(labelPosition = position)
             hideKeyboard(activity = activity, view = viewTrello)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing trello attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeTrelloRecyclerView(filePathMedia: File) {
         arrayListTrelloFileName.clear()
         recyclerViewTrelloAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        trelloAdapter = RecyclerViewTrelloAdapter(
-            addTrelloFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewTrelloAttachment.adapter = trelloAdapter
+        trelloAttachmentAdapter =
+            RecyclerViewTrelloAttachmentAdapter(
+                addTrelloFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewTrelloAttachment.adapter = trelloAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding files to trello file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addTrelloFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListTrelloFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListTrelloFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListTrelloFileName
     }
 
+    /**
+     * This method is used for initializing trello label recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeTrelloLabelRecyclerView() {
         arrayListTrelloLabelName.clear()
         recyclerViewTrelloLabel.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        trelloLabelAdapter = RecyclerViewTrelloLabelAdapter(
-            arrayListTrelloLabelName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        trelloLabelAdapter =
+            RecyclerViewTrelloLabelAdapter(
+                arrayListTrelloLabelName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewTrelloLabel.adapter = trelloLabelAdapter
     }
 
+    /**
+     * This method is used for initializing trello member recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeTrelloMemberRecyclerView() {
         arrayListTrelloMemberName.clear()
         recyclerViewTrelloMember.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        trelloMemberAdapter = RecyclerViewTrelloMemberAdapter(
-            arrayListTrelloMemberName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        trelloMemberAdapter =
+            RecyclerViewTrelloMemberAdapter(
+                arrayListTrelloMemberName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewTrelloMember.adapter = trelloMemberAdapter
     }
 
+    /**
+     * This method is used for clearing trello components.
+     */
     private fun clearTrelloComponents() {
         cardViewTrelloMemberList.visibility = View.GONE
         cardViewTrelloLabelList.visibility = View.GONE
@@ -7060,6 +7391,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //        autoTextViewTrelloProject.setText("",false)
     }
 
+    /**
+     * This method is used for creating trello-time layout which is attached to application overlay.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun initializeTrelloTimelineLayout() {
         removeTrelloTimelineLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -7101,6 +7436,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonClicksTrelloTimeline()
     }
 
+    /**
+     * This method is used for removing loggerbird_trello_start_date_popup from window.
+     */
     private fun removeTrelloTimelineLayout() {
         if (this::viewTrelloTimeline.isInitialized && windowManagerTrelloTimeline != null) {
             (windowManagerTrelloTimeline as WindowManager).removeViewImmediate(
@@ -7110,6 +7448,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_trello_start_date_popup.
+     */
     private fun buttonClicksTrelloTimeline() {
         imageViewTrelloDate.setSafeOnClickListener {
             initializeTrelloDateLayout()
@@ -7136,6 +7477,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for creating trello-date layout which is attached to application overlay.
+     */
     private fun initializeTrelloDateLayout() {
         removeTrelloDateLayout()
         calendarTrello = Calendar.getInstance()
@@ -7173,6 +7517,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonClicksTrelloDateLayout()
     }
 
+    /**
+     * This method is used for removing trello_calendar_view from window.
+     */
     private fun removeTrelloDateLayout() {
         if (this::viewTrelloDate.isInitialized && windowManagerTrelloDate != null) {
             (windowManagerTrelloDate as WindowManager).removeViewImmediate(
@@ -7182,6 +7529,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the trello_calendar_view.
+     */
     private fun buttonClicksTrelloDateLayout() {
         val calendar = Calendar.getInstance()
         val mYear = calendar.get(Calendar.YEAR)
@@ -7257,9 +7607,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         frameLayoutTrelloTime.setOnClickListener {
             removeTrelloTimeLayout()
         }
-//        timePickerFutureTask.setOnTimeChangedListener { view, hourOfDay, minute ->
-//
-//        }
         buttonTrelloTimeCreate.setSafeOnClickListener {
             calendarTrello?.set(Calendar.HOUR_OF_DAY, timePickerTrello.hour)
             calendarTrello?.set(Calendar.MINUTE, timePickerTrello.minute)
@@ -7273,6 +7620,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for start date and start time is not null in trello layout.
+     * @return Boolean value.
+     */
     private fun checkTrelloDateAndTimeEmpty(): Boolean {
         if (trelloStartDate != null && trelloStartTime != null) {
             defaultToast.attachToast(
@@ -7290,6 +7641,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    //Gitlab
+    /**
+     * This method is used for creating gitlab layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeGitlabLayout(filePathMedia: File) {
         try {
@@ -7358,7 +7715,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     viewGitlab.findViewById(R.id.gitlab_progressbar_background)
                 recyclerViewGitlabAttachment =
                     viewGitlab.findViewById(R.id.recycler_view_gitlab_attachment)
-                editTextGitlabWeight.filters = arrayOf<InputFilter>(InputTypeFilter("0", "100"))
+                editTextGitlabWeight.filters = arrayOf<InputFilter>(
+                    InputTypeFilter(
+                        "0",
+                        "100"
+                    )
+                )
 
                 gitlabAuthentication.callGitlab(
                     activity = activity,
@@ -7368,7 +7730,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
                 progressBarGitlab.visibility = View.VISIBLE
                 progressBarGitlabLayout.visibility = View.VISIBLE
-                initializeGitlabRecyclerView(filePathMedia = filePathMedia)
+                initializeGitlabAttachmentRecyclerView(filePathMedia = filePathMedia)
                 buttonClicksGitlab(filePathMedia = filePathMedia)
             }
         } catch (e: Exception) {
@@ -7378,8 +7740,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing gitlab date-picker.
+     */
     private fun initializeGitlabDatePicker() {
-
         val calendar = Calendar.getInstance()
         var mYear = calendar.get(Calendar.YEAR)
         var mMonth = calendar.get(Calendar.MONTH)
@@ -7425,6 +7789,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for creating custom gitlab date-picker layout which is attached to application overlay.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     private fun attachGitlabDatePicker() {
         try {
             val rootView: ViewGroup =
@@ -7463,6 +7831,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing gitlab_calendar_view from window.
+     */
     private fun detachGitlabDatePicker() {
         if (this::calendarViewGitlabView.isInitialized) {
             (windowManagerGitlabDatePicker as WindowManager).removeViewImmediate(
@@ -7471,6 +7842,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_gitlab_popup from window.
+     */
     private fun removeGitlabLayout() {
         if (windowManagerGitlab != null && this::viewGitlab.isInitialized) {
             (windowManagerGitlab as WindowManager).removeViewImmediate(viewGitlab)
@@ -7479,9 +7853,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_gitlab_popup.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun buttonClicksGitlab(filePathMedia: File) {
-
         buttonGitlabCreate.setSafeOnClickListener {
             if (checkGitlabTitleEmpty()) {
                 progressBarGitlabLayout.visibility = View.VISIBLE
@@ -7529,43 +7905,61 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing gitlab attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeGitlabRecyclerView(filePathMedia: File) {
+    private fun initializeGitlabAttachmentRecyclerView(filePathMedia: File) {
         arrayListGitlabFileName.clear()
         recyclerViewGitlabAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        gitlabAdapter = RecyclerViewGitlabAdapter(
-            addGitlabFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewGitlabAttachment.adapter = gitlabAdapter
+        gitlabAttachmentAdapter =
+            RecyclerViewGitlabAttachmentAdapter(
+                addGitlabFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewGitlabAttachment.adapter = gitlabAttachmentAdapter
     }
+
+    /**
+     * This method is used for initializing  spinners in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabProjects is used for getting the project list for project spinner.
+     * @param arrayListGitlabAssignee is used for getting the assignee list for assignee spinner.
+     * @param arrayListGitlabMilestones is used for getting the milestone list for milestone spinner.
+     * @param arrayListGitlabLabels is used for getting the label list for label spinner.
+     * @param arrayListGitlabConfidentiality is used for getting the confidentiality list for confidentiality spinner.
+     */
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun initializeGitlabSpinner(
         arrayListGitlabProjects: ArrayList<String>,
-        arrayListGitlabUsers: ArrayList<String>,
+        arrayListGitlabAssignee: ArrayList<String>,
         arrayListGitlabMilestones: ArrayList<String>,
         arrayListGitlabLabels: ArrayList<String>,
         arrayListGitlabConfidentiality: ArrayList<String>
     ) {
 
-        initializeGitlabProject(arrayListGitlabProjects)
+        initializeGitlabProject(arrayListGitlabProjects = arrayListGitlabProjects)
 
-        initializeGitLabAssignee(arrayListGitlabUsers)
+        initializeGitLabAssignee(arrayListGitlabAssignee = arrayListGitlabAssignee)
 
-        initializeGitLabMilestones(arrayListGitlabMilestones)
+        initializeGitLabMilestones(arrayListGitlabMilestones = arrayListGitlabMilestones)
 
-        initializeGitLabLabels(arrayListGitlabLabels)
+        initializeGitLabLabels(arrayListGitlabLabels = arrayListGitlabLabels)
 
-        initializeGitLabConfidentiality(arrayListGitlabConfidentiality)
+        initializeGitLabConfidentiality(arrayListGitlabConfidentiality = arrayListGitlabConfidentiality)
 
         progressBarGitlab.visibility = View.GONE
         progressBarGitlabLayout.visibility = View.GONE
     }
 
+    /**
+     * This method is used for initializing project spinner in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabProjects is used for getting the project list for project spinner.
+     */
     @SuppressLint("ClickableViewAccessibility")
     internal fun initializeGitlabProject(
         arrayListGitlabProjects: ArrayList<String>
@@ -7600,11 +7994,15 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing assignee spinner in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabAssignee is used for getting the assignee list for assignee spinner.
+     */
     internal fun initializeGitLabAssignee(
-        arrayListGitlabUsers: ArrayList<String>
+        arrayListGitlabAssignee: ArrayList<String>
     ) {
         spinnerGitlabAssigneeAdapter =
-            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListGitlabUsers)
+            ArrayAdapter(this, android.R.layout.simple_spinner_item, arrayListGitlabAssignee)
         spinnerGitlabAssigneeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGitlabAssignee.adapter = spinnerGitlabAssigneeAdapter
 
@@ -7624,6 +8022,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing label spinner in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabLabels is used for getting the label list for label spinner.
+     */
     internal fun initializeGitLabLabels(
         arrayListGitlabLabels: ArrayList<String>
     ) {
@@ -7648,6 +8050,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing confidentiality spinner in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabConfidentiality is used for getting the confidentiality list for confidentiality spinner.
+     */
     internal fun initializeGitLabConfidentiality(
         arrayListGitlabConfidentiality: ArrayList<String>
     ) {
@@ -7673,6 +8079,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
     }
 
+    /**
+     * This method is used for initializing milestone spinner in the loggerbird_gitlab_popup.
+     * @param arrayListGitlabMilestones is used for getting the milestone list for milestone spinner.
+     */
     internal fun initializeGitLabMilestones(
         arrayListGitlabMilestones: ArrayList<String>
     ) {
@@ -7701,17 +8111,26 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     }
 
 
+    /**
+     * This method is used for adding files to gitlab file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addGitlabFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListGitlabFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListGitlabFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListGitlabFileName
     }
 
+    /**
+     * This method is used for title is not empty in gitlab layout.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkGitlabTitleEmpty(): Boolean {
         if (editTextGitlabTitle.text.toString().isNotEmpty()) {
@@ -7726,6 +8145,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     }
 
 
+    //Pivotal
+    /**
+     * This method is used for creating pivotal layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializePivotalLayout(filePathMedia: File) {
@@ -7893,7 +8318,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         floatingActionButtonView.visibility = View.VISIBLE
                     }
                 }
-                initializePivotalRecyclerView(filePathMedia = filePathMedia)
+                initializePivotalAttachmentRecyclerView(filePathMedia = filePathMedia)
                 initializePivotalTaskRecyclerView()
                 initializePivotalBlockerRecyclerView()
                 initializePivotalLabelRecyclerView()
@@ -7915,6 +8340,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_pivotal_popup from window.
+     */
     internal fun removePivotalLayout() {
         if (this::viewPivotal.isInitialized && windowManagerPivotal != null) {
             (windowManagerPivotal as WindowManager).removeViewImmediate(
@@ -7924,6 +8352,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_pivotal_popup.
+     */
     private fun buttonClicksPivotal() {
         buttonPivotalCreate.setSafeOnClickListener {
             pivotalAuthentication.gatherAutoTextDetails(
@@ -7942,11 +8373,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             if (pivotalAuthentication.checkPivotalProject(
                     activity = activity,
-                    autoTextViewPivotalProject = autoTextViewPivotalProject
+                    autoTextViewProject = autoTextViewPivotalProject
                 )
                 && pivotalAuthentication.checkPivotalStoryType(
                     activity = activity,
-                    autoTextViewPivotalStoryType = autoTextViewPivotalStoryType
+                    autoTextViewStoryType = autoTextViewPivotalStoryType
                 )
                 && pivotalAuthentication.checkPivotalTitle(
                     activity = activity,
@@ -7954,19 +8385,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
                 && pivotalAuthentication.checkPivotalLabel(
                     activity = activity,
-                    autoTextViewPivotalLabel = autoTextViewPivotalLabel
+                    autoTextViewLabel = autoTextViewPivotalLabel
                 )
                 && pivotalAuthentication.checkPivotalPoint(
                     activity = activity,
-                    autoTextViewPivotalPoint = autoTextViewPivotalPoints
+                    autoTextViewPoint = autoTextViewPivotalPoints
                 )
                 && pivotalAuthentication.checkPivotalOwner(
                     activity = activity,
-                    autoTextViewPivotalOwner = autoTextViewPivotalOwners
+                    autoTextViewOwner = autoTextViewPivotalOwners
                 )
                 && pivotalAuthentication.checkPivotalRequester(
                     activity = activity,
-                    autoTextViewPivotaRequester = autoTextViewPivotalRequester
+                    autoTextViewRequester = autoTextViewPivotalRequester
                 )
             ) {
                 attachProgressBar()
@@ -8094,14 +8525,23 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalProject is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListPivotalStoryType is used for getting the story type list for story type autoCompleteTextView.
+     * @param arrayListPivotalPoints is used for getting the points list for points autoCompleteTextView.
+     * @param arrayListPivotalRequester is used for getting the request list for request autoCompleteTextView.
+     * @param arrayListPivotalOwners is used for getting the owner list for owner autoCompleteTextView.
+     * @param arrayListPivotalLabels is used for getting the label list for label autoCompleteTextView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     internal fun initializePivotalAutoTextViews(
-        arrayListProject: ArrayList<String>,
-        arrayListStoryType: ArrayList<String>,
-        arrayListPoints: ArrayList<String>,
-        arrayListRequester: ArrayList<String>,
-        arrayListOwners: ArrayList<String>,
-        arrayListLabels: ArrayList<String>
+        arrayListPivotalProject: ArrayList<String>,
+        arrayListPivotalStoryType: ArrayList<String>,
+        arrayListPivotalPoints: ArrayList<String>,
+        arrayListPivotalRequester: ArrayList<String>,
+        arrayListPivotalOwners: ArrayList<String>,
+        arrayListPivotalLabels: ArrayList<String>
     ) {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
@@ -8109,30 +8549,52 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         editTextPivotalTasks.setText(sharedPref.getString("pivotal_tasks", null))
         editTextPivotalDescription.setText(sharedPref.getString("pivotal_description", null))
         editTextPivotalBlockers.setText(sharedPref.getString("pivotal_blockers", null))
-        initializePivotalProject(arrayListProject = arrayListProject, sharedPref = sharedPref)
-        initializePivotalStoryType(arrayListStoryType = arrayListStoryType, sharedPref = sharedPref)
-        initializePivotalPoints(arrayListPoints = arrayListPoints, sharedPref = sharedPref)
-        initializePivotalRequester(arrayListRequester = arrayListRequester, sharedPref = sharedPref)
-        initializePivotalOwners(arrayListOwners = arrayListOwners, sharedPref = sharedPref)
-        initializePivotalLabel(arrayListLabel = arrayListLabels, sharedPref = sharedPref)
+        initializePivotalProject(
+            arrayListPivotalProject = arrayListPivotalProject,
+            sharedPref = sharedPref
+        )
+        initializePivotalStoryType(
+            arrayListPivotalStoryType = arrayListPivotalStoryType,
+            sharedPref = sharedPref
+        )
+        initializePivotalPoints(
+            arrayListPivotalPoints = arrayListPivotalPoints,
+            sharedPref = sharedPref
+        )
+        initializePivotalRequester(
+            arrayListPivotalRequester = arrayListPivotalRequester,
+            sharedPref = sharedPref
+        )
+        initializePivotalOwners(
+            arrayListPivotalOwners = arrayListPivotalOwners,
+            sharedPref = sharedPref
+        )
+        initializePivotalLabel(
+            arrayListPivotalLabel = arrayListPivotalLabels,
+            sharedPref = sharedPref
+        )
         detachProgressBar()
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalProject is used for getting the project list for project autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalProject(
-        arrayListProject: ArrayList<String>,
+        arrayListPivotalProject: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalProjectAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListProject
+            arrayListPivotalProject
         )
         autoTextViewPivotalProject.setAdapter(autoTextViewPivotalProjectAdapter)
-        if (arrayListProject.isNotEmpty() && autoTextViewPivotalProject.editableText.isEmpty()) {
+        if (arrayListPivotalProject.isNotEmpty() && autoTextViewPivotalProject.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_project", null) != null) {
-                if (arrayListProject.contains(
+                if (arrayListPivotalProject.contains(
                         sharedPref.getString(
                             "pivotal_project",
                             null
@@ -8144,10 +8606,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalProject.setText(arrayListProject[0], false)
+                    autoTextViewPivotalProject.setText(arrayListPivotalProject[0], false)
                 }
             } else {
-                autoTextViewPivotalProject.setText(arrayListProject[0], false)
+                autoTextViewPivotalProject.setText(arrayListPivotalProject[0], false)
             }
         }
         autoTextViewPivotalProject.setOnTouchListener { v, event ->
@@ -8165,39 +8627,27 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             attachProgressBar()
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing story type autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalStoryType is used for getting the story type list for story type autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalStoryType(
-        arrayListStoryType: ArrayList<String>,
+        arrayListPivotalStoryType: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalStoryTypeAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListStoryType
+            arrayListPivotalStoryType
         )
         autoTextViewPivotalStoryType.setAdapter(autoTextViewPivotalStoryTypeAdapter)
-        if (arrayListStoryType.isNotEmpty() && autoTextViewPivotalStoryType.editableText.isEmpty()) {
+        if (arrayListPivotalStoryType.isNotEmpty() && autoTextViewPivotalStoryType.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_story_type", null) != null) {
-                if (arrayListStoryType.contains(
+                if (arrayListPivotalStoryType.contains(
                         sharedPref.getString(
                             "pivotal_story_type",
                             null
@@ -8209,7 +8659,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalStoryType.setText(arrayListStoryType[0], false)
+                    autoTextViewPivotalStoryType.setText(arrayListPivotalStoryType[0], false)
                 }
             }
         }
@@ -8218,42 +8668,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewPivotalStoryType.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewPivotal)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing points autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalPoints is used for getting the points list for points autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalPoints(
-        arrayListPoints: ArrayList<String>,
+        arrayListPivotalPoints: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalPointsAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListPoints
+            arrayListPivotalPoints
         )
         autoTextViewPivotalPoints.setAdapter(autoTextViewPivotalPointsAdapter)
-        if (arrayListPoints.isNotEmpty() && autoTextViewPivotalPoints.editableText.isEmpty()) {
+        if (arrayListPivotalPoints.isNotEmpty() && autoTextViewPivotalPoints.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_points", null) != null) {
-                if (arrayListPoints.contains(
+                if (arrayListPivotalPoints.contains(
                         sharedPref.getString(
                             "pivotal_points",
                             null
@@ -8265,7 +8702,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalPoints.setText(arrayListPoints[0], false)
+                    autoTextViewPivotalPoints.setText(arrayListPivotalPoints[0], false)
                 }
             }
         }
@@ -8274,42 +8711,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewPivotalPoints.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewPivotal)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing requester autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalRequester is used for getting the requester list for requester autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalRequester(
-        arrayListRequester: ArrayList<String>,
+        arrayListPivotalRequester: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalRequesterAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListRequester
+            arrayListPivotalRequester
         )
         autoTextViewPivotalRequester.setAdapter(autoTextViewPivotalRequesterAdapter)
-        if (arrayListRequester.isNotEmpty() && autoTextViewPivotalRequester.editableText.isEmpty()) {
+        if (arrayListPivotalRequester.isNotEmpty() && autoTextViewPivotalRequester.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_requester", null) != null) {
-                if (arrayListRequester.contains(
+                if (arrayListPivotalRequester.contains(
                         sharedPref.getString(
                             "pivotal_requester",
                             null
@@ -8321,7 +8745,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalRequester.setText(arrayListRequester[0], false)
+                    autoTextViewPivotalRequester.setText(arrayListPivotalRequester[0], false)
                 }
             }
         }
@@ -8330,42 +8754,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewPivotalRequester.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewPivotal)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing owners autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalOwners is used for getting the owner list for owner autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalOwners(
-        arrayListOwners: ArrayList<String>,
+        arrayListPivotalOwners: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalOwnersAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListOwners
+            arrayListPivotalOwners
         )
         autoTextViewPivotalOwners.setAdapter(autoTextViewPivotalOwnersAdapter)
-        if (arrayListOwners.isNotEmpty() && autoTextViewPivotalOwners.editableText.isEmpty()) {
+        if (arrayListPivotalOwners.isNotEmpty() && autoTextViewPivotalOwners.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_owner", null) != null) {
-                if (arrayListOwners.contains(
+                if (arrayListPivotalOwners.contains(
                         sharedPref.getString(
                             "pivotal_owner",
                             null
@@ -8377,7 +8788,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalOwners.setText(arrayListOwners[0], false)
+                    autoTextViewPivotalOwners.setText(arrayListPivotalOwners[0], false)
                 }
             }
         }
@@ -8386,43 +8797,31 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewPivotalOwners.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewPivotal)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        this.arrayListPivotalOwner = arrayListOwners
+        this.arrayListPivotalOwner = arrayListPivotalOwners
     }
 
+
+    /**
+     * This method is used for initializing label autoCompleteTextView in the loggerbird_pivotal_popup.
+     * @param arrayListPivotalLabel is used for getting the label list for label autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializePivotalLabel(
-        arrayListLabel: ArrayList<String>,
+        arrayListPivotalLabel: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewPivotalLabelAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListLabel
+            arrayListPivotalLabel
         )
         autoTextViewPivotalLabel.setAdapter(autoTextViewPivotalLabelAdapter)
-        if (arrayListLabel.isNotEmpty() && autoTextViewPivotalLabel.editableText.isEmpty()) {
+        if (arrayListPivotalLabel.isNotEmpty() && autoTextViewPivotalLabel.editableText.isEmpty()) {
             if (sharedPref.getString("pivotal_label", null) != null) {
-                if (arrayListLabel.contains(
+                if (arrayListPivotalLabel.contains(
                         sharedPref.getString(
                             "pivotal_label",
                             null
@@ -8434,7 +8833,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewPivotalLabel.setText(arrayListLabel[0], false)
+                    autoTextViewPivotalLabel.setText(arrayListPivotalLabel[0], false)
                 }
             }
         }
@@ -8443,40 +8842,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             false
         }
         autoTextViewPivotalLabel.setOnItemClickListener { parent, view, position, id ->
-            //            trelloAuthentication.setBoardPosition(boardPosition = position)
             hideKeyboard(activity = activity, view = viewPivotal)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        this.arrayListPivotalLabel = arrayListLabel
+        this.arrayListPivotalLabel = arrayListPivotalLabel
     }
 
+    /**
+     * This method is used for initializing pivotal attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializePivotalRecyclerView(filePathMedia: File) {
+    private fun initializePivotalAttachmentRecyclerView(filePathMedia: File) {
         arrayListPivotalFileName.clear()
         recyclerViewPivotalAttachmentList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        pivotalAdapter = RecyclerViewPivotalAdapter(
-            addPivotalFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewPivotalAttachmentList.adapter = pivotalAdapter
+        pivotalAttachmentAdapter =
+            RecyclerViewPivotalAttachmentAdapter(
+                addPivotalFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewPivotalAttachmentList.adapter = pivotalAttachmentAdapter
     }
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
@@ -8484,68 +8871,87 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         if (filePathMedia.exists()) {
             arrayListPivotalFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListPivotalFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListPivotalFileName
     }
 
+    /**
+     * This method is used for initializing pivotal task recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializePivotalTaskRecyclerView() {
         arrayListPivotalTaskName.clear()
         recyclerViewPivotalTaskList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        pivotalTaskAdapter = RecyclerViewPivotalTaskAdapter(
-            arrayListPivotalTaskName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        pivotalTaskAdapter =
+            RecyclerViewPivotalTaskAdapter(
+                arrayListPivotalTaskName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewPivotalTaskList.adapter = pivotalTaskAdapter
     }
 
+    /**
+     * This method is used for initializing pivotal blocker recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializePivotalBlockerRecyclerView() {
         arrayListPivotalBlockerName.clear()
         recyclerViewPivotalBlockersList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        pivotalBlockerAdapter = RecyclerViewPivotalBlockerAdapter(
-            arrayListPivotalBlockerName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        pivotalBlockerAdapter =
+            RecyclerViewPivotalBlockerAdapter(
+                arrayListPivotalBlockerName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewPivotalBlockersList.adapter = pivotalBlockerAdapter
     }
 
+    /**
+     * This method is used for initializing pivotal label recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializePivotalLabelRecyclerView() {
         arrayListPivotalLabelName.clear()
         recyclerViewPivotalLabelList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        pivotalLabelAdapter = RecyclerViewPivotalLabelAdapter(
-            arrayListPivotalLabelName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        pivotalLabelAdapter =
+            RecyclerViewPivotalLabelAdapter(
+                arrayListPivotalLabelName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewPivotalLabelList.adapter = pivotalLabelAdapter
     }
 
+    /**
+     * This method is used for initializing pivotal owner recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializePivotalOwnerRecyclerView() {
         arrayListPivotalOwnerName.clear()
         recyclerViewPivotalOwnerList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        pivotalOwnerAdapter = RecyclerViewPivotalOwnerAdapter(
-            arrayListPivotalOwnerName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        pivotalOwnerAdapter =
+            RecyclerViewPivotalOwnerAdapter(
+                arrayListPivotalOwnerName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewPivotalOwnerList.adapter = pivotalOwnerAdapter
     }
 
+    /**
+     * This method is used for clearing pivotal components.
+     */
     private fun clearPivotalComponents() {
         cardViewPivotalBlockersList.visibility = View.GONE
         cardViewPivotalTasksList.visibility = View.GONE
@@ -8571,6 +8977,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //        autoTextViewPivotalProject.setText("",false)
     }
 
+    //Basecamp
+    /**
+     * This method is used for creating basecamp layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeBasecampLayout(filePathMedia: File) {
@@ -8729,7 +9141,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         floatingActionButtonView.visibility = View.VISIBLE
                     }
                 }
-                initializeBasecampRecyclerView(filePathMedia = filePathMedia)
+                initializeBasecampAttachmentRecyclerView(filePathMedia = filePathMedia)
                 initializeBasecampAssigneeRecyclerView()
                 initializeBasecampNotifyRecyclerView()
                 buttonClicksBasecamp()
@@ -8749,6 +9161,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_basecamp_popup from window.
+     */
     internal fun removeBasecampLayout() {
         if (this::viewBasecamp.isInitialized && windowManagerBasecamp != null) {
             (windowManagerBasecamp as WindowManager).removeViewImmediate(
@@ -8758,6 +9173,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_basecamp_popup.
+     */
     private fun buttonClicksBasecamp() {
         buttonBasecampCreate.setSafeOnClickListener {
             basecampAuthentication.gatherAutoTextDetails(
@@ -8775,7 +9193,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             if (basecampAuthentication.checkBasecampProject(
                     activity = activity,
-                    autoTextViewBasecampProject = autoTextViewBasecampProject
+                    autoTextViewProject = autoTextViewBasecampProject
                 )
                 && basecampAuthentication.checkBasecampTitle(
                     activity = activity,
@@ -8875,13 +9293,21 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_basecamp_popup.
+     * @param arrayListBasecampProject is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListBasecampCategory is used for getting the category list for category autoCompleteTextView.
+     * @param arrayListBasecampCategoryIcon is used for getting the category icon list.
+     * @param arrayListBasecampAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param arrayListBasecampNotify is used for getting the notify list for notify autoCompleteTextView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     internal fun initializeBasecampAutoTextViews(
-        arrayListProject: ArrayList<String>,
-        arrayListCategory: ArrayList<String>,
-        arrayListCategoryIcon: ArrayList<String>,
-        arrayListAssignee: ArrayList<String>,
-        arrayListNotify: ArrayList<String>
+        arrayListBasecampProject: ArrayList<String>,
+        arrayListBasecampCategory: ArrayList<String>,
+        arrayListBasecampCategoryIcon: ArrayList<String>,
+        arrayListBasecampAssignee: ArrayList<String>,
+        arrayListBasecampNotify: ArrayList<String>
     ) {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
@@ -8915,17 +9341,31 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 null
             )
         )
-        initializeBasecampProject(arrayListProject = arrayListProject, sharedPref = sharedPref)
-        initializeBasecampCategory(
-            arrayListCategory = arrayListCategory,
-            arrayListCategoryIcon = arrayListCategoryIcon,
+        initializeBasecampProject(
+            arrayListProject = arrayListBasecampProject,
             sharedPref = sharedPref
         )
-        initializeBasecampAssignee(arrayListAssignee = arrayListAssignee, sharedPref = sharedPref)
-        initializeBasecampNotify(arrayListNotify = arrayListNotify, sharedPref = sharedPref)
+        initializeBasecampCategory(
+            arrayListBasecampCategory = arrayListBasecampCategory,
+            arrayListBasecampCategoryIcon = arrayListBasecampCategoryIcon,
+            sharedPref = sharedPref
+        )
+        initializeBasecampAssignee(
+            arrayListBasecampAssignee = arrayListBasecampAssignee,
+            sharedPref = sharedPref
+        )
+        initializeBasecampNotify(
+            arrayListBasecampNotify = arrayListBasecampNotify,
+            sharedPref = sharedPref
+        )
         detachProgressBar()
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_basecamp_popup.
+     * @param arrayListBasecampProject is used for getting the project list for project autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeBasecampProject(
@@ -8973,29 +9413,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             attachProgressBar()
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing category autoCompleteTextView in the loggerbird_basecamp_popup.
+     * @param arrayListBasecampCategory is used for getting the category list for category autoCompleteTextView.
+     * @param arrayListBasecampCategoryIcon is used for getting the category icon list.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeBasecampCategory(
-        arrayListCategory: ArrayList<String>,
-        arrayListCategoryIcon: ArrayList<String>,
+        arrayListBasecampCategory: ArrayList<String>,
+        arrayListBasecampCategoryIcon: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
 //        autoTextViewBasecampCategoryAdapter = ArrayAdapter(
@@ -9003,16 +9433,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //            android.R.layout.simple_dropdown_item_1line,
 //            arrayListCategory
 //        )
-        autoTextViewBasecampCategoryAdapter = AutoCompleteTextViewBasecampAdapter(
-            this,
-            R.layout.auto_text_view_basecamp_icon_item,
-            arrayListCategory,
-            arrayListCategoryIcon
-        )
-        autoTextViewBasecampCategory.setAdapter(autoTextViewBasecampCategoryAdapter)
-        if (arrayListCategory.isNotEmpty() && autoTextViewBasecampCategory.editableText.isEmpty()) {
+        autoTextViewBasecampCategoryCategoryAdapter =
+            AutoCompleteTextViewBasecampCategoryAdapter(
+                this,
+                R.layout.auto_text_view_basecamp_icon_item,
+                arrayListBasecampCategory,
+                arrayListBasecampCategoryIcon
+            )
+        autoTextViewBasecampCategory.setAdapter(autoTextViewBasecampCategoryCategoryAdapter)
+        if (arrayListBasecampCategory.isNotEmpty() && autoTextViewBasecampCategory.editableText.isEmpty()) {
             if (sharedPref.getString("basecamp_category", null) != null) {
-                if (arrayListCategory.contains(
+                if (arrayListBasecampCategory.contains(
                         sharedPref.getString(
                             "basecamp_category",
                             null
@@ -9024,7 +9455,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewBasecampCategory.setText(arrayListCategory[0], false)
+                    autoTextViewBasecampCategory.setText(arrayListBasecampCategory[0], false)
                 }
             }
         }
@@ -9036,39 +9467,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             basecampAuthentication.setCategoryPosition(categoryPosition = position)
             hideKeyboard(activity = activity, view = viewBasecamp)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing notify autoCompleteTextView in the loggerbird_basecamp_popup.
+     * @param arrayListBasecampAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeBasecampAssignee(
-        arrayListAssignee: ArrayList<String>,
+        arrayListBasecampAssignee: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewBasecampAssigneeAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListAssignee
+            arrayListBasecampAssignee
         )
         autoTextViewBasecampAssignee.setAdapter(autoTextViewBasecampAssigneeAdapter)
-        if (arrayListAssignee.isNotEmpty() && autoTextViewBasecampAssignee.editableText.isEmpty()) {
+        if (arrayListBasecampAssignee.isNotEmpty() && autoTextViewBasecampAssignee.editableText.isEmpty()) {
             if (sharedPref.getString("basecamp_assignee", null) != null) {
-                if (arrayListAssignee.contains(
+                if (arrayListBasecampAssignee.contains(
                         sharedPref.getString(
                             "basecamp_assignee",
                             null
@@ -9080,7 +9500,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewBasecampAssignee.setText(arrayListAssignee[0], false)
+                    autoTextViewBasecampAssignee.setText(arrayListBasecampAssignee[0], false)
                 }
             }
         }
@@ -9091,40 +9511,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         autoTextViewBasecampAssignee.setOnItemClickListener { parent, view, position, id ->
             hideKeyboard(activity = activity, view = viewBasecamp)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        this.arrayListBasecampAssignee = arrayListAssignee
+        this.arrayListBasecampAssignee = arrayListBasecampAssignee
     }
 
+    /**
+     * This method is used for initializing notify autoCompleteTextView in the loggerbird_basecamp_popup.
+     * @param arrayListBasecampNotify is used for getting the notify list for notify autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeBasecampNotify(
-        arrayListNotify: ArrayList<String>,
+        arrayListBasecampNotify: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewBasecampNotifyAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListNotify
+            arrayListBasecampNotify
         )
         autoTextViewBasecampNotify.setAdapter(autoTextViewBasecampNotifyAdapter)
-        if (arrayListNotify.isNotEmpty() && autoTextViewBasecampNotify.editableText.isEmpty()) {
+        if (arrayListBasecampNotify.isNotEmpty() && autoTextViewBasecampNotify.editableText.isEmpty()) {
             if (sharedPref.getString("basecamp_notify", null) != null) {
-                if (arrayListNotify.contains(
+                if (arrayListBasecampNotify.contains(
                         sharedPref.getString(
                             "basecamp_notify",
                             null
@@ -9136,7 +9545,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewBasecampNotify.setText(arrayListNotify[0], false)
+                    autoTextViewBasecampNotify.setText(arrayListBasecampNotify[0], false)
                 }
             }
         }
@@ -9147,78 +9556,83 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         autoTextViewBasecampNotify.setOnItemClickListener { parent, view, position, id ->
             hideKeyboard(activity = activity, view = viewBasecamp)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        this.arrayListBasecampNotify = arrayListNotify
+        this.arrayListBasecampNotify = arrayListBasecampNotify
     }
 
+    /**
+     * This method is used for initializing basecamp attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeBasecampRecyclerView(filePathMedia: File) {
+    private fun initializeBasecampAttachmentRecyclerView(filePathMedia: File) {
         arrayListBasecampFileName.clear()
         recyclerViewBasecampAttachmentList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        basecampAdapter = RecyclerViewBasecampAdapter(
-            addBasecampFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewBasecampAttachmentList.adapter = basecampAdapter
+        basecampAttachmentAdapter =
+            RecyclerViewBasecampAttachmentAdapter(
+                addBasecampFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewBasecampAttachmentList.adapter = basecampAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding files to basecamp file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addBasecampFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListBasecampFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListBasecampFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListBasecampFileName
     }
 
+    /**
+     * This method is used for initializing basecamp assignee recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeBasecampAssigneeRecyclerView() {
         arrayListBasecampAssigneeName.clear()
         recyclerViewBasecampAssigneeList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        basecampAssigneeAdapter = RecyclerViewBasecampAssigneeAdapter(
-            arrayListBasecampAssigneeName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        basecampAssigneeAdapter =
+            RecyclerViewBasecampAssigneeAdapter(
+                arrayListBasecampAssigneeName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewBasecampAssigneeList.adapter = basecampAssigneeAdapter
     }
 
+    /**
+     * This method is used for initializing basecamp notify recyclerView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun initializeBasecampNotifyRecyclerView() {
         arrayListBasecampNotifyName.clear()
         recyclerViewBasecampNotifyList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        basecampNotifyAdapter = RecyclerViewBasecampNotifyAdapter(
-            arrayListBasecampNotifyName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        basecampNotifyAdapter =
+            RecyclerViewBasecampNotifyAdapter(
+                arrayListBasecampNotifyName,
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
         recyclerViewBasecampNotifyList.adapter = basecampNotifyAdapter
     }
 
+    /**
+     * This method is used for clearing basecamp components.
+     */
     private fun clearBasecampComponents() {
         cardViewBasecampAssigneeList.visibility = View.GONE
         cardViewBasecampNotifyList.visibility = View.GONE
@@ -9239,6 +9653,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 //        autoTextViewPivotalProject.setText("",false)
     }
 
+    /**
+     * This method is used for creating basecamp-date layout which is attached to application overlay.
+     */
     private fun initializeBasecampDateLayout() {
         removeBasecampDateLayout()
 //        calendarTrello = Calendar.getInstance()
@@ -9286,6 +9703,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the basecamp_calendar_view.
+     */
     private fun buttonClicksBasecampDateLayout() {
         val calendar = Calendar.getInstance()
         val mYear = calendar.get(Calendar.YEAR)
@@ -9309,21 +9729,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
-    private fun clearAsanaComponents() {
-        cardViewAsanaSubTasksList.visibility = View.GONE
-        arrayListAsanaSubtaskName.clear()
-        arrayListAsanaFileName
-        asanaSubTasksAdapter.notifyDataSetChanged()
-        asanaAdapter.notifyDataSetChanged()
-        editTextAsanaSubTask.text = null
-        editTextAsanaDescription.text = null
-        editTextAsanaTaskName.text = null
-        autoTextViewAsanaPriority.setText("", false)
-        autoTextViewAsanaSector.setText("", false)
-        autoTextViewAsanaAssignee.setText("", false)
-//        autoTextViewPivotalProject.setText("",false)
-    }
 
+    //Asana
+    /**
+     * This method is used for creating asana layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeAsanaLayout(filePathMedia: File) {
@@ -9464,8 +9876,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         floatingActionButtonView.visibility = View.VISIBLE
                     }
                 }
-                initializeAsanaRecyclerView(filePathMedia = filePathMedia)
-                initializeAsanaSubtaskRecyclerView()
+                initializeAsanaAttachmentRecyclerView(filePathMedia = filePathMedia)
                 buttonClicksAsana()
                 asanaAuthentication.callAsana(
                     activity = activity,
@@ -9483,6 +9894,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing loggerbird_asana_popup from window.
+     */
     internal fun removeAsanaLayout() {
         if (this::viewAsana.isInitialized && windowManagerAsana != null) {
             (windowManagerAsana as WindowManager).removeViewImmediate(
@@ -9492,6 +9906,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_asana_popup.
+     */
     private fun buttonClicksAsana() {
         buttonAsanaCreate.setSafeOnClickListener {
             asanaAuthentication.gatherAutoTextDetails(
@@ -9507,7 +9924,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             if (asanaAuthentication.checkAsanaProject(
                     activity = activity,
-                    autoTextViewAsanaProject = autoTextViewAsanaProject
+                    autoTextViewProject = autoTextViewAsanaProject
                 )
                 && asanaAuthentication.checkAsanaTask(
                     activity = activity,
@@ -9515,11 +9932,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
                 && asanaAuthentication.checkAsanaSection(
                     activity = activity,
-                    autoTextViewAsanaSection = autoTextViewAsanaSector
+                    autoTextViewSection = autoTextViewAsanaSector
                 )
                 && asanaAuthentication.checkAsanaAssignee(
                     activity = activity,
-                    autoTextViewAsanaAssignee = autoTextViewAsanaAssignee
+                    autoTextViewAssignee = autoTextViewAsanaAssignee
                 )
             ) {
                 asanaAuthentication.callAsana(
@@ -9572,51 +9989,79 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     }
 
+    /**
+     * This method is used for initializing asana attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeAsanaRecyclerView(filePathMedia: File) {
+    private fun initializeAsanaAttachmentRecyclerView(filePathMedia: File) {
         arrayListAsanaFileName.clear()
         recyclerViewAsanaAttachmentList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        asanaAdapter = RecyclerViewAsanaAdapter(
-            addAsanaFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewAsanaAttachmentList.adapter = asanaAdapter
+        asanaAttachmentAdapter =
+            RecyclerViewAsanaAttachmentAdapter(
+                addAsanaFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewAsanaAttachmentList.adapter = asanaAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding files to asana file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addAsanaFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListAsanaFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListAsanaFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListAsanaFileName
     }
 
+    /**
+     * This method is used for initializing asana sub-task recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeAsanaSubtaskRecyclerView() {
+    private fun initializeAsanaSubtaskRecyclerView(filePathMedia: File) {
         arrayListAsanaSubtaskName.clear()
         recyclerViewAsanaSubTasksList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        asanaSubTasksAdapter = RecyclerViewAsanaSubTaskAdapter(
-            arrayListAsanaSubtaskName,
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
+        asanaSubTasksAdapter =
+            RecyclerViewAsanaSubTaskAdapter(
+                arrayListAsanaSubtaskName,
+                context = context,
+                activity = activity,
+                rootView = rootView,
+                filePathMedia = filePathMedia,
+                arrayListAssignee = arrayListAsanaSubtaskAssignee,
+                arrayListSection = arrayListAsanaSubtaskSection
+            )
         recyclerViewAsanaSubTasksList.adapter = asanaSubTasksAdapter
     }
 
+
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_asana_popup.
+     * @param arrayListAsanaProject is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListAsanaAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param arrayListAsanaSection is used for getting the section list for section autoCompleteTextView.
+     * @param arrayListAsanaPriority is used for getting the priority list for priority autoCompleteTextView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     internal fun initializeAsanaAutoTextViews(
-        arrayListProject: ArrayList<String>,
-        arrayListAssignee: ArrayList<String>,
-        arrayListSection: ArrayList<String>,
-        arrayListPriority: ArrayList<String>
+        arrayListAsanaProject: ArrayList<String>,
+        arrayListAsanaAssignee: ArrayList<String>,
+        arrayListAsanaSection: ArrayList<String>,
+        arrayListAsanaPriority: ArrayList<String>,
+        filePathMedia: File
     ) {
         val sharedPref =
             PreferenceManager.getDefaultSharedPreferences(activity.applicationContext)
@@ -9638,37 +10083,46 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 null
             )
         )
-        initializeAsanaProject(arrayListProject = arrayListProject, sharedPref = sharedPref)
+        initializeAsanaProject(
+            arrayListAsanaProject = arrayListAsanaProject,
+            sharedPref = sharedPref
+        )
         initializeAsanaSection(
-            arrayListSection = arrayListSection,
+            arrayListAsanaSection = arrayListAsanaSection,
             sharedPref = sharedPref
         )
         initializeAsanaAssignee(
-            arrayListAssignee = arrayListAssignee,
+            arrayListAsanaAssignee = arrayListAsanaAssignee,
             sharedPref = sharedPref
         )
         initializeAsanaPriority(
-            arrayListPriority = arrayListPriority,
+            arrayListAsanaPriority = arrayListAsanaPriority,
             sharedPref = sharedPref
         )
+        initializeAsanaSubtaskRecyclerView(filePathMedia = filePathMedia)
         detachProgressBar()
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_asana_popup.
+     * @param arrayListAsanaProject is used for getting the project list for project autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeAsanaProject(
-        arrayListProject: ArrayList<String>,
+        arrayListAsanaProject: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewAsanaProjectAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListProject
+            arrayListAsanaProject
         )
         autoTextViewAsanaProject.setAdapter(autoTextViewAsanaProjectAdapter)
-        if (arrayListProject.isNotEmpty() && autoTextViewAsanaProject.editableText.isEmpty()) {
+        if (arrayListAsanaProject.isNotEmpty() && autoTextViewAsanaProject.editableText.isEmpty()) {
             if (sharedPref.getString("asana_project", null) != null) {
-                if (arrayListProject.contains(
+                if (arrayListAsanaProject.contains(
                         sharedPref.getString(
                             "asana_project",
                             null
@@ -9680,10 +10134,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewAsanaProject.setText(arrayListProject[0], false)
+                    autoTextViewAsanaProject.setText(arrayListAsanaProject[0], false)
                 }
             } else {
-                autoTextViewAsanaProject.setText(arrayListProject[0], false)
+                autoTextViewAsanaProject.setText(arrayListAsanaProject[0], false)
             }
         }
         autoTextViewAsanaProject.setOnTouchListener { v, event ->
@@ -9701,39 +10155,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             )
             attachProgressBar()
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing section autoCompleteTextView in the loggerbird_asana_popup.
+     * @param arrayListAsanaSection is used for getting the section list for section autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeAsanaSection(
-        arrayListSection: ArrayList<String>,
+        arrayListAsanaSection: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewAsanaCategoryAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListSection
+            arrayListAsanaSection
         )
         autoTextViewAsanaSector.setAdapter(autoTextViewAsanaCategoryAdapter)
-        if (arrayListSection.isNotEmpty() && autoTextViewAsanaSector.editableText.isEmpty()) {
+        if (arrayListAsanaSection.isNotEmpty() && autoTextViewAsanaSector.editableText.isEmpty()) {
             if (sharedPref.getString("asana_section", null) != null) {
-                if (arrayListSection.contains(
+                if (arrayListAsanaSection.contains(
                         sharedPref.getString(
                             "asana_section",
                             null
@@ -9745,7 +10188,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewAsanaSector.setText(arrayListSection[0], false)
+                    autoTextViewAsanaSector.setText(arrayListAsanaSection[0], false)
                 }
             }
         }
@@ -9757,39 +10200,29 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             asanaAuthentication.setSectionPosition(sectionPosition = position)
             hideKeyboard(activity = activity, view = viewAsana)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        this.arrayListAsanaSubtaskSection = arrayListAsanaSection
     }
 
+    /**
+     * This method is used for initializing priority autoCompleteTextView in the loggerbird_asana_popup.
+     * @param arrayListAsanaPriority is used for getting the priority list for priority autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeAsanaPriority(
-        arrayListPriority: ArrayList<String>,
+        arrayListAsanaPriority: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewAsanaPriorityAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListPriority
+            arrayListAsanaPriority
         )
         autoTextViewAsanaPriority.setAdapter(autoTextViewAsanaPriorityAdapter)
-        if (arrayListPriority.isNotEmpty() && autoTextViewAsanaPriority.editableText.isEmpty()) {
+        if (arrayListAsanaPriority.isNotEmpty() && autoTextViewAsanaPriority.editableText.isEmpty()) {
             if (sharedPref.getString("asana_priority", null) != null) {
-                if (arrayListPriority.contains(
+                if (arrayListAsanaPriority.contains(
                         sharedPref.getString(
                             "asana_priority",
                             null
@@ -9801,7 +10234,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewAsanaPriority.setText(arrayListPriority[0], false)
+                    autoTextViewAsanaPriority.setText(arrayListAsanaPriority[0], false)
                 }
             }
         }
@@ -9813,39 +10246,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             //            basecampAuthentication.setCategoryPosition(categoryPosition = position)
             hideKeyboard(activity = activity, view = viewAsana)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 
+    /**
+     * This method is used for initializing assignee autoCompleteTextView in the loggerbird_asana_popup.
+     * @param arrayListAsanaAssignee is used for getting the assignee list for assignee autoCompleteTextView.
+     * @param sharedPref is used for getting the reference of SharedPreferences of current activity.
+     */
     @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     private fun initializeAsanaAssignee(
-        arrayListAssignee: ArrayList<String>,
+        arrayListAsanaAssignee: ArrayList<String>,
         sharedPref: SharedPreferences
     ) {
         autoTextViewAsanaAssigneeAdapter = ArrayAdapter(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            arrayListAssignee
+            arrayListAsanaAssignee
         )
         autoTextViewAsanaAssignee.setAdapter(autoTextViewAsanaAssigneeAdapter)
-        if (arrayListAssignee.isNotEmpty() && autoTextViewAsanaAssignee.editableText.isEmpty()) {
+        if (arrayListAsanaAssignee.isNotEmpty() && autoTextViewAsanaAssignee.editableText.isEmpty()) {
             if (sharedPref.getString("asana_assignee", null) != null) {
-                if (arrayListAssignee.contains(
+                if (arrayListAsanaAssignee.contains(
                         sharedPref.getString(
                             "asana_assignee",
                             null
@@ -9857,7 +10279,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                         false
                     )
                 } else {
-                    autoTextViewAsanaAssignee.setText(arrayListAssignee[0], false)
+                    autoTextViewAsanaAssignee.setText(arrayListAsanaAssignee[0], false)
                 }
             }
         }
@@ -9869,24 +10291,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             asanaAuthentication.setAssignee(assigneePosition = position)
             hideKeyboard(activity = activity, view = viewAsana)
         }
-//        autoTextViewProject.setOnFocusChangeListener { v, hasFocus ->
-//            if (!hasFocus) {
-//                if (!arrayListProjectNames.contains(autoTextViewProject.editableText.toString())) {
-//                    if (arrayListProjectNames.isNotEmpty()) {
-//                        if (sharedPref.getString("jira_project", null) != null) {
-//                            autoTextViewProject.setText(
-//                                sharedPref.getString("jira_project", null),
-//                                false
-//                            )
-//                        } else {
-//                            autoTextViewProject.setText(arrayListProjectNames[0], false)
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        this.arrayListAsanaSubtaskAssignee = arrayListAsanaAssignee
     }
 
+    /**
+     * This method is used for creating asana-date layout which is attached to application overlay.
+     */
     private fun initializeAsanaDateLayout() {
         removeAsanaDateLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -9924,6 +10334,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonClicksAsanaDateLayout()
     }
 
+    /**
+     * This method is used for removing asana_calendar_view from window.
+     */
     private fun removeAsanaDateLayout() {
         if (this::viewAsanaDate.isInitialized && windowManagerAsanaDate != null) {
             (windowManagerAsanaDate as WindowManager).removeViewImmediate(
@@ -9933,6 +10346,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the asana_calendar_view.
+     */
     private fun buttonClicksAsanaDateLayout() {
         val calendar = Calendar.getInstance()
         val mYear = calendar.get(Calendar.YEAR)
@@ -9977,6 +10393,32 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             removeAsanaDateLayout()
         }
     }
+
+    /**
+     * This method is used for clearing asana components.
+     */
+    private fun clearAsanaComponents() {
+        cardViewAsanaSubTasksList.visibility = View.GONE
+        arrayListAsanaSubtaskName.clear()
+        arrayListAsanaFileName
+        asanaSubTasksAdapter.notifyDataSetChanged()
+        asanaAttachmentAdapter.notifyDataSetChanged()
+        editTextAsanaSubTask.text = null
+        editTextAsanaDescription.text = null
+        editTextAsanaTaskName.text = null
+        autoTextViewAsanaPriority.setText("", false)
+        autoTextViewAsanaSector.setText("", false)
+        autoTextViewAsanaAssignee.setText("", false)
+//        autoTextViewPivotalProject.setText("",false)
+    }
+
+
+    //Clubhouse
+    /**
+     * This method is used for creating clubhouse layout which is attached to application overlay.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @throws exception if error occurs then com.mobilex.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun initializeClubhouseLayout(filePathMedia: File) {
         try {
@@ -10044,7 +10486,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
                 progressBarClubhouse.visibility = View.VISIBLE
                 progressBarClubhouseLayout.visibility = View.VISIBLE
-                initializeClubhouseRecyclerView(filePathMedia = filePathMedia)
+                initializeClubhouseAttachmentRecyclerView(filePathMedia = filePathMedia)
                 buttonClicksClubhouse(filePathMedia = filePathMedia)
 
             }
@@ -10056,6 +10498,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing project autoCompleteTextView in the loggerbird_clubhouse_popup.
+     * @param arrayListClubhouseProjects is used for getting the project list for project autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     internal fun initializeClubhouseProject(
         arrayListClubhouseProjects: ArrayList<String>
@@ -10095,6 +10541,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing epic autoCompleteTextView in the loggerbird_clubhouse_popup.
+     * @param arrayListClubhouseEpic is used for getting the epic list for epic autoCompleteTextView.
+     */
     @SuppressLint("ClickableViewAccessibility")
     internal fun initializeClubhouseEpic(
         arrayListClubhouseEpic: ArrayList<String>
@@ -10122,6 +10572,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing  autoCompleteTextViews in the loggerbird_clubhouse_popup.
+     * @param arrayListClubhouseRequester is used for getting the requester list for requester autoCompleteTextView.
+     * @param arrayListClubhouseProjects is used for getting the project list for project autoCompleteTextView.
+     * @param arrayListClubhouseStoryType is used for getting the story type list for story type autoCompleteTextView.
+     * @param arrayListClubhouseEpic is used for getting the epic list for epic autoCompleteTextView.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     internal fun initializeClubhouseSpinner(
         arrayListClubhouseRequester: ArrayList<String>,
@@ -10138,6 +10595,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         progressBarClubhouseLayout.visibility = View.GONE
     }
 
+    /**
+     * This method is used for initializing story type autoCompleteTextView in the loggerbird_clubhouse_popup.
+     * @param arrayListClubhouseStoryType is used for getting the story type list for story type autoCompleteTextView.
+     */
     internal fun initializeClubhouseStoryType(
         arrayListClubhouseStoryType: ArrayList<String>
     ) {
@@ -10164,6 +10625,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
     }
 
+    /**
+     * This method is used for creating custom clubhouse date-picker layout which is attached to application overlay.
+     */
     private fun attachClubhouseDatePicker() {
         try {
             val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
@@ -10201,6 +10665,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing clubhouse date-picker.
+     */
     private fun initializeClubhouseDatePicker() {
         val calendar = Calendar.getInstance()
         var mYear = calendar.get(Calendar.YEAR)
@@ -10247,6 +10714,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for removing clubhouse_calendar_view from window.
+     */
     private fun detachClubhouseDatePicker() {
         if (this::calendarViewClubhouseView.isInitialized) {
             (windowManagerClubhouseDatePicker as WindowManager).removeViewImmediate(
@@ -10255,6 +10725,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing requester autoCompleteTextView in the loggerbird_clubhouse_popup.
+     * @param arrayListClubhouseRequester is used for getting the requester list for requester autoCompleteTextView.
+     */
     internal fun initializeClubhouseRequester(
         arrayListClubhouseRequester: ArrayList<String>
     ) {
@@ -10281,9 +10755,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
     }
 
+    /**
+     * This method is used for initializing button clicks of buttons that are inside in the loggerbird_clubhouse_popup.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun buttonClicksClubhouse(filePathMedia: File) {
-
         buttonClubhouseCreate.setSafeOnClickListener {
             if (checkClubhouseStoryNameEmpty() && checkClubhouseStoryDescriptionEmpty() &&
                 checkClubhouseStoryDueDateEmpty() && checkClubhouseStoryEstimatePoint()
@@ -10335,6 +10812,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for story field is not empty in clubhouse layout.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkClubhouseStoryNameEmpty(): Boolean {
         if (editTextClubhouseStoryName.text.toString().isNotEmpty()) {
@@ -10348,6 +10829,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used for description field is not empty in clubhouse layout.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkClubhouseStoryDescriptionEmpty(): Boolean {
         if (editTextClubhouseStoryDescription.text.toString().isNotEmpty()) {
@@ -10361,6 +10846,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used for date field is not empty in clubhouse layout.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkClubhouseStoryDueDateEmpty(): Boolean {
         if (textViewClubhouseDueDate.text.toString().isNotEmpty()) {
@@ -10374,6 +10863,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method used for estimate point field is not empty in clubhouse layout.
+     * @return Boolean value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun checkClubhouseStoryEstimatePoint(): Boolean {
         if (editTextClubhouseEstimate.text.toString().isNotEmpty()) {
@@ -10387,6 +10880,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         return false
     }
 
+    /**
+     * This method is used for removing loggerbird_clubhouse_popup from window.
+     */
     internal fun removeClubhouseLayout() {
         if (windowManagerClubhouse != null && this::viewClubhouse.isInitialized) {
             (windowManagerClubhouse as WindowManager).removeViewImmediate(viewClubhouse)
@@ -10395,26 +10891,36 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
     }
 
+    /**
+     * This method is used for initializing clubhouse attachment recyclerView.
+     * @param filePathMedia is used for getting the reference of current media file.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
-    private fun initializeClubhouseRecyclerView(filePathMedia: File) {
+    private fun initializeClubhouseAttachmentRecyclerView(filePathMedia: File) {
         arrayListClubhouseFileName.clear()
         recyclerViewClubhouseAttachment.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        clubhouseAdapter = RecyclerViewClubhouseAdapter(
-            addClubhouseFileNames(filePathMedia = filePathMedia),
-            context = context,
-            activity = activity,
-            rootView = rootView
-        )
-        recyclerViewClubhouseAttachment.adapter = clubhouseAdapter
+        clubhouseAttachmentAdapter =
+            RecyclerViewClubhouseAttachmentAdapter(
+                addClubhouseFileNames(filePathMedia = filePathMedia),
+                context = context,
+                activity = activity,
+                rootView = rootView
+            )
+        recyclerViewClubhouseAttachment.adapter = clubhouseAttachmentAdapter
     }
 
+    /**
+     * This method is used for adding files to clubhouse file list.
+     * @param filePathMedia is used for getting the reference of current media file.
+     * @return ArrayList<RecyclerViewModel> value.
+     */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun addClubhouseFileNames(filePathMedia: File): ArrayList<RecyclerViewModel> {
         if (filePathMedia.exists()) {
             arrayListClubhouseFileName.add(RecyclerViewModel(file = filePathMedia))
         }
-        if (!checkUnhandledFilePath() && LoggerBird.filePathSecessionName.exists()) {
+        if (LoggerBird.filePathSecessionName.exists()) {
             arrayListClubhouseFileName.add(RecyclerViewModel(file = LoggerBird.filePathSecessionName))
         }
         return arrayListClubhouseFileName

@@ -2,7 +2,10 @@ package models.api.jira
 
 import java.net.URI
 
-data class JiraLinkedIssueModel(
+/**
+ * This class is a model for Jira Api request
+ */
+internal data class JiraLinkedIssueModel(
     var inward:String?  = null,
     var outward:String? = null,
     var name:String? = null

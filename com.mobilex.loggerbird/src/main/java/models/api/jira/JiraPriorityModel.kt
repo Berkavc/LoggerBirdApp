@@ -1,6 +1,9 @@
 package models.api.jira
 
-data class JiraPriorityModel(
+/**
+ * This class is a model for Jira Api request
+ */
+internal data class JiraPriorityModel(
     var name: String? = null,
     var id:String? = null
 )

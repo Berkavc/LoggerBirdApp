@@ -1,8 +1,9 @@
 package models.api.github
 
-
-
-data class GithubLabelsModel(
+/**
+ * This class is a model for Github Api request
+ */
+internal data class GithubLabelsModel(
     var name:String? = null
 )
 

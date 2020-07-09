@@ -1,6 +1,9 @@
 package models.api.jira
 
-data class JiraSprintModel(
+/**
+ * This class is a model for Jira Api request
+ */
+internal data class JiraSprintModel(
     val customfield_10020:Int
 )
 
