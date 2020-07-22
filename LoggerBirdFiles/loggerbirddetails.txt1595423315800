@@ -1,0 +1,26 @@
+Device Information:
+ID:QSR1.190920.001
+SERIAL: google/sdk_gphone_x86/generic_x86:10/QSR1.190920.001/5891938:user/release-keys
+DEVICE:generic_x86
+DEVICE MODEL:Android SDK built for x86
+DEVICE TYPE:user
+USER:android-build
+SDK VERSION:29
+MANUFACTURER:Google
+HOST:wpra9.hot.corp.google.com
+HARDWARE:ranchu
+BRAND:google
+PRODUCT:sdk_gphone_x86
+Available Memory:1065 MB
+Total Memory:1994 MB
+Runtime Max Memory: 512 MB 
+Runtime Total Memory:3 MB
+Runtime Free Memory:1 MB
+Low Memory: false
+Available Processors:4
+Used Memory Size:2 MB
+CPU ABI:x86
+Network Usage(Send):205827 Bytes
+Network Usage(Received):315298 Bytes
+Battery:100.0
+ 
