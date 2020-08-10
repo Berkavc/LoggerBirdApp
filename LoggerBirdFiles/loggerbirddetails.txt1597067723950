@@ -1,0 +1,30 @@
+Device Information:
+ID:NYC
+SERIAL: google/sdk_google_phone_x86/generic_x86:7.1.1/NYC/4316688:user/release-keys
+DEVICE:generic_x86
+DEVICE MODEL:Android SDK built for x86
+DEVICE TYPE:user
+USER:android-build
+SDK VERSION:25
+MANUFACTURER:Google
+HOST:wprg10.hot.corp.google.com
+HARDWARE:ranchu
+BRAND:google
+PRODUCT:sdk_google_phone_x86
+Available Memory:1007 MB
+Total Memory:1514 MB
+Runtime Max Memory: 384 MB 
+Runtime Total Memory:9 MB
+Runtime Free Memory:0 MB
+Low Memory: false
+Available Processors:4
+Used Memory Size:9 MB
+CPU ABI:x86
+Network Usage(Send):0 Bytes
+Network Usage(Received):0 Bytes
+Battery:100.0
+
+Memory Usage Information:
+Memory Overused: true
+Memory Usage: 9926600 Bytes
+Memory Overused Activity: MainActivity
