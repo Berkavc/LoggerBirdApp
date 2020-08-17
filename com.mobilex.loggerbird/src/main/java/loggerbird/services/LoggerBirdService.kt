@@ -98,6 +98,8 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import java.text.SimpleDateFormat
 import android.text.InputFilter
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.addTextChangedListener
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaAssigneeAdapter
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaPriorityAdapter
@@ -333,8 +335,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     internal lateinit var buttonJiraCancel: Button
     private lateinit var layoutJira: FrameLayout
     private lateinit var toolbarJira: Toolbar
-    private lateinit var progressBarJira: ProgressBar
-    private lateinit var progressBarJiraLayout: FrameLayout
     private lateinit var cardViewJiraSprint: CardView
     private lateinit var cardViewJiraStartDate: CardView
     private lateinit var cardViewJiraEpicName: CardView
@@ -343,7 +343,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var imageButtonRemoveDate: ImageButton
     private lateinit var calendarViewJiraStartDate: CalendarView
     private lateinit var calendarViewJiraView: View
-    private lateinit var calendarViewJiraLayout: FrameLayout
+    private lateinit var calendarViewJiraLayout: ConstraintLayout
     private var calendarViewJiraDate: Long? = null
     private lateinit var buttonCalendarViewJiraCancel: Button
     private lateinit var buttonCalendarViewJiraOk: Button
@@ -447,13 +447,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     //Future-Task-Date:
     private var futureStartDate: Long? = null
-    private lateinit var frameLayoutFutureDate: FrameLayout
+    private lateinit var constraintLayoutFutureDate: ConstraintLayout
     private lateinit var calendarViewFutureTask: CalendarView
     private lateinit var buttonFutureTaskDateCreate: Button
     private lateinit var buttonFutureTaskDateCancel: Button
     //Future-Task-Time:
     private var futureStartTime: Long? = null
-    private lateinit var frameLayoutFutureTime: FrameLayout
+    private lateinit var constraintLayoutFutureTime: ConstraintLayout
     private lateinit var timePickerFutureTask: TimePicker
     private lateinit var buttonFutureTaskTimeCreate: Button
     private lateinit var buttonFutureTaskTimeCancel: Button
@@ -684,7 +684,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var imageButtonBasecampRemoveDate: ImageButton
 
     //basecamp_date:
-    private lateinit var frameLayoutBasecampDate: FrameLayout
+    private lateinit var constraintLayoutBasecampDate: ConstraintLayout
     private lateinit var calendarViewBasecamp: CalendarView
     private lateinit var buttonBasecampDateCreate: Button
     private lateinit var buttonBasecampDateCancel: Button
@@ -720,7 +720,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var arrayListAsanaSubtaskSection: ArrayList<String> = ArrayList()
 
     //asana_date:
-    private lateinit var frameLayoutAsanaDate: FrameLayout
+    private lateinit var constraintLayoutAsanaDate: ConstraintLayout
     private lateinit var calendarViewAsana: CalendarView
     private lateinit var buttonAsanaDateCreate: Button
     private lateinit var buttonAsanaDateCancel: Button
@@ -3922,8 +3922,6 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 buttonJiraCancel = viewJira.findViewById(R.id.button_jira_cancel)
                 toolbarJira = viewJira.findViewById(R.id.textView_jira_title)
                 layoutJira = viewJira.findViewById(R.id.layout_jira)
-                progressBarJira = viewJira.findViewById(R.id.jira_progressbar)
-                progressBarJiraLayout = viewJira.findViewById(R.id.jira_progressbar_background)
                 cardViewJiraSprint = viewJira.findViewById(R.id.cardView_sprint)
                 cardViewJiraStartDate = viewJira.findViewById(R.id.cardView_start_date)
                 cardViewJiraEpicName = viewJira.findViewById(R.id.cardView_epic_name)
@@ -6167,7 +6165,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewFutureDate,
             windowManagerParamsFutureDate
         )
-        frameLayoutFutureDate = viewFutureDate.findViewById(R.id.future_calendar_view_layout)
+        constraintLayoutFutureDate = viewFutureDate.findViewById(R.id.future_calendar_view_layout)
         calendarViewFutureTask = viewFutureDate.findViewById(R.id.calendarView_start_date)
         buttonFutureTaskDateCreate = viewFutureDate.findViewById(R.id.button_future_calendar_ok)
         buttonFutureTaskDateCancel = viewFutureDate.findViewById(R.id.button_future_calendar_cancel)
@@ -6200,7 +6198,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             calendarViewFutureTask.minDate = System.currentTimeMillis()
         }
-        frameLayoutFutureDate.setOnClickListener {
+        constraintLayoutFutureDate.setOnClickListener {
             removeFutureDateLayout()
         }
         calendarViewFutureTask.setOnDateChangeListener { view, year, month, dayOfMonth ->
@@ -6250,7 +6248,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewFutureTime,
             windowManagerParamsFutureTime
         )
-        frameLayoutFutureTime = viewFutureTime.findViewById(R.id.future_time_view_layout)
+        constraintLayoutFutureTime = viewFutureTime.findViewById(R.id.future_time_view_layout)
         timePickerFutureTask = viewFutureTime.findViewById(R.id.timePicker_start_time)
         buttonFutureTaskTimeCreate = viewFutureTime.findViewById(R.id.button_future_time_ok)
         buttonFutureTaskTimeCancel = viewFutureTime.findViewById(R.id.button_future_time_cancel)
@@ -6275,7 +6273,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for initializing button clicks of buttons that are inside in the future_time_picker.
      */
     private fun buttonClicksFutureTime() {
-        frameLayoutFutureTime.setOnClickListener {
+        constraintLayoutFutureTime.setOnClickListener {
             removeFutureTimeLayout()
         }
         buttonFutureTaskTimeCreate.setSafeOnClickListener {
@@ -10228,7 +10226,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewBasecampDate,
             windowManagerParamsBaseCampDate
         )
-        frameLayoutBasecampDate = viewBasecampDate.findViewById(R.id.basecamp_calendar_view_layout)
+        constraintLayoutBasecampDate = viewBasecampDate.findViewById(R.id.basecamp_calendar_view_layout)
         calendarViewBasecamp = viewBasecampDate.findViewById(R.id.calendarView_start_date)
         buttonBasecampDateCancel =
             viewBasecampDate.findViewById(R.id.button_basecamp_calendar_cancel)
@@ -10257,7 +10255,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             calendarViewBasecamp.minDate = System.currentTimeMillis()
         }
-        frameLayoutBasecampDate.setOnClickListener {
+        constraintLayoutBasecampDate.setOnClickListener {
             removeBasecampDateLayout()
         }
         calendarViewBasecamp.setOnDateChangeListener { view, year, month, dayOfMonth ->
@@ -10876,7 +10874,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewAsanaDate,
             windowManagerParamsAsanaDate
         )
-        frameLayoutAsanaDate = viewAsanaDate.findViewById(R.id.asana_calendar_view_layout)
+        constraintLayoutAsanaDate = viewAsanaDate.findViewById(R.id.asana_calendar_view_layout)
         calendarViewAsana = viewAsanaDate.findViewById(R.id.calendarView_start_date)
         buttonAsanaDateCancel =
             viewAsanaDate.findViewById(R.id.button_asana_calendar_cancel)
@@ -10920,7 +10918,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             calendarViewAsana.minDate = System.currentTimeMillis() + 86400000
         }
-        frameLayoutAsanaDate.setOnClickListener {
+        constraintLayoutAsanaDate.setOnClickListener {
             removeAsanaDateLayout()
         }
         calendarViewAsana.setOnDateChangeListener { view, year, month, dayOfMonth ->

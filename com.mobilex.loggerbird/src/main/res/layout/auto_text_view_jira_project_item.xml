@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
     android:orientation="horizontal"
     android:layout_gravity="center_horizontal"
     android:layout_marginTop="10dp"
-    android:background="@null"
-    >
+    android:background="@null">
 
         <TextView
             android:id="@+id/textView_jira_project_name"
@@ -17,8 +16,12 @@
             android:text="PLACEHOLDER.TXT"
             android:background="@color/white"
             android:textColor="@color/black"
-            android:textSize="22sp">
+            android:textSize="22sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            >
         </TextView>
 
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

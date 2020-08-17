@@ -8,6 +8,9 @@ import android.view.*
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.marginBottom
 import com.mobilex.loggerbird.R
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
@@ -65,12 +68,18 @@ internal class DefaultToast {
                 textViewToast!!.viewTreeObserver.addOnGlobalLayoutListener {
                     if (!controlGlobalLayoutListener) {
                         controlGlobalLayoutListener = true
-                        val textViewLayout = FrameLayout.LayoutParams(
-                            3 * (textViewToast!!.width),
-                            3 * textViewToast!!.height
-                        )
-                        textViewLayout.setMargins(0, 0, 0, 100)
-                        textViewToast!!.layoutParams = textViewLayout
+//                        val textViewLayout = ConstraintLayout.LayoutParams(
+//                            3 * textViewToast!!.width,
+//                            3 * textViewToast!!.height
+//                        )
+                        val constraintSet = ConstraintSet()
+                        constraintSet.clone((textViewToast!!.parent as ConstraintLayout))
+                        constraintSet.constrainWidth(textViewToast!!.id, 3 * textViewToast!!.width)
+                        constraintSet.constrainHeight(textViewToast!!.id, 3 * textViewToast!!.height)
+                        constraintSet.connect(textViewToast!!.id,ConstraintSet.START,(textViewToast!!.parent as ConstraintLayout).id,ConstraintSet.START)
+                        constraintSet.connect(textViewToast!!.id,ConstraintSet.END,(textViewToast!!.parent as ConstraintLayout).id,ConstraintSet.END)
+                        constraintSet.connect(textViewToast!!.id,ConstraintSet.BOTTOM,(textViewToast!!.parent as ConstraintLayout).id,ConstraintSet.BOTTOM,100)
+                        constraintSet.applyTo(textViewToast!!.parent as ConstraintLayout)
                         textViewToast!!.text = toastMessage
                         toastTimer(activity = activity)
                     }

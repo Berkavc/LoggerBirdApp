@@ -1,32 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/cookie"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_loggerbird_activate_popup"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="bottom"
     android:background="@color/cookieBarColor"
-    android:gravity="center_vertical"
-    android:orientation="vertical"
-    android:paddingBottom="16dp"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp"
-    android:windowSwipeToDismiss = "true"
-    android:paddingTop="20dp">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    android:padding="16dp"
+    >
         <ImageView
+            android:id="@+id/imageView_loggerbird_icon"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginRight="16dp"
-            android:src="@drawable/loggerbird"
-            android:layout_marginEnd="16dp"
-            android:layout_gravity="center" />
-        <LinearLayout
-            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:src="@drawable/loggerbird"
+            android:layout_marginTop="20dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            />
             <TextView
                 android:id="@+id/textView_loggerbird_title"
                 android:layout_width="wrap_content"
@@ -34,44 +23,50 @@
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 android:text="@string/library_name"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_marginRight="10dp"
+                android:layout_marginStart="10dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/imageView_loggerbird_icon"
+                app:layout_constraintStart_toEndOf="@id/imageView_loggerbird_icon"
+                />
             <TextView
                 android:id="@+id/textView_loggerbird_permission"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginStart="10dp"
                 android:text="@string/logger_bird_floating_action_button_permission_message"
                 android:textColor="@android:color/white"
-                android:textSize="14sp" />
-        </LinearLayout>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:weightSum="2">
+                android:textSize="14sp"
+                app:layout_constraintTop_toBottomOf="@id/textView_loggerbird_title"
+                app:layout_constraintStart_toEndOf="@id/imageView_loggerbird_icon"
+                />
+
         <TextView
             android:layout_marginTop="6dp"
-            android:layout_weight="1"
             android:id="@+id/btn_action_dismiss"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
             android:text="@string/textView_action_dismiss"
             android:textColor="@color/white"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/textView_loggerbird_permission"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            />
         <TextView
             android:layout_marginTop="6dp"
             android:id="@+id/btn_action_activate"
-            android:layout_weight="1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:gravity="end"
             android:text="@string/textView_action_activate"
             android:textColor="@color/white"
             android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-</LinearLayout>
+            android:textStyle="bold"
+            app:layout_constraintTop_toBottomOf="@id/textView_loggerbird_permission"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+</androidx.constraintlayout.widget.ConstraintLayout>
