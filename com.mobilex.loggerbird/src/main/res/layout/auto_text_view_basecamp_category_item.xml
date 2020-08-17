@@ -3,9 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:gravity="center"
-    android:orientation="horizontal"
-    android:layout_gravity="center_horizontal"
     android:layout_marginTop="10dp"
     android:background="@null">
         <TextView

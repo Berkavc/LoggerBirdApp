@@ -12,9 +12,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/loggerbird"
-            android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/textView_loggerbird_title"
+            app:layout_constraintBottom_toBottomOf="@+id/textView_loggerbird_permission"
             />
             <TextView
                 android:id="@+id/textView_loggerbird_title"

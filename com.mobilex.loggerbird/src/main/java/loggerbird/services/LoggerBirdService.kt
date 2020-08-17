@@ -99,7 +99,6 @@ import kotlin.collections.HashMap
 import java.text.SimpleDateFormat
 import android.text.InputFilter
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.addTextChangedListener
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaAssigneeAdapter
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaPriorityAdapter
@@ -478,7 +477,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     internal lateinit var buttonGitlabCancel: Button
     private lateinit var toolbarGitlab: Toolbar
     private lateinit var calendarViewGitlabView: View
-    private lateinit var calendarViewGitlabLayout: FrameLayout
+    private lateinit var calendarViewGitlabLayout: ConstraintLayout
     private lateinit var calendarViewGitlabDueDate: CalendarView
     private var calendarViewGitlabDate: Long? = null
     private lateinit var buttonCalendarViewGitlabCancel: Button
@@ -585,14 +584,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var calendarTrello: Calendar? = null
     //trello_date:
     private var trelloStartDate: Long? = null
-    private lateinit var frameLayoutTrelloDate: FrameLayout
+    private lateinit var constraintLayoutTrelloDate: ConstraintLayout
     private lateinit var calendarViewTrello: CalendarView
     private lateinit var buttonTrelloDateCreate: Button
     private lateinit var buttonTrelloDateCancel: Button
 
     //trello_time:
     private var trelloStartTime: Long? = null
-    private lateinit var frameLayoutTrelloTime: FrameLayout
+    private lateinit var constraintLayoutTrelloTime: ConstraintLayout
     private lateinit var timePickerTrello: TimePicker
     private lateinit var buttonTrelloTimeCreate: Button
     private lateinit var buttonTrelloTimeCancel: Button
@@ -731,7 +730,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var buttonClubhouseCreate: Button
     private lateinit var toolbarClubhouse: Toolbar
     private lateinit var calendarViewClubhouseView: View
-    private lateinit var calendarViewClubhouseLayout: FrameLayout
+    private lateinit var calendarViewClubhouseLayout: ConstraintLayout
     private lateinit var calendarViewClubhouseDueDate: CalendarView
     private var calendarViewClubhouseDate: Long? = null
     private lateinit var buttonCalendarViewClubhouseCancel: Button
@@ -7941,7 +7940,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewTrelloDate,
             windowManagerParamsTrelloDate
         )
-        frameLayoutTrelloDate = viewTrelloDate.findViewById(R.id.trello_calendar_view_layout)
+        constraintLayoutTrelloDate = viewTrelloDate.findViewById(R.id.trello_calendar_view_layout)
         calendarViewTrello = viewTrelloDate.findViewById(R.id.calendarView_start_date)
         buttonTrelloDateCancel = viewTrelloDate.findViewById(R.id.button_trello_calendar_cancel)
         buttonTrelloDateCreate = viewTrelloDate.findViewById(R.id.button_trello_calendar_ok)
@@ -7972,7 +7971,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             calendarViewTrello.minDate = System.currentTimeMillis()
         }
-        frameLayoutTrelloDate.setOnClickListener {
+        constraintLayoutTrelloDate.setOnClickListener {
             removeTrelloDateLayout()
         }
         calendarViewTrello.setOnDateChangeListener { view, year, month, dayOfMonth ->
@@ -8020,7 +8019,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewTrelloTime,
             windowManagerParamsTrelloTime
         )
-        frameLayoutTrelloTime = viewTrelloTime.findViewById(R.id.trello_time_view_layout)
+        constraintLayoutTrelloTime = viewTrelloTime.findViewById(R.id.trello_time_view_layout)
         timePickerTrello = viewTrelloTime.findViewById(R.id.timePicker_start_time)
         buttonTrelloTimeCancel = viewTrelloTime.findViewById(R.id.button_trello_time_cancel)
         buttonTrelloTimeCreate = viewTrelloTime.findViewById(R.id.button_trello_time_ok)
@@ -8037,7 +8036,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     }
 
     private fun buttonClicksTrelloTimeLayout() {
-        frameLayoutTrelloTime.setOnClickListener {
+        constraintLayoutTrelloTime.setOnClickListener {
             removeTrelloTimeLayout()
         }
         buttonTrelloTimeCreate.setSafeOnClickListener {

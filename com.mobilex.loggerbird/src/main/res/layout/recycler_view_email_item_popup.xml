@@ -1,79 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:gravity="center"
     android:background="@color/darkTransparent"
-    android:orientation="vertical">
+    android:padding="16dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/pop_up_shape"
-        android:orientation="vertical">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/textView_recycler_view_email_popup_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="20dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="20dp"
-            android:layout_gravity="center">
+            android:layout_marginTop="10dp"
+            android:text="@string/textView_recyclerView_popup_header"
+            android:textColor="@color/black"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textSize="20sp"
-                android:textColor="@color/black"
-                android:text="@string/textView_recyclerView_popup_header" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="300dp"
+        <TextView
+            android:id="@+id/textView_recycler_view_email_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            android:layout_gravity="center">
-
-            <TextView
-                android:id="@+id/textView_recycler_view_email_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:textSize="15sp"
-                android:textColor="@color/black"
-                android:text="@string/textView_recyclerView_email_popup_title" />
-        </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_gravity="center"
-        android:layout_margin="5dp">
+            android:layout_marginTop="10dp"
+            android:text="@string/textView_recyclerView_email_popup_title"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_recycler_view_email_popup_title" />
 
         <Button
             android:id="@+id/button_recycler_view_email_yes"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textColor="@color/colorFab"
+            android:layout_marginTop="10dp"
             android:background="@drawable/pop_up_button_shape"
-            android:text="@string/button_recyclerView_yes" />
+            android:text="@string/button_recyclerView_yes"
+            android:textColor="@color/colorFab"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_recycler_view_email_title" />
 
         <Button
             android:id="@+id/button_recycler_view_email_no"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textColor="@color/colorBlack"
+            android:layout_marginTop="10dp"
             android:background="@color/colorFab"
-            android:text="@string/button_recyclerView_no" />
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+            android:text="@string/button_recyclerView_no"
+            android:textColor="@color/colorBlack"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/button_recycler_view_email_yes" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

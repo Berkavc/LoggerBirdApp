@@ -325,6 +325,7 @@
     <string name="button_slack_create">Oluştur</string>
     <string name="textView_slack_no_attachment">Hiçbir ek bulunmamaktadir.</string>
     <!-- recycler_view_slack_item_popup-->
+    <string name="textView_recyclerView_slack_attachment_header">Delete Attachment</string>
     <string name="textView_recyclerView_slack_popup_title">Slack mesajınızdan bu eklentiyi kaldırmaktan eminmisiniz?</string>
     <string name="button_recyclerView_slack_yes">Evet</string>
     <string name="button_recyclerView_slack_no">Hayır</string>

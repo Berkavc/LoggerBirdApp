@@ -1,72 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/gray"
-    android:orientation="vertical"
-    android:weightSum="1">
+    android:background="@color/gray">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/brushWidthSeekText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.1"
-        android:layout_margin="10dp"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/brushWidthSeekText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:layout_margin="12dp"
-            android:text="@string/textView_brush_width_adjust">
-        </TextView>
+        android:padding="32dp"
+        android:text="@string/textView_brush_width_adjust"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"></TextView>
 
 
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/brush_decrease"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_remove_white_24dp"
+        android:tint="@color/white"
+        app:layout_constraintTop_toBottomOf="@id/brushWidthSeekText"
+        app:layout_constraintBottom_toTopOf="@id/brushWidthSeek"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <LinearLayout
+    <SeekBar
+        android:id="@+id/brushWidthSeek"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.9"
-        android:layout_marginBottom="20dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp">
+        android:layout_height="wrap_content"
+        android:progress="30"
+        android:progressBackgroundTint="@color/white"
+        android:progressTint="@color/white"
+        android:thumbTint="@color/white"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/brushWidthSeekText"
+        />
 
-        <ImageView
-            android:id="@+id/brush_decrease"
-            android:layout_width="28dp"
-            android:layout_height="30dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_remove_white_24dp"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:tint="@color/white" />
-
-        <SeekBar
-            android:id="@+id/brushWidthSeek"
-            android:layout_width="0dp"
-            android:layout_height="30dp"
-            android:progress="30"
-            android:layout_weight="8"
-            android:layout_gravity="center"
-            android:progressTint="@color/white"
-            android:thumbTint="@color/white"
-            android:progressBackgroundTint="@color/white" />
-
-        <ImageView
-            android:id="@+id/brush_increase"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:layout_weight="1"
-            android:layout_gravity="center"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_add_white_24dp"
-            android:tint="@color/white" />
-
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/brush_increase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_add_white_24dp"
+        android:tint="@color/white"
+        app:layout_constraintBottom_toTopOf="@id/brushWidthSeek"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/brushWidthSeekText"
+        />
 
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,6 @@
     android:id="@+id/layout_loggerbird_file_action_popup"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="bottom"
     android:background="@color/cookieBarColor"
     android:padding="8dp">
     <TextView
