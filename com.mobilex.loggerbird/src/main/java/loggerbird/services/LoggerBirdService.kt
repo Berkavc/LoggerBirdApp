@@ -332,14 +332,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var autoTextViewJiraEpicName: AutoCompleteTextView
     private lateinit var buttonJiraCreate: Button
     internal lateinit var buttonJiraCancel: Button
-    private lateinit var layoutJira: FrameLayout
+    private lateinit var layoutJira: ConstraintLayout
     private lateinit var toolbarJira: Toolbar
-    private lateinit var cardViewJiraSprint: CardView
-    private lateinit var cardViewJiraStartDate: CardView
-    private lateinit var cardViewJiraEpicName: CardView
-    private lateinit var cardViewJiraEpicLink: CardView
-    private lateinit var imageViewStartDate: ImageView
-    private lateinit var imageButtonRemoveDate: ImageButton
+    private lateinit var imageViewJiraStartDate: ImageView
+    private lateinit var imageButtonJiraRemoveDate: ImageButton
     private lateinit var calendarViewJiraStartDate: CalendarView
     private lateinit var calendarViewJiraView: View
     private lateinit var calendarViewJiraLayout: ConstraintLayout
@@ -364,30 +360,38 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var autoTextViewJiraEpicNameAdapter: AutoCompleteTextViewJiraEpicNameAdapter
     private var projectJiraPosition: Int = 0
     private var controlProjectJiraPosition: Boolean = false
-    internal lateinit var cardViewJiraIssueList: CardView
+    internal lateinit var textViewJiraIssueList: TextView
+    internal lateinit var imageViewJiraIssueList:ImageView
     private lateinit var recyclerViewJiraIssueList: RecyclerView
     private lateinit var jiraAdapterIssueList: RecyclerViewJiraIssueAdapter
     private lateinit var imageViewJiraIssue: ImageView
     private val arrayListJiraIssueName: ArrayList<RecyclerViewModelIssue> = ArrayList()
     private var arrayListJiraIssue: ArrayList<String> = ArrayList()
-    internal lateinit var cardViewJiraLabelList: CardView
+    internal lateinit var textViewJiraLabelList: TextView
+    internal lateinit var imageViewJiraLabelList:ImageView
     private lateinit var recyclerViewJiraLabelList: RecyclerView
     private lateinit var jiraAdapterLabelList: RecyclerViewJiraLabelAdapter
     private lateinit var imageViewJiraLabel: ImageView
     private val arrayListJiraLabelName: ArrayList<RecyclerViewModelLabel> = ArrayList()
     private var arrayListJiraLabel: ArrayList<String> = ArrayList()
-    internal lateinit var cardViewJiraComponentList: CardView
+    internal lateinit var textViewJiraComponentList: TextView
+    internal lateinit var imageViewJiraComponentList:ImageView
     private lateinit var recyclerViewJiraComponentList: RecyclerView
     private lateinit var jiraAdapterComponentList: RecyclerViewJiraComponentAdapter
     private lateinit var imageViewJiraComponent: ImageView
     private val arrayListJiraComponentName: ArrayList<RecyclerViewModelComponent> = ArrayList()
     private var arrayListJiraComponent: ArrayList<String> = ArrayList()
-    internal lateinit var cardViewJiraFixVersionsList: CardView
+    internal lateinit var textViewJiraFixVersionsList: TextView
+    internal lateinit var imageViewJiraFixVersionsList:ImageView
     private lateinit var recyclerViewJiraFixVersionsList: RecyclerView
     private lateinit var jiraAdapterFixVersionsList: RecyclerViewJiraFixVersionsAdapter
     private lateinit var imageViewJiraFixVersions: ImageView
     private val arrayListJiraFixVersionsName: ArrayList<RecyclerViewModelFixVersions> = ArrayList()
     private var arrayListJiraFixVersions: ArrayList<String> = ArrayList()
+    private lateinit var textViewJiraSprint:TextView
+    private lateinit var textViewJiraStartDate:TextView
+    private lateinit var textViewJiraEpicName:TextView
+    private lateinit var textViewJiraEpicLink:TextView
     //Feedback:
     private lateinit var floating_action_button_feedback: Button
     private lateinit var floating_action_button_feed_close: Button
@@ -3919,14 +3923,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     viewJira.findViewById(R.id.auto_textView_jira_epic_name)
                 buttonJiraCreate = viewJira.findViewById(R.id.button_jira_create)
                 buttonJiraCancel = viewJira.findViewById(R.id.button_jira_cancel)
-                toolbarJira = viewJira.findViewById(R.id.textView_jira_title)
+                toolbarJira = viewJira.findViewById(R.id.toolbar_jira)
                 layoutJira = viewJira.findViewById(R.id.layout_jira)
-                cardViewJiraSprint = viewJira.findViewById(R.id.cardView_sprint)
-                cardViewJiraStartDate = viewJira.findViewById(R.id.cardView_start_date)
-                cardViewJiraEpicName = viewJira.findViewById(R.id.cardView_epic_name)
-                cardViewJiraEpicLink = viewJira.findViewById(R.id.cardView_epic_link)
-                imageViewStartDate = viewJira.findViewById(R.id.imageView_start_date)
-                imageButtonRemoveDate =
+                imageViewJiraStartDate = viewJira.findViewById(R.id.imageView_start_date)
+                imageButtonJiraRemoveDate =
                     viewJira.findViewById(R.id.image_button_jira_remove_date)
                 scrollViewJira = viewJira.findViewById(R.id.scrollView_jira)
 
@@ -3936,26 +3936,36 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     }
                     return@setOnTouchListener false
                 }
-                cardViewJiraIssueList = viewJira.findViewById(R.id.cardView_issues_list)
+                textViewJiraIssueList = viewJira.findViewById(R.id.textView_issues_list)
+                imageViewJiraIssueList = viewJira.findViewById(R.id.imageview_issue_list)
                 imageViewJiraIssue = viewJira.findViewById(R.id.imageView_issue_add)
                 recyclerViewJiraIssueList =
                     viewJira.findViewById(R.id.recycler_view_issues_list)
 
-                cardViewJiraLabelList = viewJira.findViewById(R.id.cardView_label_list)
+                textViewJiraLabelList = viewJira.findViewById(R.id.textView_label_list)
+                imageViewJiraLabelList = viewJira.findViewById(R.id.imageView_label_list)
                 imageViewJiraLabel = viewJira.findViewById(R.id.imageView_label_add)
                 recyclerViewJiraLabelList = viewJira.findViewById(R.id.recycler_view_label_list)
 
-                cardViewJiraComponentList = viewJira.findViewById(R.id.cardView_component_list)
+                textViewJiraComponentList = viewJira.findViewById(R.id.textView_component_list)
+                imageViewJiraComponentList = viewJira.findViewById(R.id.imageView_component_list)
                 imageViewJiraComponent = viewJira.findViewById(R.id.imageView_component_add)
                 recyclerViewJiraComponentList =
                     viewJira.findViewById(R.id.recycler_view_component_list)
 
-                cardViewJiraFixVersionsList =
-                    viewJira.findViewById(R.id.cardView_fix_versions_list)
+                textViewJiraFixVersionsList =
+                    viewJira.findViewById(R.id.textView_fix_versions_list)
+                imageViewJiraFixVersionsList =
+                    viewJira.findViewById(R.id.imageView_fix_versions_list)
                 imageViewJiraFixVersions =
                     viewJira.findViewById(R.id.imageView_fix_versions_add)
                 recyclerViewJiraFixVersionsList =
                     viewJira.findViewById(R.id.recycler_view_fix_versions_list)
+
+                textViewJiraSprint = viewJira.findViewById(R.id.textView_jira_sprint)
+                textViewJiraStartDate = viewJira.findViewById(R.id.textView_jira_start_date)
+                textViewJiraEpicName = viewJira.findViewById(R.id.textView_jira_epic_name)
+                textViewJiraEpicLink = viewJira.findViewById(R.id.textView_jira_epic_link)
 
                 jiraAuthentication.callJira(
                     context = context,
@@ -4135,13 +4145,13 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 floatingActionButtonView.visibility = View.VISIBLE
             }
         }
-        imageViewStartDate.setSafeOnClickListener {
+        imageViewJiraStartDate.setSafeOnClickListener {
             attachJiraDatePicker()
         }
 
-        imageButtonRemoveDate.setOnClickListener {
+        imageButtonJiraRemoveDate.setOnClickListener {
             jiraAuthentication.setStartDate(startDate = null)
-            imageButtonRemoveDate.visibility = View.GONE
+            imageButtonJiraRemoveDate.visibility = View.GONE
         }
         imageViewJiraIssue.setSafeOnClickListener {
             hideKeyboard(activity = activity, view = viewJira)
@@ -4155,7 +4165,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListJiraIssueName.add(RecyclerViewModelIssue(autoTextViewJiraIssue.editableText.toString()))
                 jiraAdapterIssueList.notifyDataSetChanged()
-                cardViewJiraIssueList.visibility = View.VISIBLE
+                textViewJiraIssueList.visibility = View.VISIBLE
+                imageViewJiraIssueList.visibility = View.VISIBLE
             } else if (arrayListJiraIssueName.contains(
                     RecyclerViewModelIssue(autoTextViewJiraIssue.editableText.toString())
                 )
@@ -4184,7 +4195,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListJiraLabelName.add(RecyclerViewModelLabel(autoTextViewJiraLabel.editableText.toString()))
                 jiraAdapterLabelList.notifyDataSetChanged()
-                cardViewJiraLabelList.visibility = View.VISIBLE
+                textViewJiraLabelList.visibility = View.VISIBLE
+                imageViewJiraLabelList.visibility = View.VISIBLE
             } else if (arrayListJiraLabelName.contains(
                     RecyclerViewModelLabel(autoTextViewJiraLabel.editableText.toString())
                 )
@@ -4213,7 +4225,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListJiraComponentName.add(RecyclerViewModelComponent(autoTextViewJiraComponent.editableText.toString()))
                 jiraAdapterComponentList.notifyDataSetChanged()
-                cardViewJiraComponentList.visibility = View.VISIBLE
+
+                textViewJiraComponentList.visibility = View.VISIBLE
+                imageViewJiraComponentList.visibility = View.VISIBLE
             } else if (arrayListJiraComponentName.contains(
                     RecyclerViewModelComponent(autoTextViewJiraComponent.editableText.toString())
                 )
@@ -4247,7 +4261,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     )
                 )
                 jiraAdapterFixVersionsList.notifyDataSetChanged()
-                cardViewJiraFixVersionsList.visibility = View.VISIBLE
+                textViewJiraFixVersionsList.visibility = View.VISIBLE
+                imageViewJiraFixVersionsList.visibility = View.VISIBLE
             } else if (arrayListJiraFixVersionsName.contains(
                     RecyclerViewModelFixVersions(autoTextViewJiraFixVersions.editableText.toString())
                 )
@@ -4557,8 +4572,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         }
         controlProjectJiraPosition = false
         if (hashMapJiraBoardList[arrayListJiraProjectKeys[projectJiraPosition]] == "scrum") {
-            cardViewJiraSprint.visibility = View.VISIBLE
-            cardViewJiraStartDate.visibility = View.VISIBLE
+            textViewJiraSprint.visibility = View.VISIBLE
+            autoTextViewJiraSprint.visibility = View.VISIBLE
+            textViewJiraStartDate.visibility = View.VISIBLE
+            imageViewJiraStartDate.visibility = View.VISIBLE
             autoTextViewJiraSprintAdapter = AutoCompleteTextViewJiraSprintAdapter(
                 this,
                 R.layout.auto_text_view_jira_sprint_item,
@@ -4583,8 +4600,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 hideKeyboard(activity = activity, view = viewJira)
             }
         } else {
-            cardViewJiraSprint.visibility = View.GONE
-            cardViewJiraStartDate.visibility = View.GONE
+            textViewJiraSprint.visibility = View.GONE
+            autoTextViewJiraSprint.visibility = View.GONE
+            textViewJiraStartDate.visibility = View.GONE
+            imageViewJiraStartDate.visibility = View.GONE
+            imageButtonJiraRemoveDate.visibility = View.GONE
         }
     }
 
@@ -5085,8 +5105,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         sharedPref: SharedPreferences
     ) {
         if (autoTextViewJiraIssueType.editableText.toString() == "Epic") {
-            cardViewJiraEpicName.visibility = View.VISIBLE
-            cardViewJiraEpicLink.visibility = View.GONE
+            textViewJiraEpicName.visibility = View.VISIBLE
+            autoTextViewJiraEpicName.visibility = View.VISIBLE
+            textViewJiraEpicLink.visibility = View.GONE
+            autoTextViewJiraEpicLink.visibility = View.GONE
             autoTextViewJiraEpicNameAdapter = AutoCompleteTextViewJiraEpicNameAdapter(
                 this,
                 R.layout.auto_text_view_jira_epic_name_item,
@@ -5130,8 +5152,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 }
             }
         } else {
-            cardViewJiraEpicName.visibility = View.GONE
-            cardViewJiraEpicLink.visibility = View.VISIBLE
+            textViewJiraEpicName.visibility = View.GONE
+            autoTextViewJiraEpicName.visibility = View.GONE
+            textViewJiraEpicLink.visibility = View.VISIBLE
+            autoTextViewJiraEpicLink.visibility = View.VISIBLE
         }
     }
 
@@ -5167,7 +5191,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         buttonCalendarViewJiraOk.setOnClickListener {
             jiraAuthentication.setStartDate(startDate = startDate)
             detachJiraDatePicker()
-            imageButtonRemoveDate.visibility = View.VISIBLE
+            imageButtonJiraRemoveDate.visibility = View.VISIBLE
         }
         calendarViewJiraStartDate.setOnDateChangeListener { viewStartDate, year, month, dayOfMonth ->
             calendarViewJiraDate = viewStartDate.date

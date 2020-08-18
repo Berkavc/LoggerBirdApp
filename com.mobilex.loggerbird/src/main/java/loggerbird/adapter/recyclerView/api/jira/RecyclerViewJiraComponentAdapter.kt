@@ -88,9 +88,11 @@ internal class RecyclerViewJiraComponentAdapter(
         private lateinit var textViewTitle: TextView
         private lateinit var buttonYes: Button
         private lateinit var buttonNo: Button
+
         //Static variables.
-        companion object{
-             internal  var arrayListComponentNames:ArrayList<RecyclerViewModelComponent> = ArrayList()
+        companion object {
+            internal var arrayListComponentNames: ArrayList<RecyclerViewModelComponent> =
+                ArrayList()
         }
 
         /**
@@ -103,7 +105,7 @@ internal class RecyclerViewJiraComponentAdapter(
          * @param activity is for getting reference of current activity in the application.
          * @param rootView is for getting reference of the view that is in the root of current activity.
          */
-       internal fun bindItems(
+        internal fun bindItems(
             item: RecyclerViewModelComponent,
             componentAdapter: RecyclerViewJiraComponentAdapter,
             position: Int,
@@ -117,13 +119,13 @@ internal class RecyclerViewJiraComponentAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.componentName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        componentList = componentList,
-                        position = position,
-                        componentAdapter = componentAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    componentList = componentList,
+                    position = position,
+                    componentAdapter = componentAdapter
+                )
             }
 
         }
@@ -151,37 +153,43 @@ internal class RecyclerViewJiraComponentAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle = viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_jira_title)
-                        buttonYes = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_jira_yes)
-                        buttonNo = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_jira_no)
-                        buttonClicksComponentPopup(componentAdapter = componentAdapter , componentList = componentList , position = position)
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
+                        )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_jira_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_jira_yes)
+                    buttonNo = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_jira_no)
+                    buttonClicksComponentPopup(
+                        componentAdapter = componentAdapter,
+                        componentList = componentList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -198,13 +206,20 @@ internal class RecyclerViewJiraComponentAdapter(
          * @param position is used for getting reference of the current position of the item.
          * @param componentAdapter is used for getting reference of the custom recyclerView loggerbird.adapter class.
          */
-        private fun buttonClicksComponentPopup(componentList: ArrayList<RecyclerViewModelComponent>, position: Int, componentAdapter: RecyclerViewJiraComponentAdapter) {
+        private fun buttonClicksComponentPopup(
+            componentList: ArrayList<RecyclerViewModelComponent>,
+            position: Int,
+            componentAdapter: RecyclerViewJiraComponentAdapter
+        ) {
             buttonYes.setSafeOnClickListener {
                 componentList.removeAt(position)
                 arrayListComponentNames = componentList
                 componentAdapter.notifyDataSetChanged()
-                if(componentList.size <=0){
-                    LoggerBirdService.loggerBirdService.cardViewJiraComponentList.visibility = View.GONE
+                if (componentList.size <= 0) {
+                    LoggerBirdService.loggerBirdService.textViewJiraComponentList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewJiraComponentList.visibility =
+                        View.GONE
                 }
                 removePopupLayout()
             }
@@ -218,7 +233,7 @@ internal class RecyclerViewJiraComponentAdapter(
         /**
          * This method is used for removing recycler_view_jira_component_popup from window.
          */
-        private fun removePopupLayout(){
+        private fun removePopupLayout() {
             if (windowManagerRecyclerViewItemPopup != null && this::viewRecyclerViewItems.isInitialized) {
                 (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
                     viewRecyclerViewItems
