@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelMember
@@ -88,9 +86,10 @@ internal class RecyclerViewTrelloMemberAdapter(
         private lateinit var textViewTitle: TextView
         private lateinit var buttonYes: Button
         private lateinit var buttonNo: Button
+
         //Static variables.
-        companion object{
-             internal  var arrayListMemberNames:ArrayList<RecyclerViewModelMember> = ArrayList()
+        companion object {
+            internal var arrayListMemberNames: ArrayList<RecyclerViewModelMember> = ArrayList()
         }
 
 
@@ -104,7 +103,7 @@ internal class RecyclerViewTrelloMemberAdapter(
          * @param activity is for getting reference of current activity in the application.
          * @param rootView is for getting reference of the view that is in the root of current activity.
          */
-       internal fun bindItems(
+        internal fun bindItems(
             item: RecyclerViewModelMember,
             memberAdapter: RecyclerViewTrelloMemberAdapter,
             position: Int,
@@ -118,13 +117,13 @@ internal class RecyclerViewTrelloMemberAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.memberName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        memberList = memberList,
-                        position = position,
-                        memberAdapter = memberAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    memberList = memberList,
+                    position = position,
+                    memberAdapter = memberAdapter
+                )
             }
 
         }
@@ -152,37 +151,44 @@ internal class RecyclerViewTrelloMemberAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle = viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_trello_title)
-                        buttonYes = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_yes)
-                        buttonNo = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_no)
-                        buttonClicksTrelloPopup(memberAdapter = memberAdapter , memberList = memberList , position = position)
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
+                        )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_trello_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_no)
+                    buttonClicksTrelloPopup(
+                        memberAdapter = memberAdapter,
+                        memberList = memberList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -199,13 +205,20 @@ internal class RecyclerViewTrelloMemberAdapter(
          * @param position is used for getting reference of the current position of the item.
          * @param memberAdapter is used for getting reference of the custom recyclerView loggerbird.adapter class.
          */
-        private fun buttonClicksTrelloPopup(memberList: ArrayList<RecyclerViewModelMember>, position: Int, memberAdapter: RecyclerViewTrelloMemberAdapter) {
+        private fun buttonClicksTrelloPopup(
+            memberList: ArrayList<RecyclerViewModelMember>,
+            position: Int,
+            memberAdapter: RecyclerViewTrelloMemberAdapter
+        ) {
             buttonYes.setSafeOnClickListener {
                 memberList.removeAt(position)
                 arrayListMemberNames = memberList
                 memberAdapter.notifyDataSetChanged()
-                if(memberList.size <=0){
-                    LoggerBirdService.loggerBirdService.cardViewTrelloMemberList.visibility = View.GONE
+                if (memberList.size <= 0) {
+                    LoggerBirdService.loggerBirdService.textViewTrelloMemberList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewTrelloMemberList.visibility =
+                        View.GONE
                 }
                 removePopupLayout()
             }
@@ -219,7 +232,7 @@ internal class RecyclerViewTrelloMemberAdapter(
         /**
          * This method is used for removing recycler_view_trello_member_popup from window.
          */
-        private fun removePopupLayout(){
+        private fun removePopupLayout() {
             if (windowManagerRecyclerViewItemPopup != null && this::viewRecyclerViewItems.isInitialized) {
                 (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
                     viewRecyclerViewItems

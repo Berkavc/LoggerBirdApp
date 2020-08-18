@@ -77,8 +77,8 @@ class LoggerBirdIntegrationBuilder(
         fun setTrelloIntegration() = apply {
             val trelloUserName = LoggerBird.decryptTokenKey("appcaesars@gmail.com")
             val trelloPassword = LoggerBird.decryptTokenKey("umbasta1")
-            val trelloKey = LoggerBird.decryptTokenKey("23c4a97f599e7db20e36b32d38853210cf2120bbb955a7cc4fe9550a24f8b32c")
-            val trelloToken = LoggerBird.decryptTokenKey("4b4185b55f32b9e76fef2effcc9147c8")
+            val trelloKey = LoggerBird.decryptTokenKey("08669397e16b6d79bde0317d1476941e")
+            val trelloToken = LoggerBird.decryptTokenKey("febcd9b160281966db0f34f51aae563b42ea7a273ca83319f7c82c5cdb5e343f")
             LoggerBird.trelloUserName = trelloUserName;LoggerBird.trelloPassword =
             trelloPassword; LoggerBird.trelloKey = trelloKey; LoggerBird.trelloToken =
             trelloToken

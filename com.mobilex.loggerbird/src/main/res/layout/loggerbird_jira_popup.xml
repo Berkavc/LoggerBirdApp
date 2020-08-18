@@ -10,8 +10,7 @@
         android:id="@+id/layout_jira"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        >
+        android:background="@color/white">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar_jira"
@@ -164,9 +163,9 @@
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
+            app:layout_constraintEnd_toStartOf="@id/imageView_component_add"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/imageView_component_add"
             app:layout_constraintTop_toBottomOf="@id/textView_jira_component"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
@@ -193,12 +192,11 @@
             android:id="@+id/imageView_component_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/recycler_view_component_list"
-            app:layout_constraintTop_toBottomOf="@id/textView_component_list"
-            app:srcCompat="@drawable/ic_timeline_black_24dp"
             android:visibility="gone"
-            >
+            app:layout_constraintEnd_toStartOf="@id/recycler_view_component_list"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_component_list"
+            app:srcCompat="@drawable/ic_timeline_black_24dp">
 
         </ImageView>
 
@@ -206,9 +204,9 @@
             android:id="@+id/recycler_view_component_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/imageView_component_list"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_component_list"></androidx.recyclerview.widget.RecyclerView>
 
 
@@ -270,9 +268,9 @@
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
+            app:layout_constraintEnd_toStartOf="@id/imageView_issue_add"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/imageView_issue_add"
             app:layout_constraintTop_toBottomOf="@id/textView_jira_issues"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
@@ -300,19 +298,18 @@
             android:id="@+id/imageview_issue_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/recycler_view_issues_list"
-            app:layout_constraintTop_toBottomOf="@id/textView_issues_list"
             android:visibility="gone"
-            app:srcCompat="@drawable/ic_assignment_black_24dp">
-        </ImageView>
+            app:layout_constraintEnd_toStartOf="@+id/recycler_view_issues_list"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView_issues_list"
+            app:srcCompat="@drawable/ic_assignment_black_24dp"></ImageView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_issues_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/imageview_issue_list"
             app:layout_constraintTop_toBottomOf="@id/textView_issues_list"></androidx.recyclerview.widget.RecyclerView>
 
@@ -353,9 +350,9 @@
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toStartOf="@id/imageView_fix_versions_add"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_jira_fix_versions"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
@@ -383,8 +380,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/recycler_view_fix_versions_list"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_fix_versions_list"
             app:srcCompat="@drawable/ic_build_black_24dp"></ImageView>
 
@@ -392,8 +389,8 @@
             android:id="@+id/recycler_view_fix_versions_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/imageView_fix_versions_list"
             app:layout_constraintTop_toBottomOf="@id/textView_fix_versions_list"></androidx.recyclerview.widget.RecyclerView>
 
@@ -435,9 +432,9 @@
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
+            app:layout_constraintEnd_toStartOf="@id/imageView_label_add"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/imageView_label_add"
             app:layout_constraintTop_toBottomOf="@id/textView_jira_labels"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
@@ -465,8 +462,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/recycler_view_label_list"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_label_list"
             app:srcCompat="@drawable/ic_label_black_24dp"></ImageView>
 
@@ -474,8 +471,8 @@
             android:id="@+id/recycler_view_label_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toEndOf="@id/imageView_label_list"
             app:layout_constraintTop_toBottomOf="@id/textView_label_list"></androidx.recyclerview.widget.RecyclerView>
 
@@ -534,8 +531,8 @@
             android:id="@+id/imageView_start_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
             android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:visibility="gone"
             app:layout_constraintStart_toEndOf="@id/textView_jira_start_date"
             app:layout_constraintTop_toBottomOf="@id/auto_textView_jira_sprint"
@@ -545,10 +542,10 @@
             android:id="@+id/image_button_jira_remove_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:background="@color/white"
             android:visibility="gone"
-            android:layout_marginLeft="5dp"
-            android:layout_marginStart="5dp"
             app:layout_constraintStart_toEndOf="@id/imageView_start_date"
             app:layout_constraintTop_toBottomOf="@id/auto_textView_jira_sprint"
             app:srcCompat="@drawable/ic_close_black_24dp"></ImageButton>
@@ -567,8 +564,8 @@
             android:id="@+id/imageView_attachments_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/recycler_view_jira_attachment"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_jira_attachments"
             app:srcCompat="@drawable/ic_attach_file_black_24dp">
 
@@ -587,27 +584,29 @@
         <Button
             android:id="@+id/button_jira_cancel"
             style="@style/Widget.AppCompat.Button.Borderless"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorFab"
+            android:layout_marginTop="5dp"
+            android:background="@color/orange"
             android:text="@string/button_jira_cancel"
             android:textAllCaps="false"
             android:textColor="@color/secondaryColor"
             android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/imageView_attachments_add" />
+            app:layout_constraintTop_toBottomOf="@id/button_jira_create" />
 
         <Button
             android:id="@+id/button_jira_create"
             style="@style/Widget.AppCompat.Button.Borderless"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorFab"
+            android:layout_marginTop="5dp"
+            android:background="@color/orange"
             android:text="@string/button_jira_create"
             android:textAllCaps="false"
             android:textColor="@color/black"
             android:textSize="18sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/imageView_attachments_add" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

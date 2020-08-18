@@ -559,22 +559,25 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var trelloLabelAdapter: RecyclerViewTrelloLabelAdapter
     private val arrayListTrelloFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var scrollViewTrello: ScrollView
-    internal lateinit var cardViewTrelloLabelList: CardView
+    internal lateinit var textViewTrelloLabelList: TextView
     private val arrayListTrelloLabelName: ArrayList<RecyclerViewModelLabel> = ArrayList()
     private lateinit var imageViewTrelloLabel: ImageView
     private lateinit var arrayListTrelloLabel: ArrayList<String>
-    internal lateinit var cardViewTrelloMemberList: CardView
+    internal lateinit var textViewTrelloMemberList: TextView
     private lateinit var recyclerViewTrelloMember: RecyclerView
     private lateinit var trelloMemberAdapter: RecyclerViewTrelloMemberAdapter
     private var arrayListTrelloMemberName: ArrayList<RecyclerViewModelMember> = ArrayList()
     private lateinit var imageViewTrelloMember: ImageView
     private lateinit var arrayListTrelloMember: ArrayList<String>
-    internal lateinit var cardViewTrelloCheckList: CardView
+    internal lateinit var textViewTrelloCheckList: TextView
     private lateinit var recyclerViewTrelloCheckList: RecyclerView
     private lateinit var trelloCheckListAdapter: RecyclerViewTrelloCheckListAdapter
     private var arrayListTrelloCheckListName: ArrayList<RecyclerViewModelCheckList> = ArrayList()
     private lateinit var imageViewTrelloCheckList: ImageView
     private lateinit var arrayListTrelloCheckList: ArrayList<String>
+    internal lateinit var imageViewTrelloMemberList:ImageView
+    internal lateinit var imageViewTrelloLabelList:ImageView
+    internal lateinit var imageviewTrelloCheckListList:ImageView
     //trello_timeline:
     private lateinit var imageViewTrelloCalendar: ImageView
     private lateinit var imageButtonTrelloRemoveTimeline: ImageButton
@@ -7223,16 +7226,19 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             autoTextViewTrelloMember = viewTrello.findViewById(R.id.auto_textView_trello_member)
             autoTextViewTrelloLabel = viewTrello.findViewById(R.id.auto_textView_trello_label)
             recyclerViewTrelloLabel = viewTrello.findViewById(R.id.recycler_view_label_list)
-            imageViewTrelloLabel = viewTrello.findViewById(R.id.imageView_label_add)
-            cardViewTrelloLabelList = viewTrello.findViewById(R.id.cardView_label_list)
-            recyclerViewTrelloMember = viewTrello.findViewById(R.id.recycler_view_member_list)
-            imageViewTrelloMember = viewTrello.findViewById(R.id.imageView_member_add)
-            cardViewTrelloMemberList = viewTrello.findViewById(R.id.cardView_member_list)
+            imageViewTrelloLabel = viewTrello.findViewById(R.id.imageView_trello_label_add)
+            textViewTrelloLabelList = viewTrello.findViewById(R.id.textView_trello_label_list)
+            imageViewTrelloLabelList = viewTrello.findViewById(R.id.imageView_trello_label_list)
+            recyclerViewTrelloMember = viewTrello.findViewById(R.id.recycler_view_trello_member_list)
+            imageViewTrelloMember = viewTrello.findViewById(R.id.imageView_trello_member_add)
+            textViewTrelloMemberList = viewTrello.findViewById(R.id.textView_trello_member_list)
+            imageViewTrelloMemberList = viewTrello.findViewById(R.id.imageView_trello_member_list)
             recyclerViewTrelloCheckList =
-                viewTrello.findViewById(R.id.recycler_view_check_list_list)
-            imageViewTrelloCheckList = viewTrello.findViewById(R.id.imageView_check_list_add)
-            cardViewTrelloCheckList = viewTrello.findViewById(R.id.cardView_check_list_list)
-            imageViewTrelloCalendar = viewTrello.findViewById(R.id.imageView_start_date)
+                viewTrello.findViewById(R.id.recycler_view_trello_check_list_list)
+            imageViewTrelloCheckList = viewTrello.findViewById(R.id.imageView_trello_check_list_add)
+            textViewTrelloCheckList = viewTrello.findViewById(R.id.textView_trello_check_list_list)
+            imageviewTrelloCheckListList = viewTrello.findViewById(R.id.imageView_trello_check_list_list)
+            imageViewTrelloCalendar = viewTrello.findViewById(R.id.imageView_trello_start_date)
             imageButtonTrelloRemoveTimeline =
                 viewTrello.findViewById(R.id.image_button_trello_remove_date)
             scrollViewTrello = viewTrello.findViewById(R.id.scrollView_trello)
@@ -7401,7 +7407,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListTrelloLabelName.add(RecyclerViewModelLabel(autoTextViewTrelloLabel.editableText.toString()))
                 trelloLabelAdapter.notifyDataSetChanged()
-                cardViewTrelloLabelList.visibility = View.VISIBLE
+                textViewTrelloLabelList.visibility = View.VISIBLE
+                imageViewTrelloLabelList.visibility = View.VISIBLE
             } else if (arrayListTrelloLabelName.contains(
                     RecyclerViewModelLabel(autoTextViewTrelloLabel.editableText.toString())
                 )
@@ -7430,7 +7437,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListTrelloMemberName.add(RecyclerViewModelMember(autoTextViewTrelloMember.editableText.toString()))
                 trelloMemberAdapter.notifyDataSetChanged()
-                cardViewTrelloMemberList.visibility = View.VISIBLE
+                textViewTrelloMemberList.visibility = View.VISIBLE
+                imageViewTrelloMemberList.visibility = View.VISIBLE
             } else if (arrayListTrelloMemberName.contains(
                     RecyclerViewModelMember(autoTextViewTrelloMember.editableText.toString())
                 )
@@ -7456,7 +7464,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListTrelloCheckListName.add(RecyclerViewModelCheckList(editTextTrelloCheckList.text.toString()))
                 trelloCheckListAdapter.notifyDataSetChanged()
-                cardViewTrelloCheckList.visibility = View.VISIBLE
+                textViewTrelloCheckList.visibility = View.VISIBLE
+                imageviewTrelloCheckListList.visibility = View.VISIBLE
                 RecyclerViewTrelloCheckListAdapter.ViewHolder.hashmapCheckListNames[editTextTrelloCheckList.text.toString()] =
                     null
                 RecyclerViewTrelloCheckListAdapter.ViewHolder.hashmapCheckListCheckedList[editTextTrelloCheckList.text.toString()] =
@@ -7825,8 +7834,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing trello components.
      */
     private fun clearTrelloComponents() {
-        cardViewTrelloMemberList.visibility = View.GONE
-        cardViewTrelloLabelList.visibility = View.GONE
+        textViewTrelloMemberList.visibility = View.GONE
+        textViewTrelloLabelList.visibility = View.GONE
+        textViewTrelloCheckList.visibility = View.GONE
+        imageViewTrelloMemberList.visibility = View.GONE
+        imageViewTrelloLabelList.visibility = View.GONE
+        imageviewTrelloCheckListList.visibility = View.GONE
         arrayListTrelloMemberName.clear()
         arrayListTrelloLabelName.clear()
         trelloMemberAdapter.notifyDataSetChanged()

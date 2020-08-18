@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.annotation.RequiresApi
@@ -99,7 +98,7 @@ internal class RecyclerViewTrelloCheckListAdapter(
         private lateinit var imageViewAddItem: ImageView
         private lateinit var layoutTrelloCheck: FrameLayout
         private val arrayListTrelloItemName: ArrayList<RecyclerViewModelItem> = ArrayList()
-        private var arrayListTrelloCheckedItem:ArrayList<Boolean> = ArrayList()
+        private var arrayListTrelloCheckedItem: ArrayList<Boolean> = ArrayList()
         private lateinit var trelloItemAdapter: RecyclerViewTrelloItemAdapter
         private val defaultToast = DefaultToast()
 
@@ -109,7 +108,8 @@ internal class RecyclerViewTrelloCheckListAdapter(
                 ArrayList()
             internal var hashmapCheckListNames: HashMap<String, ArrayList<RecyclerViewModelItem>?> =
                 HashMap()
-            internal var hashmapCheckListCheckedList:HashMap<String , ArrayList<Boolean>?> = HashMap()
+            internal var hashmapCheckListCheckedList: HashMap<String, ArrayList<Boolean>?> =
+                HashMap()
         }
 
         /**
@@ -146,13 +146,13 @@ internal class RecyclerViewTrelloCheckListAdapter(
 //            }
             textViewFileName.text = item.checkListName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        checkListList = checkListList,
-                        position = position,
-                        checkListAdapter = checkListAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    checkListList = checkListList,
+                    position = position,
+                    checkListAdapter = checkListAdapter
+                )
             }
             imageViewAdd.setSafeOnClickListener {
                 initializeItemLayout(
@@ -188,44 +188,44 @@ internal class RecyclerViewTrelloCheckListAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle =
-                            viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_trello_title)
-                        buttonYes =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_yes)
-                        buttonNo =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_no)
-                        buttonClicksTrelloPopup(
-                            checkListAdapter = checkListAdapter,
-                            checkList = checkListList,
-                            position = position
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_trello_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_trello_no)
+                    buttonClicksTrelloPopup(
+                        checkListAdapter = checkListAdapter,
+                        checkList = checkListList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -258,7 +258,9 @@ internal class RecyclerViewTrelloCheckListAdapter(
                 arrayListCheckListNames = checkList
                 checkListAdapter.notifyDataSetChanged()
                 if (checkList.size <= 0) {
-                    LoggerBirdService.loggerBirdService.cardViewTrelloCheckList.visibility =
+                    LoggerBirdService.loggerBirdService.textViewTrelloCheckList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageviewTrelloCheckListList.visibility =
                         View.GONE
                 }
                 removePopupLayout()
@@ -314,50 +316,50 @@ internal class RecyclerViewTrelloCheckListAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsTrelloItem =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerTrelloItem =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerTrelloItem != null) {
-                        (windowManagerTrelloItem as WindowManager).addView(
-                            viewTrelloItem,
-                            windowManagerParamsTrelloItem
+                windowManagerParamsTrelloItem =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        layoutTrelloCheck = viewTrelloItem.findViewById(R.id.layout_trello_check)
-                        editTextTrelloCheckDescription =
-                            viewTrelloItem.findViewById(R.id.editText_trello_check_description)
-                        buttonTrelloCheckCancel =
-                            viewTrelloItem.findViewById(R.id.button_trello_check_cancel)
-                        buttonTrelloCheckCreate =
-                            viewTrelloItem.findViewById(R.id.button_trello_check_create)
-                        imageViewAddItem = viewTrelloItem.findViewById(R.id.imageView_item_add)
-                        recyclerViewTrelloCheckItemList =
-                            viewTrelloItem.findViewById(R.id.recycler_view_trello_check_item_list)
-                        initializeTrelloItemRecyclerView(
-                            activity = activity,
-                            context = context,
-                            rootView = rootView,
-                            position = position
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        buttonClicksTrelloItem(activity = activity, position = position)
                     }
+
+                windowManagerTrelloItem =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerTrelloItem != null) {
+                    (windowManagerTrelloItem as WindowManager).addView(
+                        viewTrelloItem,
+                        windowManagerParamsTrelloItem
+                    )
+                    layoutTrelloCheck = viewTrelloItem.findViewById(R.id.layout_trello_check)
+                    editTextTrelloCheckDescription =
+                        viewTrelloItem.findViewById(R.id.editText_trello_check_description)
+                    buttonTrelloCheckCancel =
+                        viewTrelloItem.findViewById(R.id.button_trello_check_cancel)
+                    buttonTrelloCheckCreate =
+                        viewTrelloItem.findViewById(R.id.button_trello_check_create)
+                    imageViewAddItem = viewTrelloItem.findViewById(R.id.imageView_item_add)
+                    recyclerViewTrelloCheckItemList =
+                        viewTrelloItem.findViewById(R.id.recycler_view_trello_check_item_list)
+                    initializeTrelloItemRecyclerView(
+                        activity = activity,
+                        context = context,
+                        rootView = rootView,
+                        position = position
+                    )
+                    buttonClicksTrelloItem(activity = activity, position = position)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -402,7 +404,8 @@ internal class RecyclerViewTrelloCheckListAdapter(
                     arrayListTrelloCheckedItem.add(false)
                     hashmapCheckListNames[arrayListCheckListNames[position].checkListName] =
                         arrayListTrelloItemName
-                    hashmapCheckListCheckedList[arrayListCheckListNames[position].checkListName] = arrayListTrelloCheckedItem
+                    hashmapCheckListCheckedList[arrayListCheckListNames[position].checkListName] =
+                        arrayListTrelloCheckedItem
                     trelloItemAdapter.notifyDataSetChanged()
                 } else {
                     defaultToast.attachToast(
