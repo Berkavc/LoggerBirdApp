@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginStart="10dp"
-    android:layout_marginLeft="10dp">
+    android:layout_marginStart="4dp"
+    android:layout_marginLeft="4dp">
 
     <TextView
         android:id="@+id/textView_file_name"
@@ -12,22 +12,17 @@
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:text="PLACEHOLDER.TXT"
-        android:textColor="@color/black"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toStartOf="@id/image_button_cross"
+        android:textSize="14sp"
+        android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"></TextView>
-
 
     <ImageView
         android:id="@+id/imageView_check_list_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="10dp"
-        android:layout_marginRight="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginStart="4dp"
+        android:layout_marginRight="4dp"
         app:layout_constraintStart_toEndOf="@id/textView_file_name"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ic_add_black_24dp" />
@@ -35,9 +30,12 @@
 
     <ImageButton
         android:id="@+id/image_button_cross"
-        android:layout_width="16dp"
-        android:layout_height="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:background="@color/white"
+        android:layout_marginStart="4dp"
+        android:layout_marginRight="4dp"
+        android:tint="@color/orange"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/imageView_check_list_add"

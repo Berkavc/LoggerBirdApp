@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelBlocker
@@ -218,7 +216,9 @@ internal class RecyclerViewPivotalBlockerAdapter(
                 arrayListBlocker = blockerList
                 blockerAdapter.notifyDataSetChanged()
                 if (blockerList.size <= 0) {
-                    LoggerBirdService.loggerBirdService.cardViewPivotalBlockersList.visibility =
+                    LoggerBirdService.loggerBirdService.textViewPivotalBlockersList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewPivotalBlockersList.visibility =
                         View.GONE
                 }
                 removePopupLayout()

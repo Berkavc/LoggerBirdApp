@@ -71,7 +71,7 @@ class LoggerBirdIntegrationBuilder(
             LoggerBird.basecampApiToken = basecampApiToken }
 
         fun setPivotalIntegraton() = apply {
-                val pivotalApiToken = "070e64617f8042311841cf6616d3af8b"
+                val pivotalApiToken = LoggerBird.decryptTokenKey("067510e1f4f5db8e92ba9aaadcd204b0")
                 LoggerBird.pivotalApiToken = pivotalApiToken }
 
         fun setTrelloIntegration() = apply {

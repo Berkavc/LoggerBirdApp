@@ -10,12 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.annotation.RequiresApi
-import androidx.cardview.widget.CardView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
@@ -120,7 +119,6 @@ internal class RecyclerViewAsanaSubTaskAdapter(
         private lateinit var editTextAsanaSubDescription: EditText
         private lateinit var recyclerViewAsanaSubAttachmentList: RecyclerView
         private lateinit var asanaSubAttachmentAdapter: RecyclerViewAsanaSubAttachmentAdapter
-        private lateinit var cardViewAsanaSubAttachment: CardView
         private lateinit var buttonAsanaSubCancel: Button
         private lateinit var buttonAsanaSubCreate: Button
         private val arrayListAsanaSubFileName: ArrayList<RecyclerViewModel> = ArrayList()
@@ -128,13 +126,11 @@ internal class RecyclerViewAsanaSubTaskAdapter(
         private var subStartDate: String? = null
         private var subAssigneePosition: Int? = null
         private var subSectionPosition: Int? = null
-        //private var subDescription: String? = null
-        //private var subFile: String? = null
         private var arrayListSubAssigneeNames: ArrayList<String> = ArrayList()
         private var arrayListSubSectorNames: ArrayList<String> = ArrayList()
 
         //asana-sub date
-        private lateinit var frameLayoutAsanaSubDate: FrameLayout
+        private lateinit var constraintLayoutAsanaSubDate: ConstraintLayout
         private lateinit var calendarViewAsanaSub: CalendarView
         private lateinit var buttonAsanaDateSubCancel: Button
         private lateinit var buttonAsanaDateSubCreate: Button
@@ -299,9 +295,8 @@ internal class RecyclerViewAsanaSubTaskAdapter(
                     hashMapSubFile.remove(subtaskList[position].subtaskName)
                 }
                 if (subtaskList.size <= 0) {
-                    //LoggerBirdService.loggerBirdService.cardViewAsanaSubTasksList.visibility = View.GONE
+                    LoggerBirdService.loggerBirdService.textViewAsanaSubTasksList.visibility = View.GONE
                     LoggerBirdService.loggerBirdService.imageViewAsanaSubTask.visibility = View.GONE
-                    LoggerBirdService.loggerBirdService.recyclerViewAsanaSubTasksList.visibility = View.GONE
                 }
             }
             buttonNo.setSafeOnClickListener {
@@ -386,26 +381,24 @@ internal class RecyclerViewAsanaSubTaskAdapter(
                         autoTextViewAsanaSubSection =
                             viewAsanaSub.findViewById(R.id.auto_textView_asana_sub_section)
                         imageViewAsanaSubStartDate =
-                            viewAsanaSub.findViewById(R.id.imageView_start_date)
+                            viewAsanaSub.findViewById(R.id.imageView_jira_start_date)
                         imageButtonAsanaSubRemoveDate =
                             viewAsanaSub.findViewById(R.id.image_button_asana_sub_remove_date)
                         editTextAsanaSubDescription =
                             viewAsanaSub.findViewById(R.id.editText_asana_sub_description)
                         recyclerViewAsanaSubAttachmentList =
                             viewAsanaSub.findViewById(R.id.recycler_view_asana_sub_attachment)
-                        cardViewAsanaSubAttachment =
-                            viewAsanaSub.findViewById(R.id.cardView_attachment)
                         buttonAsanaSubCancel =
                             viewAsanaSub.findViewById(R.id.button_asana_sub_cancel)
                         buttonAsanaSubCreate =
                             viewAsanaSub.findViewById(R.id.button_asana_sub_create)
-                        scrollViewAsanaSub = viewAsanaSub.findViewById(R.id.scrollView_asana_sub)
-                        scrollViewAsanaSub.setOnTouchListener { v, event ->
-                            if (event.action == MotionEvent.ACTION_DOWN) {
-                                hideKeyboard(activity = activity, view = viewAsanaSub)
-                            }
-                            return@setOnTouchListener false
-                        }
+//                        scrollViewAsanaSub = viewAsanaSub.findViewById(R.id.scrollView_asana_sub)
+//                        scrollViewAsanaSub.setOnTouchListener { v, event ->
+//                            if (event.action == MotionEvent.ACTION_DOWN) {
+//                                hideKeyboard(activity = activity, view = viewAsanaSub)
+//                            }
+//                            return@setOnTouchListener false
+//                        }
                         initializeAsanaSubRecyclerView(
                             activity = activity,
                             context = context,
@@ -658,7 +651,7 @@ internal class RecyclerViewAsanaSubTaskAdapter(
                 viewAsanaSubDate,
                 windowManagerParamsAsanaSubDate
             )
-            frameLayoutAsanaSubDate = viewAsanaSubDate.findViewById(R.id.asana_calendar_view_layout)
+            constraintLayoutAsanaSubDate = viewAsanaSubDate.findViewById(R.id.asana_calendar_view_layout)
             calendarViewAsanaSub = viewAsanaSubDate.findViewById(R.id.calendarView_start_date)
             buttonAsanaDateSubCancel =
                 viewAsanaSubDate.findViewById(R.id.button_asana_calendar_cancel)
@@ -702,7 +695,7 @@ internal class RecyclerViewAsanaSubTaskAdapter(
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                 calendarViewAsanaSub.minDate = System.currentTimeMillis() + 86400000
             }
-            frameLayoutAsanaSubDate.setOnClickListener {
+            constraintLayoutAsanaSubDate.setOnClickListener {
                 removeAsanaSubDateLayout()
             }
             calendarViewAsanaSub.setOnDateChangeListener { view, year, month, dayOfMonth ->

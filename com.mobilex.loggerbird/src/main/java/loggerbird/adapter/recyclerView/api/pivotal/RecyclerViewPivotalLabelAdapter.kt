@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelLabel
@@ -90,8 +88,8 @@ internal class RecyclerViewPivotalLabelAdapter(
         private lateinit var buttonNo: Button
 
         //Static variables.
-        companion object{
-             internal  var arrayListLabelNames:ArrayList<RecyclerViewModelLabel> = ArrayList()
+        companion object {
+            internal var arrayListLabelNames: ArrayList<RecyclerViewModelLabel> = ArrayList()
         }
 
         /**
@@ -104,7 +102,7 @@ internal class RecyclerViewPivotalLabelAdapter(
          * @param activity is for getting reference of current activity in the application.
          * @param rootView is for getting reference of the view that is in the root of current activity.
          */
-       internal fun bindItems(
+        internal fun bindItems(
             item: RecyclerViewModelLabel,
             labelAdapter: RecyclerViewPivotalLabelAdapter,
             position: Int,
@@ -118,13 +116,13 @@ internal class RecyclerViewPivotalLabelAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.labelName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        labelList = labelList,
-                        position = position,
-                        labelAdapter = labelAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    labelList = labelList,
+                    position = position,
+                    labelAdapter = labelAdapter
+                )
             }
 
         }
@@ -153,37 +151,44 @@ internal class RecyclerViewPivotalLabelAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle = viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
-                        buttonYes = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
-                        buttonNo = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
-                        buttonClicksPivotalPopup(labelAdapter = labelAdapter , labelList = labelList , position = position)
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
+                        )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
+                    buttonClicksPivotalPopup(
+                        labelAdapter = labelAdapter,
+                        labelList = labelList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -200,13 +205,20 @@ internal class RecyclerViewPivotalLabelAdapter(
          * @param position is used for getting reference of the current position of the item.
          * @param labelAdapter is used for getting reference of the custom recyclerView loggerbird.adapter class.
          */
-        private fun buttonClicksPivotalPopup(labelList: ArrayList<RecyclerViewModelLabel>, position: Int, labelAdapter: RecyclerViewPivotalLabelAdapter) {
+        private fun buttonClicksPivotalPopup(
+            labelList: ArrayList<RecyclerViewModelLabel>,
+            position: Int,
+            labelAdapter: RecyclerViewPivotalLabelAdapter
+        ) {
             buttonYes.setSafeOnClickListener {
                 labelList.removeAt(position)
                 arrayListLabelNames = labelList
                 labelAdapter.notifyDataSetChanged()
-                if(labelList.size <=0){
-                    LoggerBirdService.loggerBirdService.cardViewPivotalLabelList.visibility = View.GONE
+                if (labelList.size <= 0) {
+                    LoggerBirdService.loggerBirdService.textViewPivotalLabelList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewPivotalLabelList.visibility =
+                        View.GONE
                 }
                 removePopupLayout()
             }
@@ -220,7 +232,7 @@ internal class RecyclerViewPivotalLabelAdapter(
         /**
          * This method is used for removing recycler_view_pivotal_label_item_popup from window.
          */
-        private fun removePopupLayout(){
+        private fun removePopupLayout() {
             if (windowManagerRecyclerViewItemPopup != null && this::viewRecyclerViewItems.isInitialized) {
                 (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
                     viewRecyclerViewItems
@@ -228,11 +240,12 @@ internal class RecyclerViewPivotalLabelAdapter(
                 windowManagerRecyclerViewItemPopup = null
             }
         }
+
         /**
          * This method is used for preventing spamming of a button and allows to be button click methods executed in every 2 second.
          */
         @SuppressLint("CheckResult")
-      private  fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
+        private fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
             RxView.clicks(this).throttleFirst(2000, TimeUnit.MILLISECONDS).subscribe {
                 onClick(this)
             }

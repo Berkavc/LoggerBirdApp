@@ -526,7 +526,8 @@
     <string name="textView_basecamp_menu_save">Görev detayı kaydet</string>
     <string name="textView_basecamp_menu_clear">Görev detayı temizle</string>
     <!-- loggerbird_basecamp_popup-->
-    <string name="textView_basecamp_message_board">Message board</string>
+    <string name="textView_basecamp_toolbar_title">Basecamp Görevi oluştur</string>
+    <string name="textView_basecamp_message_board">Mesaj tahtası</string>
     <string name="textView_basecamp_project">Proje</string>
     <string name="textView_basecamp_title">Başlık</string>
     <string name="editText_basecamp_title_hint">Bu mesaj için bir başlık giriniz…</string>
@@ -645,6 +646,7 @@
     <string name="button_recyclerView_trello_item_yes">Madde sil</string>
     <string name="button_recyclerView_trello_item_no">Madde tut</string>
     <!-- loggerbird_bitbucket_popup-->
+    <string name="textView_bitbucket_toolbar_title">Bitbucket görevi oluştur</string>
     <string name="textView_bitbucket_project">Proje</string>
     <string name="textView_bitbucket_assignee">Sorumlu</string>
     <string name="textView_bitbucket_priority">Öncelik</string>

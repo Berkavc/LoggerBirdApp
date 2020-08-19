@@ -98,7 +98,9 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import java.text.SimpleDateFormat
 import android.text.InputFilter
+import androidx.constraintlayout.solver.widgets.ConstraintWidgetGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.widget.NestedScrollView
 import androidx.core.widget.addTextChangedListener
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaAssigneeAdapter
 import loggerbird.adapter.autoCompleteTextViews.api.asana.AutoCompleteTextViewAsanaPriorityAdapter
@@ -361,37 +363,37 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var projectJiraPosition: Int = 0
     private var controlProjectJiraPosition: Boolean = false
     internal lateinit var textViewJiraIssueList: TextView
-    internal lateinit var imageViewJiraIssueList:ImageView
+    internal lateinit var imageViewJiraIssueList: ImageView
     private lateinit var recyclerViewJiraIssueList: RecyclerView
     private lateinit var jiraAdapterIssueList: RecyclerViewJiraIssueAdapter
     private lateinit var imageViewJiraIssue: ImageView
     private val arrayListJiraIssueName: ArrayList<RecyclerViewModelIssue> = ArrayList()
     private var arrayListJiraIssue: ArrayList<String> = ArrayList()
     internal lateinit var textViewJiraLabelList: TextView
-    internal lateinit var imageViewJiraLabelList:ImageView
+    internal lateinit var imageViewJiraLabelList: ImageView
     private lateinit var recyclerViewJiraLabelList: RecyclerView
     private lateinit var jiraAdapterLabelList: RecyclerViewJiraLabelAdapter
     private lateinit var imageViewJiraLabel: ImageView
     private val arrayListJiraLabelName: ArrayList<RecyclerViewModelLabel> = ArrayList()
     private var arrayListJiraLabel: ArrayList<String> = ArrayList()
     internal lateinit var textViewJiraComponentList: TextView
-    internal lateinit var imageViewJiraComponentList:ImageView
+    internal lateinit var imageViewJiraComponentList: ImageView
     private lateinit var recyclerViewJiraComponentList: RecyclerView
     private lateinit var jiraAdapterComponentList: RecyclerViewJiraComponentAdapter
     private lateinit var imageViewJiraComponent: ImageView
     private val arrayListJiraComponentName: ArrayList<RecyclerViewModelComponent> = ArrayList()
     private var arrayListJiraComponent: ArrayList<String> = ArrayList()
     internal lateinit var textViewJiraFixVersionsList: TextView
-    internal lateinit var imageViewJiraFixVersionsList:ImageView
+    internal lateinit var imageViewJiraFixVersionsList: ImageView
     private lateinit var recyclerViewJiraFixVersionsList: RecyclerView
     private lateinit var jiraAdapterFixVersionsList: RecyclerViewJiraFixVersionsAdapter
     private lateinit var imageViewJiraFixVersions: ImageView
     private val arrayListJiraFixVersionsName: ArrayList<RecyclerViewModelFixVersions> = ArrayList()
     private var arrayListJiraFixVersions: ArrayList<String> = ArrayList()
-    private lateinit var textViewJiraSprint:TextView
-    private lateinit var textViewJiraStartDate:TextView
-    private lateinit var textViewJiraEpicName:TextView
-    private lateinit var textViewJiraEpicLink:TextView
+    private lateinit var textViewJiraSprint: TextView
+    private lateinit var textViewJiraStartDate: TextView
+    private lateinit var textViewJiraEpicName: TextView
+    private lateinit var textViewJiraEpicLink: TextView
     //Feedback:
     private lateinit var floating_action_button_feedback: Button
     private lateinit var floating_action_button_feed_close: Button
@@ -575,9 +577,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private var arrayListTrelloCheckListName: ArrayList<RecyclerViewModelCheckList> = ArrayList()
     private lateinit var imageViewTrelloCheckList: ImageView
     private lateinit var arrayListTrelloCheckList: ArrayList<String>
-    internal lateinit var imageViewTrelloMemberList:ImageView
-    internal lateinit var imageViewTrelloLabelList:ImageView
-    internal lateinit var imageviewTrelloCheckListList:ImageView
+    internal lateinit var imageViewTrelloMemberList: ImageView
+    internal lateinit var imageViewTrelloLabelList: ImageView
+    internal lateinit var imageviewTrelloCheckListList: ImageView
     //trello_timeline:
     private lateinit var imageViewTrelloCalendar: ImageView
     private lateinit var imageButtonTrelloRemoveTimeline: ImageButton
@@ -626,18 +628,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var autoTextViewPivotalOwnersAdapter: AutoCompleteTextViewPivotalOwnersAdapter
     private lateinit var autoTextViewPivotalRequesterAdapter: AutoCompleteTextViewPivotalRequesterAdapter
     private lateinit var imageViewPivotalOwners: ImageView
-    internal lateinit var cardViewPivotalOwnersList: CardView
+    internal lateinit var textViewPivotalOwnersList: TextView
     private lateinit var recyclerViewPivotalOwnerList: RecyclerView
     private lateinit var imageViewPivotalBlockers: ImageView
-    internal lateinit var cardViewPivotalBlockersList: CardView
+    internal lateinit var textViewPivotalBlockersList: TextView
     private lateinit var recyclerViewPivotalBlockersList: RecyclerView
     private lateinit var imageViewPivotalLabel: ImageView
-    internal lateinit var cardViewPivotalLabelList: CardView
+    internal lateinit var textViewPivotalLabelList: TextView
     private lateinit var recyclerViewPivotalLabelList: RecyclerView
     private lateinit var imageViewPivotalTask: ImageView
-    internal lateinit var cardViewPivotalTasksList: CardView
+    internal lateinit var textViewPivotalTasksList: TextView
     private lateinit var recyclerViewPivotalTaskList: RecyclerView
-    internal lateinit var cardViewPivotalAttachments: CardView
     private lateinit var recyclerViewPivotalAttachmentList: RecyclerView
     private val arrayListPivotalFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var pivotalAttachmentAdapter: RecyclerViewPivotalAttachmentAdapter
@@ -651,13 +652,16 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private val arrayListPivotalOwnerName: ArrayList<RecyclerViewModelOwner> = ArrayList()
     private lateinit var pivotalOwnerAdapter: RecyclerViewPivotalOwnerAdapter
     private lateinit var arrayListPivotalOwner: ArrayList<String>
-
+    internal lateinit var imageViewPivotalOwnerList: ImageView
+    internal lateinit var imageViewPivotalBlockersList: ImageView
+    internal lateinit var imageViewPivotalLabelList: ImageView
+    internal lateinit var imageViewPivotalTaskList: ImageView
     //Basecamp
     internal val basecampAuthentication = BasecampApi()
     private lateinit var buttonBasecampCancel: Button
     private lateinit var buttonBasecampCreate: Button
     private lateinit var toolbarBasecamp: Toolbar
-    private lateinit var scrollViewBasecamp: ScrollView
+    private lateinit var scrollViewBasecamp: NestedScrollView
     private lateinit var autoTextViewBasecampProject: AutoCompleteTextView
     private lateinit var autoTextViewBasecampCategory: AutoCompleteTextView
     private lateinit var autoTextViewBasecampAssignee: AutoCompleteTextView
@@ -673,8 +677,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var editTextBasecampContent: EditText
     private lateinit var imageViewBasecampAssignee: ImageView
     private lateinit var imageViewBasecampNotify: ImageView
-    internal lateinit var cardViewBasecampAssigneeList: CardView
-    internal lateinit var cardViewBasecampNotifyList: CardView
+    //    internal lateinit var cardViewBasecampAssigneeList: CardView
+//    internal lateinit var cardViewBasecampNotifyList: CardView
     private lateinit var recyclerViewBasecampAttachmentList: RecyclerView
     private lateinit var recyclerViewBasecampNotifyList: RecyclerView
     private lateinit var recyclerViewBasecampAssigneeList: RecyclerView
@@ -686,8 +690,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var basecampNotifyAdapter: RecyclerViewBasecampNotifyAdapter
     private val arrayListBasecampNotifyName: ArrayList<RecyclerViewModelNotify> = ArrayList()
     private lateinit var arrayListBasecampNotify: ArrayList<String>
-    private lateinit var imageViewBasecampDate: ImageView
-    private lateinit var imageButtonBasecampRemoveDate: ImageButton
+    //    private lateinit var imageViewBasecampDate: ImageView
+//    private lateinit var imageButtonBasecampRemoveDate: ImageButton
+    private lateinit var textViewBasecampDate: TextView
+    private lateinit var imageViewBasecampRemoveDate: ImageView
 
     //basecamp_date:
     private lateinit var constraintLayoutBasecampDate: ConstraintLayout
@@ -698,7 +704,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     //Asana
     internal val asanaAuthentication = AsanaApi()
     private lateinit var toolbarAsana: Toolbar
-    private lateinit var scrollViewAsana: ScrollView
+    private lateinit var scrollViewAsana: NestedScrollView
     private lateinit var autoTextViewAsanaProject: AutoCompleteTextView
     private lateinit var autoTextViewAsanaProjectAdapter: AutoCompleteTextViewAsanaProjectAdapter
     private lateinit var autoTextViewAsanaAssignee: AutoCompleteTextView
@@ -713,13 +719,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var imageViewAsanaTaskAdd: ImageView
     private lateinit var recyclerViewAsanaAttachmentList: RecyclerView
     private val arrayListAsanaFileName: ArrayList<RecyclerViewModel> = ArrayList()
-    private lateinit var recyclerViewAsanaSubTasksList: RecyclerView
     private val arrayListAsanaSubtaskName: ArrayList<RecyclerViewModelSubtask> = ArrayList()
-    internal lateinit var cardViewAsanaSubTasksList: CardView
+    internal lateinit var textViewAsanaSubTasksList: TextView
+    internal lateinit var imageViewAsanaSubTask: ImageView
+    internal lateinit var recyclerViewAsanaSubTasksList: RecyclerView
     private lateinit var asanaAttachmentAdapter: RecyclerViewAsanaAttachmentAdapter
     private lateinit var asanaSubTasksAdapter: RecyclerViewAsanaSubTaskAdapter
-    private lateinit var imageViewAsanaStartDate: ImageView
-    private lateinit var imageButtonAsanaRemoveDate: ImageButton
+    //    private lateinit var imageViewAsanaStartDate: ImageView
+//    private lateinit var imageButtonAsanaRemoveDate: ImageButton
+    private lateinit var constraintGroupAsanaSubtask: ConstraintWidgetGroup
+    private lateinit var textViewAsanaStartDate: TextView
+    private lateinit var imageViewAsanaRemoveDate: ImageView
     private lateinit var buttonAsanaCancel: Button
     private lateinit var buttonAsanaCreate: Button
     private var arrayListAsanaSubtaskAssignee: ArrayList<String> = ArrayList()
@@ -751,14 +761,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var editTextClubhouseStoryDescription: EditText
     private lateinit var editTextClubhouseEstimate: EditText
     private lateinit var autoTextViewClubhouseStoryType: AutoCompleteTextView
-    private lateinit var autoTextViewClubhouseStoryTypeAdapter:  AutoCompleteTextViewClubhouseStoryTypeAdapter
+    private lateinit var autoTextViewClubhouseStoryTypeAdapter: AutoCompleteTextViewClubhouseStoryTypeAdapter
     private lateinit var autoTextViewClubhouseRequester: AutoCompleteTextView
-    private lateinit var autoTextViewClubhouseRequesterAdapter:   AutoCompleteTextViewClubhouseRequesterAdapter
+    private lateinit var autoTextViewClubhouseRequesterAdapter: AutoCompleteTextViewClubhouseRequesterAdapter
     private val arrayListClubhouseFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var clubhouseAttachmentAdapter: RecyclerViewClubhouseAttachmentAdapter
     private lateinit var recyclerViewClubhouseAttachment: RecyclerView
     private lateinit var textViewClubhouseEpic: TextView
-    private lateinit var linearLayoutClubhouseEpic: LinearLayout
+    //    private lateinit var linearLayoutClubhouseEpic: LinearLayout
     private lateinit var imageViewClubhouseDueDate: ImageView
 
     //LoggerBird Activate Popup:
@@ -790,7 +800,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var buttonBitbucketCancel: Button
     private lateinit var buttonBitbucketCreate: Button
     private lateinit var toolbarBitbucket: Toolbar
-    private lateinit var scrollViewBitbucket: ScrollView
+    private lateinit var scrollViewBitbucket: NestedScrollView
     private lateinit var autoTextViewBitbucketProject: AutoCompleteTextView
     private lateinit var autoTextViewBitbucketProjectAdapter: AutoCompleteTextViewBitbucketProjectAdapter
     private lateinit var autoTextviewBitbucketKind: AutoCompleteTextView
@@ -1078,7 +1088,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     it.delete()
                 }
             }
-            if(this::activity.isInitialized){
+            if (this::activity.isInitialized) {
                 dailySessionTimeRecorder(activity = activity)
             }
             controlServiceOnDestroyState = true
@@ -1954,7 +1964,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             coroutineCallScreenShot.async {
                 try {
                     arrayListFileName.clear()
-                    if(getFileList() != null){
+                    if (getFileList() != null) {
                         arrayListFileName.addAll(getFileList()!!)
                     }
                     if (arrayListFileName.size <= 10) {
@@ -1994,7 +2004,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
                     } else {
                         activity.runOnUiThread {
-                            Toast.makeText(context, R.string.session_file_limit, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, R.string.session_file_limit, Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
                 } catch (e: Exception) {
@@ -2017,7 +2028,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 try {
                     if (!audioRecording) {
                         arrayListFileName.clear()
-                        if(getFileList() != null){
+                        if (getFileList() != null) {
                             arrayListFileName.addAll(getFileList()!!)
                         }
                         if (arrayListFileName.size <= 10) {
@@ -2183,7 +2194,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 try {
                     if (!videoRecording) {
                         arrayListFileName.clear()
-                        if(getFileList() != null){
+                        if (getFileList() != null) {
                             arrayListFileName.addAll(getFileList()!!)
                         }
                         if (arrayListFileName.size <= 10) {
@@ -2805,7 +2816,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                             activity.runOnUiThread {
                                 textView_counter_video.text = timeStringHour(counterTime)
                             }
-                            if(counterTime > counterMediaLimit){
+                            if (counterTime > counterMediaLimit) {
                                 activity.runOnUiThread {
                                     timerTaskVideo?.cancel()
                                     textView_counter_video.performClick()
@@ -2833,46 +2844,46 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     }
 
 
-        /**
-         * This method starts audio counter.
-         */
-        private fun audioCounterStart() {
-            coroutineCallAudioCounter.async {
-                try {
-                    withContext(Dispatchers.Main) {
-                        textView_counter_audio.visibility = View.VISIBLE
-                    }
-                    counterAudio = 0
-                    timerAudio = Timer()
-                    timerTaskAudio = object : TimerTask() {
-                        override fun run() {
-                            val counterTimer = (counterAudio * 1000).toLong()
-                            counterAudio++
+    /**
+     * This method starts audio counter.
+     */
+    private fun audioCounterStart() {
+        coroutineCallAudioCounter.async {
+            try {
+                withContext(Dispatchers.Main) {
+                    textView_counter_audio.visibility = View.VISIBLE
+                }
+                counterAudio = 0
+                timerAudio = Timer()
+                timerTaskAudio = object : TimerTask() {
+                    override fun run() {
+                        val counterTimer = (counterAudio * 1000).toLong()
+                        counterAudio++
+                        activity.runOnUiThread {
+                            textView_counter_audio.text = timeStringHour(counterTimer)
+                        }
+                        if (counterTimer > counterMediaLimit) {
                             activity.runOnUiThread {
-                                textView_counter_audio.text = timeStringHour(counterTimer)
-                            }
-                            if(counterTimer > counterMediaLimit){
-                                activity.runOnUiThread {
-                                    timerTaskAudio?.cancel()
-                                    textView_counter_audio.performClick()
-                                }
+                                timerTaskAudio?.cancel()
+                                textView_counter_audio.performClick()
                             }
                         }
                     }
-                    timerAudio!!.schedule(
-                        timerTaskAudio, 0, 1000
-                    )
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    LoggerBird.callEnqueue()
-                    LoggerBird.callExceptionDetails(
-                        exception = e,
-                        tag = Constants.audioRecordingCounterTag
-                    )
                 }
-
+                timerAudio!!.schedule(
+                    timerTaskAudio, 0, 1000
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                LoggerBird.callEnqueue()
+                LoggerBird.callExceptionDetails(
+                    exception = e,
+                    tag = Constants.audioRecordingCounterTag
+                )
             }
+
         }
+    }
 
     /**
      * This method stops video counter.
@@ -2994,11 +3005,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun addFileListAsync() {
         coroutineCallFileActionList.async {
-           getFileList()?.forEach {
-               if(!arrayListFileName.contains(it)){
-                   arrayListFileName.add(it)
-               }
-           }
+            getFileList()?.forEach {
+                if (!arrayListFileName.contains(it)) {
+                    arrayListFileName.add(it)
+                }
+            }
             val gson = Gson()
             val json = gson.toJson(arrayListFileName)
             val sharedPref =
@@ -3018,16 +3029,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         val gson = Gson()
         val json = sharedPref.getString("file_quantity", "")
         if (json?.isNotEmpty()!!) {
-            val arrayListFile:ArrayList<String> = gson.fromJson(json, object : TypeToken<ArrayList<String>>() {}.type)
-                for(file in 0..arrayListFile.size){
-                    if(arrayListFile.size <= file ){
-                        break
-                    }else{
-                        if(!File(arrayListFile[file]).exists()){
-                            arrayListFile.removeAt(file)
-                        }
+            val arrayListFile: ArrayList<String> =
+                gson.fromJson(json, object : TypeToken<ArrayList<String>>() {}.type)
+            for (file in 0..arrayListFile.size) {
+                if (arrayListFile.size <= file) {
+                    break
+                } else {
+                    if (!File(arrayListFile[file]).exists()) {
+                        arrayListFile.removeAt(file)
                     }
                 }
+            }
             return arrayListFile
         }
         return null
@@ -3062,12 +3074,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for checking that number of Loggerbird files greater than ten.
      */
     private fun controlActionFiles() {
-            val arrayListFileList: ArrayList<String>? = getFileList()
-            if(arrayListFileList != null){
-                if (arrayListFileList.size > 10) {
-                    chooseActionFiles()
-                }
+        val arrayListFileList: ArrayList<String>? = getFileList()
+        if (arrayListFileList != null) {
+            if (arrayListFileList.size > 10) {
+                chooseActionFiles()
             }
+        }
     }
 
     /**
@@ -3928,7 +3940,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 buttonJiraCancel = viewJira.findViewById(R.id.button_jira_cancel)
                 toolbarJira = viewJira.findViewById(R.id.toolbar_jira)
                 layoutJira = viewJira.findViewById(R.id.layout_jira)
-                imageViewJiraStartDate = viewJira.findViewById(R.id.imageView_start_date)
+                imageViewJiraStartDate = viewJira.findViewById(R.id.imageView_jira_start_date)
                 imageButtonJiraRemoveDate =
                     viewJira.findViewById(R.id.image_button_jira_remove_date)
                 scrollViewJira = viewJira.findViewById(R.id.scrollView_jira)
@@ -3939,31 +3951,31 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     }
                     return@setOnTouchListener false
                 }
-                textViewJiraIssueList = viewJira.findViewById(R.id.textView_issues_list)
-                imageViewJiraIssueList = viewJira.findViewById(R.id.imageview_issue_list)
-                imageViewJiraIssue = viewJira.findViewById(R.id.imageView_issue_add)
+                textViewJiraIssueList = viewJira.findViewById(R.id.textView_jira_issues_list)
+                imageViewJiraIssueList = viewJira.findViewById(R.id.imageView_jira_issue_list)
+                imageViewJiraIssue = viewJira.findViewById(R.id.imageView_jira_issue_add)
                 recyclerViewJiraIssueList =
-                    viewJira.findViewById(R.id.recycler_view_issues_list)
+                    viewJira.findViewById(R.id.recycler_view_jira_issues_list)
 
-                textViewJiraLabelList = viewJira.findViewById(R.id.textView_label_list)
-                imageViewJiraLabelList = viewJira.findViewById(R.id.imageView_label_list)
-                imageViewJiraLabel = viewJira.findViewById(R.id.imageView_label_add)
-                recyclerViewJiraLabelList = viewJira.findViewById(R.id.recycler_view_label_list)
+                textViewJiraLabelList = viewJira.findViewById(R.id.textView_jira_label_list)
+                imageViewJiraLabelList = viewJira.findViewById(R.id.imageView_jira_label_list)
+                imageViewJiraLabel = viewJira.findViewById(R.id.imageView_jira_label_add)
+                recyclerViewJiraLabelList = viewJira.findViewById(R.id.recycler_view_jira_label_list)
 
-                textViewJiraComponentList = viewJira.findViewById(R.id.textView_component_list)
-                imageViewJiraComponentList = viewJira.findViewById(R.id.imageView_component_list)
-                imageViewJiraComponent = viewJira.findViewById(R.id.imageView_component_add)
+                textViewJiraComponentList = viewJira.findViewById(R.id.textView_jira_component_list)
+                imageViewJiraComponentList = viewJira.findViewById(R.id.imageView_jira_component_list)
+                imageViewJiraComponent = viewJira.findViewById(R.id.imageView_jira_component_add)
                 recyclerViewJiraComponentList =
-                    viewJira.findViewById(R.id.recycler_view_component_list)
+                    viewJira.findViewById(R.id.recycler_view_jira_component_list)
 
                 textViewJiraFixVersionsList =
-                    viewJira.findViewById(R.id.textView_fix_versions_list)
+                    viewJira.findViewById(R.id.textView_jira_fix_versions_list)
                 imageViewJiraFixVersionsList =
-                    viewJira.findViewById(R.id.imageView_fix_versions_list)
+                    viewJira.findViewById(R.id.imageView_jira_fix_versions_list)
                 imageViewJiraFixVersions =
-                    viewJira.findViewById(R.id.imageView_fix_versions_add)
+                    viewJira.findViewById(R.id.imageView_jira_fix_versions_add)
                 recyclerViewJiraFixVersionsList =
-                    viewJira.findViewById(R.id.recycler_view_fix_versions_list)
+                    viewJira.findViewById(R.id.recycler_view_jira_fix_versions_list)
 
                 textViewJiraSprint = viewJira.findViewById(R.id.textView_jira_sprint)
                 textViewJiraStartDate = viewJira.findViewById(R.id.textView_jira_start_date)
@@ -6461,9 +6473,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             cardViewGithubAssigneeList = viewGithub.findViewById(R.id.cardView_assignee_list)
             imageViewGithubAssignee = viewGithub.findViewById(R.id.imageView_assignee_add)
 
-            recyclerViewGithubLabel = viewGithub.findViewById(R.id.recycler_view_label_list)
+            recyclerViewGithubLabel = viewGithub.findViewById(R.id.recycler_view_jira_label_list)
             cardViewGithubLabelList = viewGithub.findViewById(R.id.cardView_label_list)
-            imageViewGithubLabel = viewGithub.findViewById(R.id.imageView_label_add)
+            imageViewGithubLabel = viewGithub.findViewById(R.id.imageView_jira_label_add)
 
             recyclerViewGithubProject = viewGithub.findViewById(R.id.recycler_view_project_list)
             cardViewGithubProjectList = viewGithub.findViewById(R.id.cardView_project_list)
@@ -7225,11 +7237,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             autoTextViewTrelloBoard = viewTrello.findViewById(R.id.auto_textView_trello_board)
             autoTextViewTrelloMember = viewTrello.findViewById(R.id.auto_textView_trello_member)
             autoTextViewTrelloLabel = viewTrello.findViewById(R.id.auto_textView_trello_label)
-            recyclerViewTrelloLabel = viewTrello.findViewById(R.id.recycler_view_label_list)
+            recyclerViewTrelloLabel = viewTrello.findViewById(R.id.recycler_view_jira_label_list)
             imageViewTrelloLabel = viewTrello.findViewById(R.id.imageView_trello_label_add)
             textViewTrelloLabelList = viewTrello.findViewById(R.id.textView_trello_label_list)
             imageViewTrelloLabelList = viewTrello.findViewById(R.id.imageView_trello_label_list)
-            recyclerViewTrelloMember = viewTrello.findViewById(R.id.recycler_view_trello_member_list)
+            recyclerViewTrelloMember =
+                viewTrello.findViewById(R.id.recycler_view_trello_member_list)
             imageViewTrelloMember = viewTrello.findViewById(R.id.imageView_trello_member_add)
             textViewTrelloMemberList = viewTrello.findViewById(R.id.textView_trello_member_list)
             imageViewTrelloMemberList = viewTrello.findViewById(R.id.imageView_trello_member_list)
@@ -7237,7 +7250,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 viewTrello.findViewById(R.id.recycler_view_trello_check_list_list)
             imageViewTrelloCheckList = viewTrello.findViewById(R.id.imageView_trello_check_list_add)
             textViewTrelloCheckList = viewTrello.findViewById(R.id.textView_trello_check_list_list)
-            imageviewTrelloCheckListList = viewTrello.findViewById(R.id.imageView_trello_check_list_list)
+            imageviewTrelloCheckListList =
+                viewTrello.findViewById(R.id.imageView_trello_check_list_list)
             imageViewTrelloCalendar = viewTrello.findViewById(R.id.imageView_trello_start_date)
             imageButtonTrelloRemoveTimeline =
                 viewTrello.findViewById(R.id.image_button_trello_remove_date)
@@ -8783,29 +8797,34 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 viewPivotal.findViewById(R.id.auto_textView_pivotal_owner)
             autoTextViewPivotalLabel =
                 viewPivotal.findViewById(R.id.auto_textView_pivotal_label)
-            imageViewPivotalOwners = viewPivotal.findViewById(R.id.imageView_owner_add)
-            cardViewPivotalOwnersList = viewPivotal.findViewById(R.id.cardView_owner_list)
+            imageViewPivotalOwners = viewPivotal.findViewById(R.id.imageView_pivotal_owner_add)
+            textViewPivotalOwnersList = viewPivotal.findViewById(R.id.textView_pivotal_owner_list)
             recyclerViewPivotalOwnerList =
                 viewPivotal.findViewById(R.id.recycler_view_pivotal_owner_list)
             editTextPivotalBlockers = viewPivotal.findViewById(R.id.editText_pivotal_blockers)
-            imageViewPivotalBlockers = viewPivotal.findViewById(R.id.imageView_block_add)
-            cardViewPivotalBlockersList = viewPivotal.findViewById(R.id.cardView_blockers_list)
+            imageViewPivotalBlockers = viewPivotal.findViewById(R.id.imageView_pivotal_block_add)
+            textViewPivotalBlockersList =
+                viewPivotal.findViewById(R.id.textView_pivotal_blockers_list)
             recyclerViewPivotalBlockersList =
                 viewPivotal.findViewById(R.id.recycler_view_pivotal_blockers_list)
             editTextPivotalDescription =
                 viewPivotal.findViewById(R.id.editText_pivotal_description)
-            imageViewPivotalLabel = viewPivotal.findViewById(R.id.imageView_label_add)
-            cardViewPivotalLabelList = viewPivotal.findViewById(R.id.cardView_label_list)
+            imageViewPivotalLabel = viewPivotal.findViewById(R.id.imageView_pivotal_label_add)
+            textViewPivotalLabelList = viewPivotal.findViewById(R.id.textView_pivotal_label_list)
             recyclerViewPivotalLabelList =
                 viewPivotal.findViewById(R.id.recycler_view_pivotal_label_list)
             editTextPivotalTasks = viewPivotal.findViewById(R.id.editText_pivotal_tasks)
-            imageViewPivotalTask = viewPivotal.findViewById(R.id.imageView_task_add)
-            cardViewPivotalTasksList = viewPivotal.findViewById(R.id.cardView_task_list)
+            imageViewPivotalTask = viewPivotal.findViewById(R.id.imageView_pivotal_task_add)
+            textViewPivotalTasksList = viewPivotal.findViewById(R.id.textView_pivotal_task_list)
             recyclerViewPivotalTaskList =
                 viewPivotal.findViewById(R.id.recycler_view_pivotal_task_list)
-            cardViewPivotalAttachments = viewPivotal.findViewById(R.id.cardView_attachment)
             recyclerViewPivotalAttachmentList =
                 viewPivotal.findViewById(R.id.recycler_view_pivotal_attachment)
+            imageViewPivotalBlockersList =
+                viewPivotal.findViewById(R.id.imageView_pivotal_blockers_list)
+            imageViewPivotalOwnerList = viewPivotal.findViewById(R.id.imageView_pivotal_owner_list)
+            imageViewPivotalLabelList = viewPivotal.findViewById(R.id.imageView_pivotal_label_list)
+            imageViewPivotalTaskList = viewPivotal.findViewById(R.id.imageView_pivotal_task_list)
 
             scrollViewPivotal.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -8998,7 +9017,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListPivotalTaskName.add(RecyclerViewModelTask(editTextPivotalTasks.text.toString()))
                 pivotalTaskAdapter.notifyDataSetChanged()
-                cardViewPivotalTasksList.visibility = View.VISIBLE
+                textViewPivotalTasksList.visibility = View.VISIBLE
+                imageViewPivotalTaskList.visibility = View.VISIBLE
             } else if (arrayListPivotalTaskName.contains(
                     RecyclerViewModelTask(editTextPivotalTasks.text.toString())
                 )
@@ -9024,7 +9044,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListPivotalBlockerName.add(RecyclerViewModelBlocker(editTextPivotalBlockers.text.toString()))
                 pivotalBlockerAdapter.notifyDataSetChanged()
-                cardViewPivotalBlockersList.visibility = View.VISIBLE
+                textViewPivotalBlockersList.visibility = View.VISIBLE
+                imageViewPivotalBlockersList.visibility = View.VISIBLE
             } else if (arrayListPivotalBlockerName.contains(
                     RecyclerViewModelBlocker(editTextPivotalBlockers.text.toString())
                 )
@@ -9051,7 +9072,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListPivotalLabelName.add(RecyclerViewModelLabel(autoTextViewPivotalLabel.editableText.toString()))
                 pivotalLabelAdapter.notifyDataSetChanged()
-                cardViewPivotalLabelList.visibility = View.VISIBLE
+                textViewPivotalLabelList.visibility = View.VISIBLE
+                imageViewPivotalLabelList.visibility = View.VISIBLE
             } else if (arrayListPivotalLabelName.contains(
                     RecyclerViewModelLabel(autoTextViewPivotalLabel.editableText.toString())
                 )
@@ -9079,7 +9101,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListPivotalOwnerName.add(RecyclerViewModelOwner(autoTextViewPivotalOwners.editableText.toString()))
                 pivotalOwnerAdapter.notifyDataSetChanged()
-                cardViewPivotalOwnersList.visibility = View.VISIBLE
+                textViewPivotalOwnersList.visibility = View.VISIBLE
+                imageViewPivotalOwnerList.visibility = View.VISIBLE
             } else if (arrayListPivotalOwnerName.contains(
                     RecyclerViewModelOwner(autoTextViewPivotalOwners.editableText.toString())
                 )
@@ -9529,10 +9552,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing pivotal components.
      */
     private fun clearPivotalComponents() {
-        cardViewPivotalBlockersList.visibility = View.GONE
-        cardViewPivotalTasksList.visibility = View.GONE
-        cardViewPivotalLabelList.visibility = View.GONE
-        cardViewPivotalOwnersList.visibility = View.GONE
+        textViewPivotalBlockersList.visibility = View.GONE
+        textViewPivotalTasksList.visibility = View.GONE
+        textViewPivotalLabelList.visibility = View.GONE
+        textViewPivotalOwnersList.visibility = View.GONE
+        imageViewPivotalOwnerList.visibility = View.GONE
+        imageViewPivotalLabelList.visibility = View.GONE
+        imageViewPivotalTaskList.visibility = View.GONE
+        imageViewPivotalBlockersList.visibility = View.GONE
         arrayListPivotalOwnerName.clear()
         arrayListPivotalLabelName.clear()
         arrayListPivotalTaskName.clear()
@@ -9619,18 +9646,20 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             editTextBasecampName = viewBasecamp.findViewById(R.id.editText_basecamp_name)
             imageViewBasecampAssignee = viewBasecamp.findViewById(R.id.imageView_assignee_add)
             imageViewBasecampNotify = viewBasecamp.findViewById(R.id.imageView_notify_add)
-            cardViewBasecampAssigneeList =
-                viewBasecamp.findViewById(R.id.cardView_assignee_list)
-            cardViewBasecampNotifyList = viewBasecamp.findViewById(R.id.cardView_notify_list)
+//            cardViewBasecampAssigneeList =
+//                viewBasecamp.findViewById(R.id.cardView_assignee_list)
+//            cardViewBasecampNotifyList = viewBasecamp.findViewById(R.id.cardView_notify_list)
             recyclerViewBasecampAssigneeList =
                 viewBasecamp.findViewById(R.id.recycler_view_basecamp_assignee_list)
             recyclerViewBasecampNotifyList =
                 viewBasecamp.findViewById(R.id.recycler_view_basecamp_notify_list)
             recyclerViewBasecampAttachmentList =
                 viewBasecamp.findViewById(R.id.recycler_view_basecamp_attachment)
-            imageButtonBasecampRemoveDate =
-                viewBasecamp.findViewById(R.id.image_button_basecamp_remove_date)
-            imageViewBasecampDate = viewBasecamp.findViewById(R.id.imageView_start_date)
+            imageViewBasecampRemoveDate =
+                viewBasecamp.findViewById(R.id.imageView_delete_basecamp_startDate)
+            //imageViewBasecampDate = viewBasecamp.findViewById(R.id.imageView_start_date)
+            textViewBasecampDate =
+                viewBasecamp.findViewById(R.id.textView_basecamp_start_date_enter)
             scrollViewBasecamp = viewBasecamp.findViewById(R.id.scrollView_basecamp)
             scrollViewBasecamp.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -9812,7 +9841,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     )
                 )
                 basecampAssigneeAdapter.notifyDataSetChanged()
-                cardViewBasecampAssigneeList.visibility = View.VISIBLE
+//                cardViewBasecampAssigneeList.visibility = View.VISIBLE
             } else if (arrayListBasecampAssigneeName.contains(
                     RecyclerViewModelAssignee(autoTextViewBasecampAssignee.editableText.toString())
                 )
@@ -9840,7 +9869,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListBasecampNotifyName.add(RecyclerViewModelNotify(autoTextViewBasecampNotify.editableText.toString()))
                 basecampNotifyAdapter.notifyDataSetChanged()
-                cardViewBasecampNotifyList.visibility = View.VISIBLE
+//                cardViewBasecampNotifyList.visibility = View.VISIBLE
             } else if (arrayListBasecampNotifyName.contains(
                     RecyclerViewModelNotify(autoTextViewBasecampNotify.editableText.toString())
                 )
@@ -9857,11 +9886,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
 
         }
-        imageButtonBasecampRemoveDate.setSafeOnClickListener {
-            imageButtonBasecampRemoveDate.visibility = View.GONE
+        imageViewBasecampRemoveDate.setSafeOnClickListener {
+            imageViewBasecampRemoveDate.visibility = View.GONE
             basecampAuthentication.setStartDate(startDate = null)
         }
-        imageViewBasecampDate.setSafeOnClickListener {
+        textViewBasecampDate.setSafeOnClickListener {
             initializeBasecampDateLayout()
         }
     }
@@ -10205,8 +10234,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing basecamp components.
      */
     private fun clearBasecampComponents() {
-        cardViewBasecampAssigneeList.visibility = View.GONE
-        cardViewBasecampNotifyList.visibility = View.GONE
+//        cardViewBasecampAssigneeList.visibility = View.GONE
+//        cardViewBasecampNotifyList.visibility = View.GONE
         arrayListBasecampNotifyName.clear()
         arrayListBasecampAssigneeName.clear()
         arrayListBasecampAssignee.clear()
@@ -10262,7 +10291,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             viewBasecampDate,
             windowManagerParamsBaseCampDate
         )
-        constraintLayoutBasecampDate = viewBasecampDate.findViewById(R.id.basecamp_calendar_view_layout)
+        constraintLayoutBasecampDate =
+            viewBasecampDate.findViewById(R.id.basecamp_calendar_view_layout)
         calendarViewBasecamp = viewBasecampDate.findViewById(R.id.calendarView_start_date)
         buttonBasecampDateCancel =
             viewBasecampDate.findViewById(R.id.button_basecamp_calendar_cancel)
@@ -10299,7 +10329,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             startDate = "$year-$tempMonth-$dayOfMonth"
         }
         buttonBasecampDateCreate.setSafeOnClickListener {
-            imageButtonBasecampRemoveDate.visibility = View.VISIBLE
+            //            imageButtonBasecampRemoveDate.visibility = View.VISIBLE
+            imageViewBasecampRemoveDate.visibility = View.VISIBLE
             basecampAuthentication.setStartDate(startDate = startDate)
             removeBasecampDateLayout()
         }
@@ -10367,15 +10398,16 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             editTextAsanaDescription = viewAsana.findViewById(R.id.editText_asana_description)
             editTextAsanaSubTask = viewAsana.findViewById(R.id.editText_asana_sub_tasks)
             editTextAsanaTaskName = viewAsana.findViewById(R.id.editText_asana_task_name)
-            imageViewAsanaStartDate = viewAsana.findViewById(R.id.imageView_start_date)
+            textViewAsanaStartDate = viewAsana.findViewById(R.id.textView_asana_start_date)
             imageViewAsanaTaskAdd = viewAsana.findViewById(R.id.imageView_task_add)
-            imageButtonAsanaRemoveDate =
-                viewAsana.findViewById(R.id.image_button_asana_remove_date)
+            imageViewAsanaRemoveDate = viewAsana.findViewById(R.id.imageView_asana_remove_date)
             recyclerViewAsanaAttachmentList =
                 viewAsana.findViewById(R.id.recycler_view_asana_attachment)
             recyclerViewAsanaSubTasksList =
                 viewAsana.findViewById(R.id.recycler_view_asana_sub_tasks_list)
-            cardViewAsanaSubTasksList = viewAsana.findViewById(R.id.cardView_sub_tasks_list)
+            imageViewAsanaSubTask = viewAsana.findViewById(R.id.imageView_asana_subtask)
+            textViewAsanaSubTasksList = viewAsana.findViewById(R.id.textView_asana_sub_tasks_list)
+            scrollViewAsana = viewAsana.findViewById(R.id.scrollView_asana)
             scrollViewAsana = viewAsana.findViewById(R.id.scrollView_asana)
             scrollViewAsana.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -10539,7 +10571,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListAsanaSubtaskName.add(RecyclerViewModelSubtask(editTextAsanaSubTask.text.toString()))
                 asanaSubTasksAdapter.notifyDataSetChanged()
-                cardViewAsanaSubTasksList.visibility = View.VISIBLE
+                imageViewAsanaSubTask.visibility = View.VISIBLE
+                textViewAsanaSubTasksList.visibility = View.VISIBLE
             } else if (arrayListAsanaSubtaskName.contains(
                     RecyclerViewModelSubtask(editTextAsanaSubTask.text.toString())
                 )
@@ -10555,11 +10588,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
             }
         }
-        imageButtonAsanaRemoveDate.setSafeOnClickListener {
-            imageButtonAsanaRemoveDate.visibility = View.GONE
+        imageViewAsanaRemoveDate.setSafeOnClickListener {
+            imageViewAsanaRemoveDate.visibility = View.GONE
+            textViewAsanaStartDate.text = null
             asanaAuthentication.setStartDate(startDate = null)
         }
-        imageViewAsanaStartDate.setSafeOnClickListener {
+        textViewAsanaStartDate.setSafeOnClickListener {
             initializeAsanaDateLayout()
         }
 
@@ -10951,6 +10985,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             mDayOfMonth.toString()
         }
         var startDate = "$mYear-$mTempMonth-$mTempDay"
+        var textViewDate: String? = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             calendarViewAsana.minDate = System.currentTimeMillis() + 86400000
         }
@@ -10970,9 +11005,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 dayOfMonth.toString()
             }
             startDate = "$year-$tempMonth-$tempDay"
+            textViewDate = "$year-$tempMonthMonth-$dayOfMonth"
+//            textViewAsanaStartDate.text = "$mYear-$mTempMonth-$mTempDay"
         }
         buttonAsanaDateCreate.setSafeOnClickListener {
-            imageButtonAsanaRemoveDate.visibility = View.VISIBLE
+            textViewAsanaStartDate.text = textViewDate
+            imageViewAsanaRemoveDate.visibility = View.VISIBLE
             asanaAuthentication.setStartDate(startDate = startDate)
             removeAsanaDateLayout()
         }
@@ -10985,7 +11023,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing asana components.
      */
     private fun clearAsanaComponents() {
-        cardViewAsanaSubTasksList.visibility = View.GONE
+        imageViewAsanaSubTask.visibility = View.GONE
+        recyclerViewAsanaSubTasksList.visibility = View.GONE
+        textViewAsanaSubTasksList.visibility = View.GONE
         arrayListAsanaSubtaskName.clear()
         asanaSubTasksAdapter.notifyDataSetChanged()
         editTextAsanaSubTask.text = null
@@ -11055,8 +11095,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             editTextClubhouseEstimate =
                 viewClubhouse.findViewById(R.id.editText_clubhouse_estimate_point)
             textViewClubhouseEpic = viewClubhouse.findViewById(R.id.textView_clubhouse_epic)
-            linearLayoutClubhouseEpic =
-                viewClubhouse.findViewById(R.id.linearLayout_clubhouse_epic)
+//            linearLayoutClubhouseEpic =
+//                viewClubhouse.findViewById(R.id.linearLayout_clubhouse_epic)
             imageViewClubhouseDueDate =
                 viewClubhouse.findViewById(R.id.imageView_delete_clubhouse_dueDate)
             clubhouseAuthentication.callClubhouse(
@@ -11182,10 +11222,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 floatingActionButtonView.visibility = View.VISIBLE
             }
         }
-        textViewClubhouseEpic.setSafeOnClickListener {
-            linearLayoutClubhouseEpic.visibility = View.VISIBLE
-            textViewClubhouseEpic.visibility = View.GONE
-        }
+//        textViewClubhouseEpic.setSafeOnClickListener {
+//            linearLayoutClubhouseEpic.visibility = View.VISIBLE
+//            textViewClubhouseEpic.visibility = View.GONE
+//        }
     }
 
     /**

@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelOwner
@@ -120,13 +118,13 @@ internal class RecyclerViewPivotalOwnerAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.ownerName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        ownerList = ownerList,
-                        position = position,
-                        ownerAdapter = ownerAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    ownerList = ownerList,
+                    position = position,
+                    ownerAdapter = ownerAdapter
+                )
             }
 
         }
@@ -154,44 +152,44 @@ internal class RecyclerViewPivotalOwnerAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle =
-                            viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
-                        buttonYes =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
-                        buttonNo =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
-                        buttonClicksPivotalOwnerPopup(
-                            ownerAdapter = ownerAdapter,
-                            ownerList = ownerList,
-                            position = position
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
+                    buttonClicksPivotalOwnerPopup(
+                        ownerAdapter = ownerAdapter,
+                        ownerList = ownerList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -218,7 +216,9 @@ internal class RecyclerViewPivotalOwnerAdapter(
                 arrayListOwnerNames = ownerList
                 ownerAdapter.notifyDataSetChanged()
                 if (ownerList.size <= 0) {
-                    LoggerBirdService.loggerBirdService.cardViewPivotalOwnersList.visibility =
+                    LoggerBirdService.loggerBirdService.textViewPivotalOwnersList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewPivotalOwnerList.visibility =
                         View.GONE
                 }
                 removePopupLayout()

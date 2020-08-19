@@ -244,7 +244,7 @@ internal class PivotalTrackerApi {
                 jsonObject.addProperty("story_type", storyType)
             }
             jsonObject.addProperty("name", title)
-            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/loggerbird.services/v5/projects/$projectId/")
+            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/services/v5/projects/$projectId/")
                 .create(AccountIdService::class.java)
                 .createPivotalStory(jsonObject = jsonObject)
                 .enqueue(object : retrofit2.Callback<JsonObject> {
@@ -354,7 +354,7 @@ internal class PivotalTrackerApi {
         try {
             val jsonObject = JsonObject()
             jsonObject.addProperty("description", description)
-            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/loggerbird.services/v5/projects/$projectId/stories/$storyId/")
+            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/services/v5/projects/$projectId/stories/$storyId/")
                 .create(AccountIdService::class.java)
                 .setPivotalBlockers(jsonObject = jsonObject)
                 .enqueue(object : retrofit2.Callback<JsonObject> {
@@ -404,7 +404,7 @@ internal class PivotalTrackerApi {
         try {
             val jsonObject = JsonObject()
             jsonObject.addProperty("description", description)
-            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/loggerbird.services/v5/projects/$projectId/stories/$storyId/")
+            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/services/v5/projects/$projectId/stories/$storyId/")
                 .create(AccountIdService::class.java)
                 .setPivotalTasks(jsonObject = jsonObject)
                 .enqueue(object : retrofit2.Callback<JsonObject> {
@@ -454,7 +454,7 @@ internal class PivotalTrackerApi {
         try {
             val requestFile = file.asRequestBody("multipart/form-data".toMediaTypeOrNull())
             val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/loggerbird.services/v5/projects/$projectId/")
+            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/services/v5/projects/$projectId/")
                 .create(AccountIdService::class.java)
                 .setPivotalAttachments(
                     file = body
@@ -527,7 +527,7 @@ internal class PivotalTrackerApi {
             jsonObjectId.addProperty("id", attachmentId)
             jsonArray.add(jsonObjectId)
             jsonObject.add("file_attachments", jsonArray)
-            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/loggerbird.services/v5/projects/$projectId/stories/$storyId/")
+            RetrofitPivotalClient.getPivotalUserClient(url = "https://www.pivotaltracker.com/services/v5/projects/$projectId/stories/$storyId/")
                 .create(AccountIdService::class.java)
                 .addPivotalAttachments(jsonObject = jsonObject)
                 .enqueue(object : retrofit2.Callback<JsonObject> {
@@ -588,7 +588,7 @@ internal class PivotalTrackerApi {
      */
     private fun gatherTaskProject() {
         queueCounter++
-        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/loggerbird.services/v5/")
+        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/services/v5/")
             .create(AccountIdService::class.java)
             .getPivotalProjects()
             .enqueue(object : retrofit2.Callback<JsonArray> {
@@ -657,7 +657,7 @@ internal class PivotalTrackerApi {
      */
     private fun gatherTaskLabel(projectId: String) {
         queueCounter++
-        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/loggerbird.services/v5/projects/$projectId/")
+        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/services/v5/projects/$projectId/")
             .create(AccountIdService::class.java)
             .getPivotalLabels()
             .enqueue(object : retrofit2.Callback<JsonArray> {
@@ -704,7 +704,7 @@ internal class PivotalTrackerApi {
      */
     private fun gatherTaskMembers(projectId: String) {
         queueCounter++
-        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/loggerbird.services/v5/projects/$projectId/")
+        RetrofitPivotalClient.getPivotalUserClient(url = "https://pivotaltracker.com/services/v5/projects/$projectId/")
             .create(AccountIdService::class.java)
             .getPivotalMembers()
             .enqueue(object : retrofit2.Callback<JsonArray> {

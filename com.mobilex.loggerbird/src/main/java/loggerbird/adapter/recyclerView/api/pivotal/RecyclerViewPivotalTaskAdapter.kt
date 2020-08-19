@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelTask
@@ -115,13 +113,13 @@ internal class RecyclerViewPivotalTaskAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.taskName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        taskList = taskList,
-                        position = position,
-                        taskAdapter = taskAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    taskList = taskList,
+                    position = position,
+                    taskAdapter = taskAdapter
+                )
             }
 
         }
@@ -149,44 +147,44 @@ internal class RecyclerViewPivotalTaskAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle =
-                            viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
-                        buttonYes =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
-                        buttonNo =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
-                        buttonClicksPivotalTaskPopup(
-                            taskAdapter = taskAdapter,
-                            taskList = taskList,
-                            position = position
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_pivotal_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_pivotal_no)
+                    buttonClicksPivotalTaskPopup(
+                        taskAdapter = taskAdapter,
+                        taskList = taskList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -213,7 +211,9 @@ internal class RecyclerViewPivotalTaskAdapter(
                 arrayListTasks = taskList
                 taskAdapter.notifyDataSetChanged()
                 if (taskList.size <= 0) {
-                    LoggerBirdService.loggerBirdService.cardViewPivotalTasksList.visibility =
+                    LoggerBirdService.loggerBirdService.textViewPivotalTasksList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewPivotalTaskList.visibility =
                         View.GONE
                 }
                 removePopupLayout()

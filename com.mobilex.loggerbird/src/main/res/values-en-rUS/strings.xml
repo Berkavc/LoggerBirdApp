@@ -525,6 +525,7 @@
     <string name="textView_basecamp_menu_save">Save Issue Info</string>
     <string name="textView_basecamp_menu_clear">Clear Issue Info</string>
     <!-- loggerbird_basecamp_popup-->
+    <string name="textView_basecamp_toolbar_title">Create Basecamp Issue</string>
     <string name="textView_basecamp_message_board">Message board</string>
     <string name="textView_basecamp_project">Project</string>
     <string name="textView_basecamp_title">Title</string>
@@ -645,6 +646,7 @@
     <string name="button_recyclerView_trello_item_yes">Delete Item</string>
     <string name="button_recyclerView_trello_item_no">Keep Item</string>
     <!-- loggerbird_bitbucket_popup-->
+    <string name="textView_bitbucket_toolbar_title">Create Bitbucket Issue</string>
     <string name="textView_bitbucket_project">Project</string>
     <string name="textView_bitbucket_assignee">Assignee</string>
     <string name="textView_bitbucket_priority">Priority</string>
