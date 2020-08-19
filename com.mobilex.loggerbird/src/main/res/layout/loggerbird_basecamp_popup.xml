@@ -244,6 +244,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginLeft="5dp"
             android:background="@null"
             android:cursorVisible="true"
             android:gravity="top"
@@ -278,13 +280,13 @@
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
-            app:layout_constraintEnd_toStartOf="@+id/imageView_assignee_add"
+            app:layout_constraintEnd_toStartOf="@+id/imageView_basecamp_assignee_add"
             app:layout_constraintHorizontal_weight="1"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_assignee"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
-            android:id="@+id/imageView_assignee_add"
+            android:id="@+id/imageView_basecamp_assignee_add"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
@@ -294,8 +296,8 @@
             app:srcCompat="@drawable/ic_add_black_24dp" />
 
         <TextView
-            android:id="@+id/textView_assignee_list"
-            android:layout_width="match_parent"
+            android:id="@+id/textView_basecamp_assignee_list"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_marginTop="15dp"
@@ -305,7 +307,7 @@
             android:text="@string/textView_basecamp_assignee_list"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:visibility="gone"
             app:layout_constraintStart_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/auto_textView_basecamp_assignee" />
 
@@ -316,10 +318,10 @@
             android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
             android:layout_marginTop="10dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/recycler_view_basecamp_assignee_list"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView_assignee_list"
+            app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_assignee_list"
             app:srcCompat="@drawable/ic_account_circle_black_24dp"></ImageView>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -329,25 +331,23 @@
             android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
             android:layout_marginTop="10dp"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/imageView_basecamp_assignee_list"
-            app:layout_constraintTop_toBottomOf="@+id/textView_assignee_list"></androidx.recyclerview.widget.RecyclerView>
+            app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_assignee_list"></androidx.recyclerview.widget.RecyclerView>
 
         <TextView
             android:id="@+id/textView_basecamp_notify"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
             android:layout_marginTop="15dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:fontFamily="@font/galanogrotesquesemibold"
             android:text="@string/textView_basecamp_notify"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="parent"
+            app:layout_constraintStart_toStartOf= "parent"
             app:layout_constraintTop_toBottomOf="@+id/recycler_view_basecamp_assignee_list"></TextView>
 
         <androidx.appcompat.widget.AppCompatAutoCompleteTextView
@@ -355,41 +355,40 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
-            android:layout_marginEnd="5dp"
-            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:background="@null"
             android:dropDownHeight="100dp"
             android:singleLine="true"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/imageView_notify_add"
+            app:layout_constraintHorizontal_weight="1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/imageView_basecamp_notify_add"
             app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_notify"></androidx.appcompat.widget.AppCompatAutoCompleteTextView>
 
         <ImageView
-            android:id="@+id/imageView_notify_add"
+            android:id="@+id/imageView_basecamp_notify_add"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
             android:layout_marginTop="10dp"
-            app:layout_constraintEnd_toStartOf="@+id/auto_textView_basecamp_notify"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/auto_textView_basecamp_notify"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_notify"
             app:srcCompat="@drawable/ic_add_black_24dp" />
 
         <TextView
-            android:id="@+id/textView_notify_list"
+            android:id="@+id/textView_basecamp_notify_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="15dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp"
             android:fontFamily="@font/galanogrotesquesemibold"
             android:text="@string/textView_basecamp_notify_list"
             android:textColor="@color/black"
             android:textSize="16sp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/auto_textView_basecamp_notify" />
@@ -398,26 +397,26 @@
             android:id="@+id/imageView_basecamp_notify_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="10dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toStartOf="@+id/recycler_view_basecamp_notify_list"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textView_notify_list"
+            app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_notify_list"
             app:srcCompat="@drawable/ic_account_circle_black_24dp"></ImageView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view_basecamp_notify_list"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginStart="5dp"
             android:layout_marginTop="10dp"
-            android:layout_marginEnd="5dp"
-            android:autofillHints="Nothing selected"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
+            app:layout_constraintHorizontal_weight="1"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/imageView_basecamp_notify_list"
-            app:layout_constraintTop_toBottomOf="@+id/textView_notify_list"></androidx.recyclerview.widget.RecyclerView>
+            app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_notify_list"></androidx.recyclerview.widget.RecyclerView>
 
         <TextView
             android:id="@+id/textView_basecamp_start_date"
@@ -439,6 +438,7 @@
             android:id="@+id/textView_basecamp_start_date_enter"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
             android:layout_marginStart="5dp"
             android:layout_marginTop="10dp"
             android:hint="@string/textView_asana_enter_start_date_enter"
@@ -472,6 +472,7 @@
             android:text="@string/textView_basecamp_attachments_board"
             android:textColor="@color/black"
             android:textSize="17sp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_start_date_enter"></TextView>
 
@@ -480,11 +481,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginStart="5dp"
             android:fontFamily="@font/galanogrotesquesemibold"
             android:text="@string/textView_pivotal_attachment"
             android:textColor="@color/black"
             android:textSize="16sp"
-            app:layout_constraintStart_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView_basecamp_attachments_board" />
 
         <ImageView

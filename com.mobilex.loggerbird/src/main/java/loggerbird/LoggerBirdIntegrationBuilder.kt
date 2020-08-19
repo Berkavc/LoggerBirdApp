@@ -67,7 +67,7 @@ class LoggerBirdIntegrationBuilder(
 
         fun setBasecampIntegration() = apply {
             val basecampApiToken =
-                LoggerBird.decryptTokenKey("BAhbB0kiAbl7ImNsaWVudF9pZCI6IjAyMDM2OGMwNDM4YzQ1ZjIyNjQzYmY5MTM2MDE5MjEzZTQzNGFiY2UiLCJleHBpcmVzX2F0IjoiMjAyMC0wNy0yN1QxMTo0NTo1MloiLCJ1c2VyX2lkcyI6WzQyMzI4NzkyLDQyNDI2NDU3XSwidmVyc2lvbiI6MSwiYXBpX2RlYWRib2x0IjoiODFkYTljZjlkYzljNDA0OThkZjhkOTRhODBmNzg4ZjYifQY6BkVUSXU6CVRpbWUNaxsewMIiQbcJOg1uYW5vX251bWkC3QI6DW5hbm9fZGVuaQY6DXN1Ym1pY3JvIgdzMDoJem9uZUkiCFVUQwY7AEY=--ed8edece558992d6423ab6e85838ce04800eabe5")
+                LoggerBird.decryptTokenKey("BAhbB0kiAbB7ImNsaWVudF9pZCI6IjRhOTdmMGVhNzUyNjFiZjE0NTAxNzUxZDgwNzJmYWVmODJmMDNjZDciLCJleHBpcmVzX2F0IjoiMjAyMC0wOS0wMlQxMjo1MDoxOVoiLCJ1c2VyX2lkcyI6WzQyNjM5Nzc1XSwidmVyc2lvbiI6MSwiYXBpX2RlYWRib2x0IjoiMWI1ODg2YjhhMDE4OGQxZmY2NGFmNDhkZjM3ZjEzM2UifQY6BkVUSXU6CVRpbWUNTCAewBS4M8kJOg1uYW5vX251bWkCLgI6DW5hbm9fZGVuaQY6DXN1Ym1pY3JvIgdVgDoJem9uZUkiCFVUQwY7AEY=--8049568f5b2b0d93d2e4352e0c3a8c6cce899624")
             LoggerBird.basecampApiToken = basecampApiToken }
 
         fun setPivotalIntegraton() = apply {

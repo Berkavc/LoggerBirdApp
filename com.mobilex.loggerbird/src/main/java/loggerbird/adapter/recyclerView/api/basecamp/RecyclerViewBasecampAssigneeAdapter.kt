@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelAssignee
@@ -89,9 +87,10 @@ internal class RecyclerViewBasecampAssigneeAdapter(
         private lateinit var textViewTitle: TextView
         private lateinit var buttonYes: Button
         private lateinit var buttonNo: Button
+
         //Static variables.
-        companion object{
-             internal  var arrayListAssignee:ArrayList<RecyclerViewModelAssignee> = ArrayList()
+        companion object {
+            internal var arrayListAssignee: ArrayList<RecyclerViewModelAssignee> = ArrayList()
         }
 
 
@@ -105,7 +104,7 @@ internal class RecyclerViewBasecampAssigneeAdapter(
          * @param activity is for getting reference of current activity in the application.
          * @param rootView is for getting reference of the view that is in the root of current activity.
          */
-       internal fun bindItems(
+        internal fun bindItems(
             item: RecyclerViewModelAssignee,
             assigneeAdapter: RecyclerViewBasecampAssigneeAdapter,
             position: Int,
@@ -119,13 +118,13 @@ internal class RecyclerViewBasecampAssigneeAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.assigneeName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        assigneeList = assigneeList,
-                        position = position,
-                        assigneeAdapter = assigneeAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    assigneeList = assigneeList,
+                    position = position,
+                    assigneeAdapter = assigneeAdapter
+                )
             }
 
         }
@@ -153,37 +152,44 @@ internal class RecyclerViewBasecampAssigneeAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle = viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_basecamp_title)
-                        buttonYes = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_yes)
-                        buttonNo = viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_no)
-                        buttonClicksBasecampAssigneePopup(assigneeAdapter = assigneeAdapter , assigneeList = assigneeList , position = position)
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
+                        )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_basecamp_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_no)
+                    buttonClicksBasecampAssigneePopup(
+                        assigneeAdapter = assigneeAdapter,
+                        assigneeList = assigneeList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -200,15 +206,22 @@ internal class RecyclerViewBasecampAssigneeAdapter(
          * @param position is used for getting reference of the current position of the item.
          * @param assigneeAdapter is used for getting reference of the custom recyclerView loggerbird.adapter class.
          */
-        private fun buttonClicksBasecampAssigneePopup(assigneeList: ArrayList<RecyclerViewModelAssignee>, position: Int, assigneeAdapter: RecyclerViewBasecampAssigneeAdapter) {
+        private fun buttonClicksBasecampAssigneePopup(
+            assigneeList: ArrayList<RecyclerViewModelAssignee>,
+            position: Int,
+            assigneeAdapter: RecyclerViewBasecampAssigneeAdapter
+        ) {
             buttonYes.setSafeOnClickListener {
                 assigneeList.removeAt(position)
                 arrayListAssignee = assigneeList
                 assigneeAdapter.notifyDataSetChanged()
                 removePopupLayout()
-//                if(assigneeList.size <=0){
-//                    LoggerBirdService.loggerBirdService.cardViewBasecampAssigneeList.visibility = View.GONE
-//                }
+                if (assigneeList.size <= 0) {
+                    LoggerBirdService.loggerBirdService.textViewBasecampAssigneeList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewBasecampAssigneeList.visibility =
+                        View.GONE
+                }
             }
             buttonNo.setSafeOnClickListener {
                 removePopupLayout()
@@ -220,7 +233,7 @@ internal class RecyclerViewBasecampAssigneeAdapter(
         /**
          * This method is used for removing recycler_view_basecamp_assignee_popup from window.
          */
-        private fun removePopupLayout(){
+        private fun removePopupLayout() {
             if (windowManagerRecyclerViewItemPopup != null && this::viewRecyclerViewItems.isInitialized) {
                 (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
                     viewRecyclerViewItems
@@ -233,7 +246,7 @@ internal class RecyclerViewBasecampAssigneeAdapter(
          * This method is used for preventing spamming of a button and allows to be button click methods executed in every 2 second.
          */
         @SuppressLint("CheckResult")
-       private fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
+        private fun View.setSafeOnClickListener(onClick: (View) -> Unit) {
             RxView.clicks(this).throttleFirst(2000, TimeUnit.MILLISECONDS).subscribe {
                 onClick(this)
             }

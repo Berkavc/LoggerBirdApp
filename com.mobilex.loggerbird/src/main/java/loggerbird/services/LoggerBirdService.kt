@@ -677,8 +677,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var editTextBasecampContent: EditText
     private lateinit var imageViewBasecampAssignee: ImageView
     private lateinit var imageViewBasecampNotify: ImageView
-    //    internal lateinit var cardViewBasecampAssigneeList: CardView
-//    internal lateinit var cardViewBasecampNotifyList: CardView
+    internal lateinit var textViewBasecampAssigneeList: TextView
+    internal lateinit var textViewBasecampNotifyList: TextView
     private lateinit var recyclerViewBasecampAttachmentList: RecyclerView
     private lateinit var recyclerViewBasecampNotifyList: RecyclerView
     private lateinit var recyclerViewBasecampAssigneeList: RecyclerView
@@ -690,10 +690,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private lateinit var basecampNotifyAdapter: RecyclerViewBasecampNotifyAdapter
     private val arrayListBasecampNotifyName: ArrayList<RecyclerViewModelNotify> = ArrayList()
     private lateinit var arrayListBasecampNotify: ArrayList<String>
-    //    private lateinit var imageViewBasecampDate: ImageView
-//    private lateinit var imageButtonBasecampRemoveDate: ImageButton
     private lateinit var textViewBasecampDate: TextView
     private lateinit var imageViewBasecampRemoveDate: ImageView
+    internal lateinit var imageViewBasecampAssigneeList:ImageView
+    internal lateinit var imageViewBasecampNotifyList:ImageView
 
     //basecamp_date:
     private lateinit var constraintLayoutBasecampDate: ConstraintLayout
@@ -6471,7 +6471,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             recyclerViewGithubAssignee =
                 viewGithub.findViewById(R.id.recycler_view_assignee_list)
             cardViewGithubAssigneeList = viewGithub.findViewById(R.id.cardView_assignee_list)
-            imageViewGithubAssignee = viewGithub.findViewById(R.id.imageView_assignee_add)
+            imageViewGithubAssignee = viewGithub.findViewById(R.id.imageView_basecamp_assignee_add)
 
             recyclerViewGithubLabel = viewGithub.findViewById(R.id.recycler_view_jira_label_list)
             cardViewGithubLabelList = viewGithub.findViewById(R.id.cardView_label_list)
@@ -9644,11 +9644,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 viewBasecamp.findViewById(R.id.editText_basecamp_title)
             editTextBasecampContent = viewBasecamp.findViewById(R.id.editText_basecamp_content)
             editTextBasecampName = viewBasecamp.findViewById(R.id.editText_basecamp_name)
-            imageViewBasecampAssignee = viewBasecamp.findViewById(R.id.imageView_assignee_add)
-            imageViewBasecampNotify = viewBasecamp.findViewById(R.id.imageView_notify_add)
-//            cardViewBasecampAssigneeList =
-//                viewBasecamp.findViewById(R.id.cardView_assignee_list)
-//            cardViewBasecampNotifyList = viewBasecamp.findViewById(R.id.cardView_notify_list)
+            imageViewBasecampAssignee = viewBasecamp.findViewById(R.id.imageView_basecamp_assignee_add)
+            imageViewBasecampNotify = viewBasecamp.findViewById(R.id.imageView_basecamp_notify_add)
+            textViewBasecampAssigneeList =
+                viewBasecamp.findViewById(R.id.textView_basecamp_assignee_list)
+            textViewBasecampNotifyList = viewBasecamp.findViewById(R.id.textView_basecamp_notify_list)
             recyclerViewBasecampAssigneeList =
                 viewBasecamp.findViewById(R.id.recycler_view_basecamp_assignee_list)
             recyclerViewBasecampNotifyList =
@@ -9657,9 +9657,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 viewBasecamp.findViewById(R.id.recycler_view_basecamp_attachment)
             imageViewBasecampRemoveDate =
                 viewBasecamp.findViewById(R.id.imageView_delete_basecamp_startDate)
-            //imageViewBasecampDate = viewBasecamp.findViewById(R.id.imageView_start_date)
             textViewBasecampDate =
                 viewBasecamp.findViewById(R.id.textView_basecamp_start_date_enter)
+            imageViewBasecampAssigneeList = viewBasecamp.findViewById(R.id.imageView_basecamp_assignee_list)
+            imageViewBasecampNotifyList = viewBasecamp.findViewById(R.id.imageView_basecamp_notify_list)
             scrollViewBasecamp = viewBasecamp.findViewById(R.id.scrollView_basecamp)
             scrollViewBasecamp.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -9841,7 +9842,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     )
                 )
                 basecampAssigneeAdapter.notifyDataSetChanged()
-//                cardViewBasecampAssigneeList.visibility = View.VISIBLE
+                textViewBasecampAssigneeList.visibility = View.VISIBLE
+                imageViewBasecampAssigneeList.visibility = View.VISIBLE
             } else if (arrayListBasecampAssigneeName.contains(
                     RecyclerViewModelAssignee(autoTextViewBasecampAssignee.editableText.toString())
                 )
@@ -9869,7 +9871,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListBasecampNotifyName.add(RecyclerViewModelNotify(autoTextViewBasecampNotify.editableText.toString()))
                 basecampNotifyAdapter.notifyDataSetChanged()
-//                cardViewBasecampNotifyList.visibility = View.VISIBLE
+                textViewBasecampNotifyList.visibility = View.VISIBLE
+                imageViewBasecampNotifyList.visibility = View.VISIBLE
             } else if (arrayListBasecampNotifyName.contains(
                     RecyclerViewModelNotify(autoTextViewBasecampNotify.editableText.toString())
                 )
@@ -10234,8 +10237,10 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing basecamp components.
      */
     private fun clearBasecampComponents() {
-//        cardViewBasecampAssigneeList.visibility = View.GONE
-//        cardViewBasecampNotifyList.visibility = View.GONE
+        textViewBasecampAssigneeList.visibility = View.GONE
+        textViewBasecampNotifyList.visibility = View.GONE
+        imageViewBasecampAssigneeList.visibility = View.GONE
+        imageViewBasecampNotifyList.visibility = View.GONE
         arrayListBasecampNotifyName.clear()
         arrayListBasecampAssigneeName.clear()
         arrayListBasecampAssignee.clear()

@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelNotify
@@ -120,13 +118,13 @@ internal class RecyclerViewBasecampNotifyAdapter(
             val imageButtonCross = itemView.findViewById<ImageButton>(R.id.image_button_cross)
             textViewFileName.text = item.notifyName
             imageButtonCross.setSafeOnClickListener {
-                    removeItemPopup(
-                        activity = activity,
-                        rootView = rootView,
-                        notifyList = notifyList,
-                        position = position,
-                        notifyAdapter = notifyAdapter
-                    )
+                removeItemPopup(
+                    activity = activity,
+                    rootView = rootView,
+                    notifyList = notifyList,
+                    position = position,
+                    notifyAdapter = notifyAdapter
+                )
             }
 
         }
@@ -154,44 +152,44 @@ internal class RecyclerViewBasecampNotifyAdapter(
                         (rootView as ViewGroup),
                         false
                     )
-                    windowManagerParamsRecyclerViewItemPopup =
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        } else {
-                            WindowManager.LayoutParams(
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_APPLICATION,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
-                                PixelFormat.TRANSLUCENT
-                            )
-                        }
-
-                    windowManagerRecyclerViewItemPopup =
-                        activity.getSystemService(Context.WINDOW_SERVICE)!!
-                    if (windowManagerRecyclerViewItemPopup != null) {
-                        (windowManagerRecyclerViewItemPopup as WindowManager).addView(
-                            viewRecyclerViewItems,
-                            windowManagerParamsRecyclerViewItemPopup
+                windowManagerParamsRecyclerViewItemPopup =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
-                        textViewTitle =
-                            viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_basecamp_title)
-                        buttonYes =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_yes)
-                        buttonNo =
-                            viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_no)
-                        buttonClicksBasecampNotifyPopup(
-                            notifyAdapter = notifyAdapter,
-                            notifyList = notifyList,
-                            position = position
+                    } else {
+                        WindowManager.LayoutParams(
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_APPLICATION,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                            PixelFormat.TRANSLUCENT
                         )
                     }
+
+                windowManagerRecyclerViewItemPopup =
+                    activity.getSystemService(Context.WINDOW_SERVICE)!!
+                if (windowManagerRecyclerViewItemPopup != null) {
+                    (windowManagerRecyclerViewItemPopup as WindowManager).addView(
+                        viewRecyclerViewItems,
+                        windowManagerParamsRecyclerViewItemPopup
+                    )
+                    textViewTitle =
+                        viewRecyclerViewItems.findViewById(R.id.textView_recycler_view_basecamp_title)
+                    buttonYes =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_yes)
+                    buttonNo =
+                        viewRecyclerViewItems.findViewById(R.id.button_recycler_view_basecamp_no)
+                    buttonClicksBasecampNotifyPopup(
+                        notifyAdapter = notifyAdapter,
+                        notifyList = notifyList,
+                        position = position
+                    )
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
                 LoggerBird.callEnqueue()
@@ -218,10 +216,12 @@ internal class RecyclerViewBasecampNotifyAdapter(
                 arrayListNotify = notifyList
                 notifyAdapter.notifyDataSetChanged()
                 removePopupLayout()
-//                if (notifyList.size <= 0) {
-//                    LoggerBirdService.loggerBirdService.cardViewBasecampNotifyList.visibility =
-//                        View.GONE
-//                }
+                if (notifyList.size <= 0) {
+                    LoggerBirdService.loggerBirdService.textViewBasecampNotifyList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewBasecampNotifyList.visibility =
+                        View.GONE
+                }
             }
             buttonNo.setSafeOnClickListener {
                 removePopupLayout()
