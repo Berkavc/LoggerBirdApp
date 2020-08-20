@@ -19,7 +19,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".Main3Activity"></activity>
+        <activity
+            android:name=".Main4Activity"
+            android:label="@string/title_activity_main4"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity android:name=".Main3Activity" />
 
         <receiver
             android:name="com.adjust.sdk.AdjustReferrerReceiver"

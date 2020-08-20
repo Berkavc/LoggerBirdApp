@@ -263,7 +263,8 @@ class MainActivity : AppCompatActivity() {
 //            }
         }
         button_read_logs.setOnClickListener(View.OnClickListener {
-            throw  NullPointerException("asdf123123");
+//            throw  NullPointerException("asdf123123");
+            startActivity(Intent(this@MainActivity, Main4Activity::class.java))
 //            getCurrentData()
 //            beginSearch("dog", this)
             // LogDeneme.saveComponentDetails(view=button_read_logs,resources = button_read_logs.resources)
