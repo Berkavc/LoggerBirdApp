@@ -749,7 +749,7 @@ internal class SlackApi {
         queueCounter++
         RetrofitSlackClient.getSlackUserClient(url = "https://slack.com/api/")
             .create(AccountIdService::class.java)
-            .getSlackAccessToken(code = "523949707746.1300931714102.63177181b056ffc0c614cc99fab399fd162d8a1a60eb9a33aa91a2effe2037a1" , clientId = CLIENT_ID ,clientSecret = CLIENT_SECRET)
+            .getSlackAccessToken(code = "523949707746.1305602180822.90bead24d771b9e97136249f12587b5b032bc12babd2d58e77444272e72e2763" , clientId = CLIENT_ID ,clientSecret = CLIENT_SECRET)
             .enqueue(object : retrofit2.Callback<JsonObject> {
                 override fun onFailure(
                     call: retrofit2.Call<JsonObject>,

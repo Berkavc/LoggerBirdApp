@@ -402,18 +402,18 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     //Slack:
     private val slackAuthentication = SlackApi()
-    private lateinit var buttonSlackCreate: Button
-    internal lateinit var buttonSlackCancel: Button
+    private lateinit var buttonSlackCreateChannel: Button
+    internal lateinit var buttonSlackCancelChannel: Button
     private lateinit var buttonSlackCreateUser: Button
     internal lateinit var buttonSlackCancelUser: Button
     private lateinit var spinnerChannels: Spinner
     private lateinit var spinnerUsers: Spinner
-    private lateinit var editTextMessage: EditText
+    private lateinit var editTextMessageChannel: EditText
     private lateinit var editTextMessageUser: EditText
     private lateinit var spinnerChannelsAdapter: ArrayAdapter<String>
     private lateinit var spinnerUsersAdapter: ArrayAdapter<String>
     private lateinit var slackAttachmentAdapter: RecyclerViewSlackAttachmentAdapter
-    private lateinit var recyclerViewSlackAttachment: RecyclerView
+    private lateinit var recyclerViewSlackAttachmentChannel: RecyclerView
     private lateinit var recyclerViewSlackAttachmentUser: RecyclerView
     private val arrayListSlackFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var slackChannelLayout: ConstraintLayout
@@ -422,6 +422,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     //private lateinit var toolbarSlack: Toolbar
     private lateinit var toolbarSlackUser : Toolbar
     private lateinit var toolbarSlackChannel: Toolbar
+    private lateinit var scrollViewSlack:ScrollView
+    private lateinit var scrollViewSlackUser:ScrollView
 
     //Email:
     private lateinit var buttonEmailCreate: Button
@@ -522,22 +524,25 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private val arrayListGithubFileName: ArrayList<RecyclerViewModel> = ArrayList()
     private lateinit var recyclerViewGithubAssignee: RecyclerView
     private lateinit var githubAssigneeAdapter: RecyclerViewGithubAssigneeAdapter
-    internal lateinit var cardViewGithubAssigneeList: CardView
+    internal lateinit var textViewGithubAssigneeList: TextView
     private val arrayListGithubAssigneeName: ArrayList<RecyclerViewModelAssignee> = ArrayList()
     private lateinit var imageViewGithubAssignee: ImageView
     private lateinit var arrayListGithubAssignee: ArrayList<String>
     private lateinit var recyclerViewGithubLabel: RecyclerView
     private lateinit var githubLabelAdapter: RecyclerViewGithubLabelAdapter
-    internal lateinit var cardViewGithubLabelList: CardView
+    internal lateinit var textViewGithubLabelList: TextView
     private val arrayListGithubLabelName: ArrayList<RecyclerViewModelLabel> = ArrayList()
     private lateinit var imageViewGithubLabel: ImageView
     private lateinit var arrayListGithubLabel: ArrayList<String>
     private lateinit var recyclerViewGithubProject: RecyclerView
     private lateinit var githubProjectAdapter: RecyclerViewGithubProjectAdapter
-    internal lateinit var cardViewGithubProjectList: CardView
+    internal lateinit var textViewGithubProjectList: TextView
     private val arrayListGithubProjectName: ArrayList<RecyclerViewModelProject> = ArrayList()
     private lateinit var imageViewGithubProject: ImageView
     private lateinit var arrayListGithubProject: ArrayList<String>
+    internal lateinit var imageViewGithubProjectList:ImageView
+    internal lateinit var imageViewGithubAssigneeList:ImageView
+    internal lateinit var imageViewGithubLabelList:ImageView
     //Trello
     internal val trelloAuthentication = TrelloApi()
     private lateinit var buttonTrelloCreate: Button
@@ -5319,21 +5324,30 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 spinnerUsers = viewSlack.findViewById(R.id.spinner_slack_user)
                 slackChannelLayout = viewSlack.findViewById(R.id.slack_send_channel_layout)
                 slackUserLayout = viewSlack.findViewById(R.id.slack_send_user_layout)
-                recyclerViewSlackAttachment =
-                    viewSlack.findViewById(R.id.recycler_view_slack_attachment)
+                recyclerViewSlackAttachmentChannel =
+                    viewSlack.findViewById(R.id.recycler_view_slack_attachment_channel)
                 recyclerViewSlackAttachmentUser =
                     viewSlack.findViewById(R.id.recycler_view_slack_attachment_user)
-                editTextMessage = viewSlack.findViewById(R.id.editText_slack_message)
+                editTextMessageChannel = viewSlack.findViewById(R.id.editText_slack_message_channel)
                 editTextMessageUser =
                     viewSlack.findViewById(R.id.editText_slack_message_user)
-                buttonSlackCancel = viewSlack.findViewById(R.id.button_slack_cancel)
-                buttonSlackCreate = viewSlack.findViewById(R.id.button_slack_create)
+                buttonSlackCancelChannel = viewSlack.findViewById(R.id.button_slack_cancel_channel)
+                buttonSlackCreateChannel = viewSlack.findViewById(R.id.button_slack_create_channel)
                 buttonSlackCancelUser =
                     viewSlack.findViewById(R.id.button_slack_cancel_user)
                 buttonSlackCreateUser = viewSlack.findViewById(R.id.button_slack_create_user)
-                toolbarSlackUser = viewSlack.findViewById(R.id.toolbar_gitlab_user)
-                toolbarSlackChannel = viewSlack.findViewById(R.id.toolbar_gitlab_channel)
+                toolbarSlackUser = viewSlack.findViewById(R.id.toolbar_slack_user)
+                toolbarSlackChannel = viewSlack.findViewById(R.id.toolbar_slack_channel)
                 slackBottomNavigationView = viewSlack.findViewById(R.id.slack_bottom_nav_view)
+                scrollViewSlack = viewSlack.findViewById(R.id.scrollView_slack)
+
+                scrollViewSlack.setOnTouchListener { v, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        hideKeyboard(activity = activity, view = viewSlack)
+                    }
+                    return@setOnTouchListener false
+                }
+
 
                 slackAuthentication.callSlack(
                     context = context,
@@ -5369,11 +5383,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     private fun buttonClicksSlack(filePathMedia: File) {
-        buttonSlackCreate.setSafeOnClickListener {
+        buttonSlackCreateChannel.setSafeOnClickListener {
             slackAuthentication.gatherSlackChannelSpinnerDetails(
                 spinnerChannel = spinnerChannels
             )
-            slackAuthentication.gatherSlackEditTextDetails(editTextMessage = editTextMessage)
+            slackAuthentication.gatherSlackEditTextDetails(editTextMessage = editTextMessageChannel)
             slackAuthentication.gatherSlackRecyclerViewDetails(arrayListRecyclerViewItems = arrayListSlackFileName)
             if (slackAuthentication.checkMessageEmpty(activity = activity, context = context)) {
                 attachProgressBar(task = "slack")
@@ -5411,7 +5425,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         }
 
-        buttonSlackCancel.setSafeOnClickListener {
+        buttonSlackCancelChannel.setSafeOnClickListener {
             removeSlackLayout()
             if (controlFloatingActionButtonView()) {
                 floatingActionButtonView.visibility = View.VISIBLE
@@ -5469,6 +5483,18 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
             return@setOnMenuItemClickListener true
         }
+        toolbarSlackChannel.setNavigationOnClickListener {
+            removeSlackLayout()
+            if (controlFloatingActionButtonView()) {
+                floatingActionButtonView.visibility = View.VISIBLE
+            }
+        }
+        toolbarSlackUser.setNavigationOnClickListener {
+            removeSlackLayout()
+            if (controlFloatingActionButtonView()) {
+                floatingActionButtonView.visibility = View.VISIBLE
+            }
+        }
     }
 
     /**
@@ -5476,7 +5502,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * @param filePathMedia is used for getting the reference of current media file.
      */
     private fun initializeSlackRecyclerView(filePathMedia: File) {
-        recyclerViewSlackAttachment.layoutManager =
+        recyclerViewSlackAttachmentChannel.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         recyclerViewSlackAttachmentUser.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -5491,7 +5517,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 )
         }
 
-        recyclerViewSlackAttachment.adapter = slackAttachmentAdapter
+        recyclerViewSlackAttachmentChannel.adapter = slackAttachmentAdapter
         recyclerViewSlackAttachmentUser.adapter = slackAttachmentAdapter
 
     }
@@ -6465,17 +6491,21 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                 viewGithub.findViewById(R.id.recycler_view_github_attachment)
             toolbarGithub = viewGithub.findViewById(R.id.toolbar_github)
             recyclerViewGithubAssignee =
-                viewGithub.findViewById(R.id.recycler_view_assignee_list)
-            cardViewGithubAssigneeList = viewGithub.findViewById(R.id.cardView_assignee_list)
-            imageViewGithubAssignee = viewGithub.findViewById(R.id.imageView_basecamp_assignee_add)
+                viewGithub.findViewById(R.id.recycler_view_github_assignee_list)
+            textViewGithubAssigneeList = viewGithub.findViewById(R.id.textView_github_assignee_list)
+            imageViewGithubAssignee = viewGithub.findViewById(R.id.imageView_github_assignee_add)
 
-            recyclerViewGithubLabel = viewGithub.findViewById(R.id.recycler_view_jira_label_list)
-            cardViewGithubLabelList = viewGithub.findViewById(R.id.cardView_label_list)
-            imageViewGithubLabel = viewGithub.findViewById(R.id.imageView_jira_label_add)
+            recyclerViewGithubLabel = viewGithub.findViewById(R.id.recycler_view_github_label_list)
+            textViewGithubLabelList = viewGithub.findViewById(R.id.textView_github_label_list)
+            imageViewGithubLabel = viewGithub.findViewById(R.id.imageView_github_label_add)
 
-            recyclerViewGithubProject = viewGithub.findViewById(R.id.recycler_view_project_list)
-            cardViewGithubProjectList = viewGithub.findViewById(R.id.cardView_project_list)
-            imageViewGithubProject = viewGithub.findViewById(R.id.imageView_project_add)
+            recyclerViewGithubProject = viewGithub.findViewById(R.id.recycler_view_github_project_list)
+            textViewGithubProjectList = viewGithub.findViewById(R.id.textView_github_project_list)
+            imageViewGithubProject = viewGithub.findViewById(R.id.imageView_github_project_add)
+
+            imageViewGithubProjectList = viewGithub.findViewById(R.id.imageView_github_project_list)
+            imageViewGithubAssigneeList = viewGithub.findViewById(R.id.imageView_github_assignee_list)
+            imageViewGithubLabelList= viewGithub.findViewById(R.id.imageView_github_label_list)
 
             toolbarGithub.setOnMenuItemClickListener {
                 when (it.itemId) {
@@ -6569,8 +6599,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for clearing github components.
      */
     private fun clearGithubComponents() {
-        cardViewGithubAssigneeList.visibility = View.GONE
-        cardViewGithubLabelList.visibility = View.GONE
+        textViewGithubAssigneeList.visibility = View.GONE
+        textViewGithubLabelList.visibility = View.GONE
+        textViewGithubProjectList.visibility = View.GONE
+        imageViewGithubProjectList.visibility = View.GONE
+        imageViewGithubAssigneeList.visibility = View.GONE
+        imageViewGithubLabelList.visibility = View.GONE
         arrayListGithubAssigneeName.clear()
         arrayListGithubLabelName.clear()
         githubAssigneeAdapter.notifyDataSetChanged()
@@ -6655,7 +6689,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListGithubAssigneeName.add(RecyclerViewModelAssignee(autoTextViewGithubAssignee.editableText.toString()))
                 githubAssigneeAdapter.notifyDataSetChanged()
-                cardViewGithubAssigneeList.visibility = View.VISIBLE
+                textViewGithubAssigneeList.visibility = View.VISIBLE
+                imageViewGithubAssigneeList.visibility = View.VISIBLE
             } else if (arrayListGithubAssigneeName.contains(
                     RecyclerViewModelAssignee(
                         autoTextViewGithubAssignee.editableText.toString()
@@ -6686,7 +6721,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListGithubLabelName.add(RecyclerViewModelLabel(autoTextViewGithubLabels.editableText.toString()))
                 githubLabelAdapter.notifyDataSetChanged()
-                cardViewGithubLabelList.visibility = View.VISIBLE
+                textViewGithubLabelList.visibility = View.VISIBLE
+                imageViewGithubLabelList.visibility = View.VISIBLE
             } else if (arrayListGithubLabelName.contains(
                     RecyclerViewModelLabel(autoTextViewGithubLabels.editableText.toString())
                 )
@@ -6715,7 +6751,8 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             ) {
                 arrayListGithubProjectName.add(RecyclerViewModelProject(autoTextViewGithubProject.editableText.toString()))
                 githubProjectAdapter.notifyDataSetChanged()
-                cardViewGithubProjectList.visibility = View.VISIBLE
+                textViewGithubProjectList.visibility = View.VISIBLE
+                imageViewGithubProjectList.visibility = View.VISIBLE
             } else if (arrayListGithubProjectName.contains(
                     RecyclerViewModelProject(autoTextViewGithubProject.editableText.toString())
                 )
@@ -7233,7 +7270,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             autoTextViewTrelloBoard = viewTrello.findViewById(R.id.auto_textView_trello_board)
             autoTextViewTrelloMember = viewTrello.findViewById(R.id.auto_textView_trello_member)
             autoTextViewTrelloLabel = viewTrello.findViewById(R.id.auto_textView_trello_label)
-            recyclerViewTrelloLabel = viewTrello.findViewById(R.id.recycler_view_jira_label_list)
+            recyclerViewTrelloLabel = viewTrello.findViewById(R.id.recycler_view_trello_label_list)
             imageViewTrelloLabel = viewTrello.findViewById(R.id.imageView_trello_label_add)
             textViewTrelloLabelList = viewTrello.findViewById(R.id.textView_trello_label_list)
             imageViewTrelloLabelList = viewTrello.findViewById(R.id.imageView_trello_label_list)

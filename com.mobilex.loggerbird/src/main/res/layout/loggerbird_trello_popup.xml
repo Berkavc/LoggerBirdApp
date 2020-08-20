@@ -279,13 +279,13 @@
             android:layout_marginTop="5dp"
             android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
-            app:layout_constraintEnd_toStartOf="@id/recycler_view_jira_label_list"
+            app:layout_constraintEnd_toStartOf="@id/recycler_view_trello_label_list"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/textView_trello_label_list"
             app:srcCompat="@drawable/ic_label_black_24dp"></ImageView>
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view_jira_label_list"
+            android:id="@+id/recycler_view_trello_label_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"

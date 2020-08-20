@@ -379,6 +379,8 @@
     <string name="textView_github_project_list">Project list</string>
     <string name="button_github_create">Create</string>
     <string name="button_github_cancel">Cancel</string>
+    <string name="textView_github_enter_milestone">Enter your issue milestone</string>
+    <string name="textView_github_enter_linked_pull">Enter your linked pull requests of issue</string>
     <!-- recycler_view_github_item_popup-->
     <string name="textView_recyclerView_github_popup_title">Are you sure to remove attachment from your Github issue?</string>
     <!-- loggerbird_github_menu-->
@@ -525,7 +527,7 @@
     <string name="textView_basecamp_menu_save">Save Issue Info</string>
     <string name="textView_basecamp_menu_clear">Clear Issue Info</string>
     <!-- loggerbird_basecamp_popup-->
-    <string name="textView_basecamp_toolbar_title">Create Basecamp Issue</string>
+    <string name="textView_basecamp_toolbar_title">Create Basecamp Story</string>
     <string name="textView_basecamp_message_board">Message board</string>
     <string name="textView_basecamp_project">Project</string>
     <string name="textView_basecamp_title">Title</string>
@@ -582,6 +584,10 @@
     <string name="textView_asana_enter_start_date_enter">Enter a start date for issue</string>
     <string name="button_asana_create">Create</string>
     <string name="button_asana_cancel">Cancel</string>
+    <string name="textView_asana_enter_section">Enter a section for this task</string>
+    <string name="textView_asana_enter_priority">Enter a priority for this task</string>
+    <string name="textView_asana_enter_assignee">Enter an assignee for this task</string>
+    <string name="textView_asana_enter_date">Enter a start date for this task</string>
     <!-- loggerbird_asana_sub_popup-->
     <string name="textView_asana_sub_task_name">Subtask name</string>
     <string name="editText_asana_sub_task_name">Enter a subtask name for this subtask…</string>

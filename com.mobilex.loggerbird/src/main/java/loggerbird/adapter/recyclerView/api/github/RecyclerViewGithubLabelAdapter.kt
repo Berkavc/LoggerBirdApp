@@ -15,9 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import java.util.concurrent.TimeUnit
-import android.provider.Settings
 import android.widget.Button
-import androidx.annotation.RequiresApi
 import loggerbird.constants.Constants
 import loggerbird.LoggerBird
 import loggerbird.models.recyclerView.RecyclerViewModelLabel
@@ -216,7 +214,9 @@ internal class RecyclerViewGithubLabelAdapter(
                 arrayListLabelNames = labelList
                 labelAdapter.notifyDataSetChanged()
                 if (labelList.size <= 0) {
-                    LoggerBirdService.loggerBirdService.cardViewGithubLabelList.visibility =
+                    LoggerBirdService.loggerBirdService.textViewGithubLabelList.visibility =
+                        View.GONE
+                    LoggerBirdService.loggerBirdService.imageViewGithubLabelList.visibility =
                         View.GONE
                 }
                 removePopupLayout()
