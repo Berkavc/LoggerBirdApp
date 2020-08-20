@@ -3,23 +3,16 @@ package loggerbird.observers
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.graphics.Rect
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
-import com.jakewharton.rxbinding2.view.RxView
 import com.mobilex.loggerbird.R
 import loggerbird.LoggerBird
 import loggerbird.constants.Constants
 import loggerbird.listeners.layouts.LayoutOnTouchListener
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 internal class LogComponentObserver {
