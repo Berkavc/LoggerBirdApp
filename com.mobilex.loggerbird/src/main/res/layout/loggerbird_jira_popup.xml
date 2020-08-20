@@ -20,7 +20,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:menu="@menu/loggerbird_jira_menu"
-            app:navigationIcon="@drawable/ic_arrow_back_black_24dp"
+            app:navigationIcon="@drawable/ic_jira_logo_24dp"
             app:title="@string/textView_jira_title"
             app:titleTextColor="@color/black"></androidx.appcompat.widget.Toolbar>
 
