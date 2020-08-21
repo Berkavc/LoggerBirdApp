@@ -5934,6 +5934,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
             buttonEmailCancel.setSafeOnClickListener {
                 removeEmailLayout()
+                if (controlFloatingActionButtonView()) {
+                    floatingActionButtonView.visibility = View.VISIBLE
+                }
             }
             imageViewEmailAdd.setSafeOnClickListener {
                 hideKeyboard(activity = activity, view = viewEmail)
