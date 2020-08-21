@@ -200,9 +200,10 @@ internal class PaintActivity : Activity() {
                 }.show()
             }
             layout.addView(snackView, objLayoutParams)
-            snackBarDelete.setAction(resources.getString(R.string.snackbar_dismiss)) {
-                snackBarDelete.dismiss()
-            }.show()
+//            snackBarDelete.setAction(resources.getString(R.string.snackbar_dismiss)) {
+//                snackBarDelete.dismiss()
+//            }.show()
+            snackBarDelete.show()
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()
