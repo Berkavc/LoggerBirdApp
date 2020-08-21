@@ -1062,7 +1062,7 @@ class LoggerBird : LifecycleObserver {
             if (LoggerBirdService.controlServiceOnDestroyState) {
                 if (controlLogInit) {
                     try {
-                        stringBuilderLifeCycle.append(Constants.lifeCycleTag + ":" + "\n")
+                        stringBuilderLifeCycle.append("\n"+Constants.lifeCycleTag + ":" + "\n")
                         if (Companion::fragmentLifeCycleObserver.isInitialized) {
                             if (fragmentLifeCycleObserver.returnFragmentLifeCycleState().isNotEmpty()) {
                                 for (classList in fragmentLifeCycleObserver.returnClassList()) {

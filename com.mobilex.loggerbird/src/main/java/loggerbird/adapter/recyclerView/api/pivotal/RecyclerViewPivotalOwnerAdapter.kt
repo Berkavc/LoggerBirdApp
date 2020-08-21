@@ -235,9 +235,11 @@ internal class RecyclerViewPivotalOwnerAdapter(
          */
         private fun removePopupLayout() {
             if (windowManagerRecyclerViewItemPopup != null && this::viewRecyclerViewItems.isInitialized) {
-                (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
-                    viewRecyclerViewItems
-                )
+                if(viewRecyclerViewItems.parent != null){
+                    (windowManagerRecyclerViewItemPopup as WindowManager).removeViewImmediate(
+                        viewRecyclerViewItems
+                    )
+                }
                 windowManagerRecyclerViewItemPopup = null
             }
         }

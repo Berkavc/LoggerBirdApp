@@ -1130,7 +1130,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
 
     /**
-     * This method is used for creating Main Loggerbird layout which is attached to application overlay.
+     * This method is used for creating Main Loggerbird layout.
      * @param activity is used for getting reference of current activity.
      * @throws exception if error occurs then com.mobilex.loggerbird.loggerbird.exception message will be hold in the instance of takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
      */
@@ -1138,16 +1138,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     internal fun initializeFloatingActionButton(activity: Activity) {
         try {
             if (windowManager != null && this::view.isInitialized) {
+                if(view.parent != null){
+                    (windowManager as WindowManager).removeViewImmediate(view)
+                }
                 if (revealLinearLayoutShare.visibility == View.VISIBLE) {
                     controlMediaFile()
                 }
-                (windowManager as WindowManager).removeViewImmediate(view)
                 if (!checkUnhandledFilePath() && !this.controlFileAction) {
                     initializeLoggerBirdClosePopup(activity = activity)
                 }
                 windowManager = null
                 isFabEnable = false
-
             } else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (Settings.canDrawOverlays(activity)) {
@@ -1165,6 +1166,17 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             LoggerBird.callExceptionDetails(exception = e, tag = Constants.floatingActionButtonTag)
         }
     }
+    /**
+     * This method is used for removing Main Loggerbird layout.
+     */
+    private fun removeFloatingActionButtonLayout(){
+        if (windowManager != null && this::view.isInitialized) {
+            if(view.parent != null){
+                (windowManager as WindowManager).removeViewImmediate(view)
+            }
+            windowManager = null
+        }
+    }
 
     /**
      * This method is used for initializing view of the main loggerbird layout.
@@ -1172,6 +1184,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun initializeFloatingActionButtonView() {
         try {
+            removeFloatingActionButtonLayout()
             removeFeedBackLayout()
             val rootView: ViewGroup =
                 activity.window.decorView.findViewById(android.R.id.content)
@@ -1815,7 +1828,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     ) == it.exceptionName
                 ) {
                     activity.runOnUiThread {
-                        attachUnhandledDuplicationLayout(filePath = filePath, field = field)
+                        initializeUnhandledDuplicationLayout(filePath = filePath, field = field)
                     }
                     return true
                 }
@@ -3808,7 +3821,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeFeedBackLayout() {
         if (windowManagerFeedback != null && this::viewFeedback.isInitialized) {
-            (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
+            if(viewFeedback.parent != null){
+                (windowManagerFeedback as WindowManager).removeViewImmediate(viewFeedback)
+            }
             windowManagerFeedback = null
         }
     }
@@ -4010,7 +4025,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeJiraLayout() {
         if (windowManagerJira != null && this::viewJira.isInitialized) {
-            (windowManagerJira as WindowManager).removeViewImmediate(viewJira)
+            if(viewJira.parent != null){
+                (windowManagerJira as WindowManager).removeViewImmediate(viewJira)
+            }
             windowManagerJira = null
             arrayListJiraFileName.clear()
             projectJiraPosition = 0
@@ -5373,9 +5390,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     private fun removeSlackLayout() {
         if (windowManagerSlack != null && this::viewSlack.isInitialized) {
             (windowManagerSlack as WindowManager).removeViewImmediate(viewSlack)
-            windowManagerSlack = null
-            arrayListSlackFileName.clear()
         }
+        windowManagerSlack = null
+        arrayListSlackFileName.clear()
     }
 
     /**
@@ -5677,10 +5694,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      * This method is used for creating unhandled duplcation layout which is attached to application overlay.
      * @param filePath is used for getting the reference of current  file.
      */
-    internal fun attachUnhandledDuplicationLayout(
+    internal fun initializeUnhandledDuplicationLayout(
         filePath: File,
         field: String
     ) {
+        removeUnhandledDuplicationLayout()
         val rootView: ViewGroup = activity.window.decorView.findViewById(android.R.id.content)
         viewUnhandledDuplication =
             LayoutInflater.from(activity)
@@ -5718,11 +5736,14 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     /**
      * This method is used for removing unhandled_duplication_popup from window.
      */
-    private fun detachUnhandledDuplicationLayout() {
-        if (this::viewUnhandledDuplication.isInitialized) {
-            (windowManagerUnhandledDuplication as WindowManager).removeViewImmediate(
-                viewUnhandledDuplication
-            )
+    private fun removeUnhandledDuplicationLayout() {
+        if (this::viewUnhandledDuplication.isInitialized && windowManagerUnhandledDuplication != null) {
+            if(viewUnhandledDuplication.parent != null){
+                (windowManagerUnhandledDuplication as WindowManager).removeViewImmediate(
+                    viewUnhandledDuplication
+                )
+            }
+            windowManagerUnhandledDuplication = null
         }
     }
 
@@ -5739,7 +5760,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
         val buttonCancel =
             viewUnhandledDuplication.findViewById<Button>(R.id.button_unhandled_duplication_cancel)
         buttonProceed.setSafeOnClickListener {
-            detachUnhandledDuplicationLayout()
+            removeUnhandledDuplicationLayout()
             when (field) {
                 "email" -> initializeEmailLayout(filePathMedia = filePath)
                 "jira" -> initializeJiraLayout(filePathMedia = filePath)
@@ -5755,7 +5776,7 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
             }
         }
         buttonCancel.setSafeOnClickListener {
-            detachUnhandledDuplicationLayout()
+            removeUnhandledDuplicationLayout()
             if (controlFloatingActionButtonView()) {
                 floatingActionButtonView.visibility = View.VISIBLE
             }
@@ -5855,9 +5876,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeEmailLayout() {
         if (this::viewEmail.isInitialized && windowManagerEmail != null) {
-            (windowManagerEmail as WindowManager).removeViewImmediate(
-                viewEmail
-            )
+            if(viewEmail.parent != null){
+                (windowManagerEmail as WindowManager).removeViewImmediate(
+                    viewEmail
+                )
+            }
             windowManagerEmail = null
             arrayListEmailFileName.clear()
         }
@@ -6148,9 +6171,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeFutureLayout() {
         if (this::viewFutureTask.isInitialized && windowManagerFutureTask != null) {
-            (windowManagerFutureTask as WindowManager).removeViewImmediate(
-                viewFutureTask
-            )
+            if(viewFutureTask.parent != null){
+                (windowManagerFutureTask as WindowManager).removeViewImmediate(
+                    viewFutureTask
+                )
+            }
             windowManagerFutureTask = null
         }
     }
@@ -6246,9 +6271,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeFutureDateLayout() {
         if (this::viewFutureDate.isInitialized && windowManagerFutureDate != null) {
-            (windowManagerFutureDate as WindowManager).removeViewImmediate(
-                viewFutureDate
-            )
+            if(viewFutureDate.parent != null){
+                (windowManagerFutureDate as WindowManager).removeViewImmediate(
+                    viewFutureDate
+                )
+            }
             windowManagerFutureDate = null
         }
     }
@@ -6329,9 +6356,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeFutureTimeLayout() {
         if (this::viewFutureTime.isInitialized && windowManagerFutureTime != null) {
-            (windowManagerFutureTime as WindowManager).removeViewImmediate(
-                viewFutureTime
-            )
+            if(viewFutureTime.parent != null){
+                (windowManagerFutureTime as WindowManager).removeViewImmediate(
+                    viewFutureTime
+                )
+            }
             windowManagerFutureTime = null
         }
     }
@@ -6623,9 +6652,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeGithubLayout() {
         if (this::viewGithub.isInitialized && windowManagerGithub != null) {
-            (windowManagerGithub as WindowManager).removeViewImmediate(
-                viewGithub
-            )
+            if(viewGithub.parent != null){
+                (windowManagerGithub as WindowManager).removeViewImmediate(
+                    viewGithub
+                )
+            }
             windowManagerGithub = null
         }
     }
@@ -7387,9 +7418,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeTrelloLayout() {
         if (this::viewTrello.isInitialized && windowManagerTrello != null) {
-            (windowManagerTrello as WindowManager).removeViewImmediate(
-                viewTrello
-            )
+            if(viewTrello.parent != null){
+                (windowManagerTrello as WindowManager).removeViewImmediate(
+                    viewTrello
+                )
+            }
             windowManagerTrello = null
         }
     }
@@ -7950,9 +7983,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeTrelloTimelineLayout() {
         if (this::viewTrelloTimeline.isInitialized && windowManagerTrelloTimeline != null) {
-            (windowManagerTrelloTimeline as WindowManager).removeViewImmediate(
-                viewTrelloTimeline
-            )
+            if(viewTrelloTimeline.parent != null){
+                (windowManagerTrelloTimeline as WindowManager).removeViewImmediate(
+                    viewTrelloTimeline
+                )
+            }
             windowManagerTrelloTimeline = null
         }
     }
@@ -8036,9 +8071,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeTrelloDateLayout() {
         if (this::viewTrelloDate.isInitialized && windowManagerTrelloDate != null) {
-            (windowManagerTrelloDate as WindowManager).removeViewImmediate(
-                viewTrelloDate
-            )
+            if(viewTrelloDate.parent != null){
+                (windowManagerTrelloDate as WindowManager).removeViewImmediate(
+                    viewTrelloDate
+                )
+            }
             windowManagerTrelloDate = null
         }
     }
@@ -8112,9 +8149,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     private fun removeTrelloTimeLayout() {
         if (this::viewTrelloTime.isInitialized && windowManagerTrelloTime != null) {
-            (windowManagerTrelloTime as WindowManager).removeViewImmediate(
-                viewTrelloTime
-            )
+            if(viewTrelloTime.parent != null){
+                (windowManagerTrelloTime as WindowManager).removeViewImmediate(
+                    viewTrelloTime
+                )
+            }
             windowManagerTrelloTime = null
         }
     }
@@ -8377,7 +8416,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeGitlabLayout() {
         if (windowManagerGitlab != null && this::viewGitlab.isInitialized) {
-            (windowManagerGitlab as WindowManager).removeViewImmediate(viewGitlab)
+            if(viewGitlab.parent != null){
+                (windowManagerGitlab as WindowManager).removeViewImmediate(viewGitlab)
+            }
             windowManagerGitlab = null
             arrayListGitlabFileName.clear()
         }
@@ -8970,9 +9011,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removePivotalLayout() {
         if (this::viewPivotal.isInitialized && windowManagerPivotal != null) {
-            (windowManagerPivotal as WindowManager).removeViewImmediate(
-                viewPivotal
-            )
+            if(viewPivotal.parent != null){
+                (windowManagerPivotal as WindowManager).removeViewImmediate(
+                    viewPivotal
+                )
+            }
             windowManagerPivotal = null
         }
     }
@@ -9802,9 +9845,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeBasecampLayout() {
         if (this::viewBasecamp.isInitialized && windowManagerBasecamp != null) {
-            (windowManagerBasecamp as WindowManager).removeViewImmediate(
-                viewBasecamp
-            )
+            if(viewBasecamp.parent != null){
+                (windowManagerBasecamp as WindowManager).removeViewImmediate(
+                    viewBasecamp
+                )
+            }
             windowManagerBasecamp = null
         }
     }
@@ -10340,9 +10385,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
 
     private fun removeBasecampDateLayout() {
         if (this::viewBasecampDate.isInitialized && windowManagerBasecampDate != null) {
-            (windowManagerBasecampDate as WindowManager).removeViewImmediate(
-                viewBasecampDate
-            )
+            if(viewBasecampDate.parent != null){
+                (windowManagerBasecampDate as WindowManager).removeViewImmediate(
+                    viewBasecampDate
+                )
+            }
             windowManagerBasecampDate = null
         }
     }
@@ -10545,9 +10592,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeAsanaLayout() {
         if (this::viewAsana.isInitialized && windowManagerAsana != null) {
-            (windowManagerAsana as WindowManager).removeViewImmediate(
-                viewAsana
-            )
+            if(viewAsana.parent != null){
+                (windowManagerAsana as WindowManager).removeViewImmediate(
+                    viewAsana
+                )
+            }
             windowManagerAsana = null
         }
     }
@@ -10995,9 +11044,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     private fun removeAsanaDateLayout() {
         if (this::viewAsanaDate.isInitialized && windowManagerAsanaDate != null) {
-            (windowManagerAsanaDate as WindowManager).removeViewImmediate(
-                viewAsanaDate
-            )
+            if(viewAsanaDate.parent != null){
+                (windowManagerAsanaDate as WindowManager).removeViewImmediate(
+                    viewAsanaDate
+                )
+            }
             windowManagerAsanaDate = null
         }
     }
@@ -11159,7 +11210,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeClubhouseLayout() {
         if (windowManagerClubhouse != null && this::viewClubhouse.isInitialized) {
-            (windowManagerClubhouse as WindowManager).removeViewImmediate(viewClubhouse)
+            if(viewClubhouse.parent != null){
+                (windowManagerClubhouse as WindowManager).removeViewImmediate(viewClubhouse)
+            }
             windowManagerClubhouse = null
             arrayListClubhouseFileName.clear()
         }
@@ -11687,9 +11740,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdActivateLayout() {
         if (this::viewLoggerBirdActivatePopup.isInitialized && windowManagerLoggerBirdActivatePopup != null) {
-            (windowManagerLoggerBirdActivatePopup as WindowManager).removeViewImmediate(
-                viewLoggerBirdActivatePopup
-            )
+            if(viewLoggerBirdActivatePopup.parent != null){
+                (windowManagerLoggerBirdActivatePopup as WindowManager).removeViewImmediate(
+                    viewLoggerBirdActivatePopup
+                )
+            }
             windowManagerLoggerBirdActivatePopup = null
         }
     }
@@ -11803,9 +11858,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdStartLayout() {
         if (this::viewLoggerBirdStartPopup.isInitialized && windowManagerLoggerBirdStartPopup != null) {
-            (windowManagerLoggerBirdStartPopup as WindowManager).removeViewImmediate(
-                viewLoggerBirdStartPopup
-            )
+            if(viewLoggerBirdStartPopup.parent != null){
+                (windowManagerLoggerBirdStartPopup as WindowManager).removeViewImmediate(
+                    viewLoggerBirdStartPopup
+                )
+            }
             windowManagerLoggerBirdStartPopup = null
         }
     }
@@ -11899,9 +11956,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdDismissLayout() {
         if (this::viewLoggerBirdDismissPopup.isInitialized && windowManagerLoggerBirdDismissPopup != null) {
-            (windowManagerLoggerBirdDismissPopup as WindowManager).removeViewImmediate(
-                viewLoggerBirdDismissPopup
-            )
+            if(viewLoggerBirdDismissPopup.parent != null){
+                (windowManagerLoggerBirdDismissPopup as WindowManager).removeViewImmediate(
+                    viewLoggerBirdDismissPopup
+                )
+            }
             windowManagerLoggerBirdDismissPopup = null
         }
     }
@@ -11986,9 +12045,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdFileActionLayout() {
         if (this::viewLoggerBirdFileActionPopup.isInitialized && windowManagerLoggerBirdFileActionPopup != null) {
-            (windowManagerLoggerBirdFileActionPopup as WindowManager).removeViewImmediate(
-                viewLoggerBirdFileActionPopup
-            )
+            if(viewLoggerBirdFileActionPopup.parent != null){
+                (windowManagerLoggerBirdFileActionPopup as WindowManager).removeViewImmediate(
+                    viewLoggerBirdFileActionPopup
+                )
+            }
             windowManagerLoggerBirdFileActionPopup = null
         }
     }
@@ -12071,9 +12132,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdFileActionListLayout() {
         if (this::viewLoggerBirdFileActionListPopup.isInitialized && windowManagerLoggerBirdFileActionListPopup != null) {
-            (windowManagerLoggerBirdFileActionListPopup as WindowManager).removeViewImmediate(
-                viewLoggerBirdFileActionListPopup
-            )
+            if(viewLoggerBirdFileActionListPopup.parent != null){
+                (windowManagerLoggerBirdFileActionListPopup as WindowManager).removeViewImmediate(
+                    viewLoggerBirdFileActionListPopup
+                )
+            }
             windowManagerLoggerBirdFileActionListPopup = null
         }
     }
@@ -12196,10 +12259,12 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeLoggerBirdUnhandledExceptionLayout() {
         if (this::viewLoggerBirdUnhandledExceptionPopup.isInitialized && windowManagerLoggerBirdUnhandledException != null) {
-            (windowManagerLoggerBirdUnhandledException as WindowManager).removeViewImmediate(
-                viewLoggerBirdUnhandledExceptionPopup
-            )
-            windowManagerLoggerBirdUnhandledException = null
+            if(viewLoggerBirdUnhandledExceptionPopup.parent != null){
+                (windowManagerLoggerBirdUnhandledException as WindowManager).removeViewImmediate(
+                    viewLoggerBirdUnhandledExceptionPopup
+                )
+                windowManagerLoggerBirdUnhandledException = null
+            }
         }
     }
 
@@ -12515,9 +12580,11 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
      */
     internal fun removeBitbucketLayout() {
         if (this::viewBitbucket.isInitialized && windowManagerBitbucket != null) {
-            (windowManagerBitbucket as WindowManager).removeViewImmediate(
-                viewBitbucket
-            )
+            if(viewBitbucket.parent != null){
+                (windowManagerBitbucket as WindowManager).removeViewImmediate(
+                    viewBitbucket
+                )
+            }
             windowManagerBitbucket = null
         }
     }

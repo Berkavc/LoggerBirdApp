@@ -3,6 +3,7 @@ package loggerbird.observers
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -39,7 +40,9 @@ internal class LogComponentObserver {
                     viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                 layoutOnTouchActivityListener = LayoutOnTouchListener(activity = activity)
                 frameLayout.setOnTouchListener(layoutOnTouchActivityListener)
-                gatherComponentViews(activity = activity)
+                frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
+                    gatherComponentViews(activity = activity)
+                }
             } else if (fragment != null) {
                 val layoutInflater: LayoutInflater =
                     (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
@@ -52,7 +55,9 @@ internal class LogComponentObserver {
                     viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                 layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
                 frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
-                gatherComponentViews(fragment = fragment)
+                frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
+                    gatherComponentViews(fragment = fragment)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -66,10 +71,12 @@ internal class LogComponentObserver {
         fragment: Fragment? = null
     ) {
         if (this::viewLoggerBirdCoordinator.isInitialized) {
-            if (activity != null) {
-                activity.windowManager.removeViewImmediate(viewLoggerBirdCoordinator)
-            } else if (fragment != null) {
-                (fragment.view as ViewGroup).removeView(viewLoggerBirdCoordinator)
+            if(viewLoggerBirdCoordinator.parent != null){
+                if (activity != null) {
+                    activity.windowManager.removeViewImmediate(viewLoggerBirdCoordinator)
+                } else if (fragment != null) {
+                    (fragment.view as ViewGroup).removeView(viewLoggerBirdCoordinator)
+                }
             }
         }
     }
@@ -78,21 +85,26 @@ internal class LogComponentObserver {
         try {
             arrayListComponentViews.clear()
             if (activity != null) {
-                (activity.window.decorView as ViewGroup).getAllViews().forEach {
-                    if (it !is ViewGroup) {
-                        arrayListComponentViews.add(it)
-                    }
-                }
+//                (activity.window.decorView as ViewGroup).getAllViews().forEach {
+//                    if (it !is ViewGroup) {
+//                        arrayListComponentViews.add(it)
+//                    }
+//                }
+                recursiveViews(view = activity.window.decorView)
                 LogActivityLifeCycleObserver.hashMapActivityComponents[activity] =
                     arrayListComponentViews
             } else if (fragment != null) {
-                (fragment.view as ViewGroup).getAllViews().forEach {
-                    if (it !is ViewGroup) {
-                        arrayListComponentViews.add(it)
-                    }
-                }
+//                (fragment.view as ViewGroup).getAllViews().forEach {
+//                    if (it !is ViewGroup) {
+//                        arrayListComponentViews.add(it)
+//                    }
+//                }
+                recursiveViews(view = fragment.requireView())
                 LogFragmentLifeCycleObserver.hashMapFragmentComponents[fragment] =
                     arrayListComponentViews
+            }
+            arrayListComponentViews.forEach {
+                Log.d("item",it.toString())
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -107,5 +119,18 @@ internal class LogComponentObserver {
             .toList()
             .flatMap { it.getAllViews() }
             .plus(this as View)
+    }
+
+    private fun recursiveViews(view: View) {
+        if(!arrayListComponentViews.contains(view)){
+            arrayListComponentViews.add(view)
+        }
+        if (view is ViewGroup) {
+                for(childCounter in 0 .. view.childCount){
+                    if(view.getChildAt(childCounter) != null){
+                        recursiveViews(view = view.getChildAt(childCounter))
+                    }
+                }
+        }
     }
 }

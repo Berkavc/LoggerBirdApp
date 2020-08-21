@@ -4,18 +4,15 @@ import android.app.Activity
 import android.graphics.Rect
 import android.os.Build
 import android.util.Log
-import android.view.*
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.RequiresApi
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
-import loggerbird.constants.Constants
 import loggerbird.LoggerBird
+import loggerbird.constants.Constants
 import loggerbird.observers.LogActivityLifeCycleObserver
 import loggerbird.observers.LogFragmentLifeCycleObserver
-import loggerbird.services.LoggerBirdService
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,11 +34,13 @@ internal class LayoutOnTouchListener(
             Log.d("touch_y", event.rawY.toString())
             if (activity != null) {
                 LogActivityLifeCycleObserver.hashMapActivityComponents[activity]?.forEach {
+                    if (it !is ViewGroup) {
                         val rect = Rect(it.left, it.top, it.right, it.bottom)
                         if (rect.contains(event.x.toInt(), event.y.toInt())) {
 //                     Log.d("touch_clicked_activity", "Id:" + it.id + "\n" + it.toString())
-                            LoggerBird.stringBuilderActivityLifeCycleObserver.append(Constants.activityTag + ":" + activity.javaClass.simpleName + " " + "$formattedTime" + " " + "Component Detail: " + "\n" + "Component Id:" + it.id + "\n" + "Component Name:" + it.toString())
+                            LoggerBird.stringBuilderActivityLifeCycleObserver.append(Constants.activityTag + ":" + activity.javaClass.simpleName + " " + "$formattedTime" + " "  + "Component Id:" + it.id + "  " + "Component Name:" + it.toString() + "\n")
                         }
+                    }
                 }
             } else if (fragment != null) {
                 val className: String = if (fragment.tag != null) {
@@ -50,13 +49,15 @@ internal class LayoutOnTouchListener(
                     fragment.javaClass.simpleName
                 }
                 LogFragmentLifeCycleObserver.hashMapFragmentComponents[fragment]?.forEach {
+                    if (it !is ViewGroup) {
                         val rect = Rect(it.left, it.top, it.right, it.bottom)
                         if (rect.contains(event.x.toInt(), event.y.toInt())) {
 //                        Log.d("touch_clicked_fragment", "Id:" + it.id + "\n" + it.toString())
                             LogFragmentLifeCycleObserver.stringBuilderFragmentLifeCycleObserver.append(
-                                Constants.fragmentTag + ":" + className + " " + "$formattedTime" + " " + "Component Detail:" + "\n" + "Component Id:" + it.id + "\n" + "Component Name:" + it.toString()
+                                Constants.fragmentTag + ":" + className + " " + "$formattedTime" + " " + "Component Id:" + it.id  + "Component Name:" + it.toString() + "\n"
                             )
                         }
+                    }
                 }
             }
         } catch (e: Exception) {
