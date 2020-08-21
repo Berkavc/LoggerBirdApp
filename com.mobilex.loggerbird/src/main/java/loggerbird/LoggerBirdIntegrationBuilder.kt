@@ -85,9 +85,9 @@ class LoggerBirdIntegrationBuilder(
         }
 
         fun setJiraIntegration() = apply {
-            val jiraDomainName = LoggerBird.decryptTokenKey("https://appcaesars.atlassian.net")
-            val jiraUserName = LoggerBird.decryptTokenKey("appcaesars@gmail.com")
-            val jiraApiToken = LoggerBird.decryptTokenKey("uPPXsUw0FabxeOa5CkDm0BAE")
+            val jiraDomainName = LoggerBird.decryptTokenKey("https://mobilex.atlassian.net")
+            val jiraUserName = LoggerBird.decryptTokenKey("berk.avcioglu@mobilex.com.tr")
+            val jiraApiToken = LoggerBird.decryptTokenKey("HSqKR7ci5Ue7bmjttHeeC642")
             LoggerBird.jiraDomainName = jiraDomainName;LoggerBird.jiraUserName =
             jiraUserName; LoggerBird.jiraApiToken = jiraApiToken
         }
