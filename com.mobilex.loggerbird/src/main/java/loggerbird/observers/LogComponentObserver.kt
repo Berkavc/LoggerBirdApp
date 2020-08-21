@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.FrameLayout
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
@@ -40,9 +41,12 @@ internal class LogComponentObserver {
                     viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                 layoutOnTouchActivityListener = LayoutOnTouchListener(activity = activity)
                 frameLayout.setOnTouchListener(layoutOnTouchActivityListener)
-                frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
-                    gatherComponentViews(activity = activity)
-                }
+                frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                    override fun onGlobalLayout() {
+                        gatherComponentViews(activity = activity)
+                        frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                })
             } else if (fragment != null) {
                 val layoutInflater: LayoutInflater =
                     (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
@@ -55,9 +59,12 @@ internal class LogComponentObserver {
                     viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                 layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
                 frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
-                frameLayout.viewTreeObserver.addOnGlobalLayoutListener {
-                    gatherComponentViews(fragment = fragment)
-                }
+                frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                    override fun onGlobalLayout() {
+                        gatherComponentViews(fragment = fragment)
+                        frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                })
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -102,9 +109,6 @@ internal class LogComponentObserver {
                 recursiveViews(view = fragment.requireView())
                 LogFragmentLifeCycleObserver.hashMapFragmentComponents[fragment] =
                     arrayListComponentViews
-            }
-            arrayListComponentViews.forEach {
-                Log.d("item",it.toString())
             }
         } catch (e: Exception) {
             e.printStackTrace()
