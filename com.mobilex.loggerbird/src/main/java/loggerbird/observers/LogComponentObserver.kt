@@ -34,9 +34,10 @@ internal class LogComponentObserver {
                 viewLoggerBirdCoordinator = layoutInflater.inflate(
                     R.layout.loggerbird_coordinator,
                     activity.window.decorView.findViewById(android.R.id.content),
-                    true
+                    false
                 )
                 if(viewLoggerBirdCoordinator != null){
+                    (activity.window.decorView.findViewById(android.R.id.content) as ViewGroup).addView(viewLoggerBirdCoordinator)
                     val frameLayout =
                         viewLoggerBirdCoordinator!!.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                     layoutOnTouchActivityListener = LayoutOnTouchListener(activity = activity)
@@ -55,9 +56,10 @@ internal class LogComponentObserver {
                     viewLoggerBirdCoordinator = layoutInflater.inflate(
                         R.layout.loggerbird_coordinator,
                         (fragment.view as ViewGroup),
-                        true
+                        false
                     )
                     if(viewLoggerBirdCoordinator != null){
+                        (fragment.view as ViewGroup).addView(viewLoggerBirdCoordinator)
                         val frameLayout =
                             viewLoggerBirdCoordinator!!.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
                         layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
