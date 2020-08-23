@@ -325,7 +325,7 @@ internal class JiraApi {
                                 stringBuilderDescription.append("Description:$description" + "\n")
                                 var counter = 0
                                 RecyclerViewJiraIssueAdapter.ViewHolder.arrayListIssueNames.forEach {
-                                    stringBuilderDescription.append("\n" + "Linked Issue_" + counter + ":" + jiraDomainName + "/browse/" + it.issueName)
+                                    stringBuilderDescription.append("\n" + "Linked Issue_" + counter + ":" + jiraDomainName + "/browse/" + it.issueName + "\n")
                                     counter++
                                 }
                             }

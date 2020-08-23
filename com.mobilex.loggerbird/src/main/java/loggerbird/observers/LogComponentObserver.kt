@@ -48,23 +48,25 @@ internal class LogComponentObserver {
                     }
                 })
             } else if (fragment != null) {
-                val layoutInflater: LayoutInflater =
-                    (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
-                viewLoggerBirdCoordinator = layoutInflater.inflate(
-                    R.layout.loggerbird_coordinator,
-                    (fragment.view as ViewGroup),
-                    true
-                )
-                val frameLayout =
-                    viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
-                layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
-                frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
-                frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
-                    override fun onGlobalLayout() {
-                        gatherComponentViews(fragment = fragment)
-                        frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
-                })
+                if(fragment.view != null){
+                    val layoutInflater: LayoutInflater =
+                        (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
+                    viewLoggerBirdCoordinator = layoutInflater.inflate(
+                        R.layout.loggerbird_coordinator,
+                        (fragment.view as ViewGroup),
+                        true
+                    )
+                    val frameLayout =
+                        viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
+                    layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
+                    frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
+                    frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                        override fun onGlobalLayout() {
+                            gatherComponentViews(fragment = fragment)
+                            frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    })
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
