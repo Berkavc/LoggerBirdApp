@@ -18,7 +18,7 @@ import loggerbird.listeners.layouts.LayoutOnTouchListener
 import kotlin.collections.ArrayList
 
 internal class LogComponentObserver {
-    private lateinit var viewLoggerBirdCoordinator: View
+    private  var viewLoggerBirdCoordinator: View? = null
     private val arrayListComponentViews: ArrayList<View> = ArrayList()
     private lateinit var layoutOnTouchActivityListener: LayoutOnTouchListener
     private lateinit var layoutOnTouchFragmentListener: LayoutOnTouchListener
@@ -27,7 +27,6 @@ internal class LogComponentObserver {
         activity: Activity? = null,
         fragment: Fragment? = null
     ) {
-//        removeLoggerBirdCoordinatorLayout(activity = activity,fragment = fragment)
         try {
             if (activity != null) {
                 val layoutInflater: LayoutInflater =
@@ -37,16 +36,18 @@ internal class LogComponentObserver {
                     activity.window.decorView.findViewById(android.R.id.content),
                     true
                 )
-                val frameLayout =
-                    viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
-                layoutOnTouchActivityListener = LayoutOnTouchListener(activity = activity)
-                frameLayout.setOnTouchListener(layoutOnTouchActivityListener)
-                frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
-                    override fun onGlobalLayout() {
-                        gatherComponentViews(activity = activity)
-                        frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                    }
-                })
+                if(viewLoggerBirdCoordinator != null){
+                    val frameLayout =
+                        viewLoggerBirdCoordinator!!.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
+                    layoutOnTouchActivityListener = LayoutOnTouchListener(activity = activity)
+                    frameLayout.setOnTouchListener(layoutOnTouchActivityListener)
+                    frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                        override fun onGlobalLayout() {
+                            gatherComponentViews(activity = activity)
+                            frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    })
+                }
             } else if (fragment != null) {
                 if(fragment.view != null){
                     val layoutInflater: LayoutInflater =
@@ -56,16 +57,18 @@ internal class LogComponentObserver {
                         (fragment.view as ViewGroup),
                         true
                     )
-                    val frameLayout =
-                        viewLoggerBirdCoordinator.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
-                    layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
-                    frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
-                    frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
-                        override fun onGlobalLayout() {
-                            gatherComponentViews(fragment = fragment)
-                            frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                        }
-                    })
+                    if(viewLoggerBirdCoordinator != null){
+                        val frameLayout =
+                            viewLoggerBirdCoordinator!!.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
+                        layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
+                        frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
+                        frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                            override fun onGlobalLayout() {
+                                gatherComponentViews(fragment = fragment)
+                                frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                            }
+                        })
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -79,15 +82,17 @@ internal class LogComponentObserver {
         activity: Activity? = null,
         fragment: Fragment? = null
     ) {
-        if (this::viewLoggerBirdCoordinator.isInitialized) {
-            if(viewLoggerBirdCoordinator.parent != null){
-                if (activity != null) {
-                    activity.windowManager.removeViewImmediate(viewLoggerBirdCoordinator)
-                } else if (fragment != null) {
-                    (fragment.view as ViewGroup).removeView(viewLoggerBirdCoordinator)
+            if(viewLoggerBirdCoordinator != null){
+                if(viewLoggerBirdCoordinator!!.parent != null){
+                    if (activity != null) {
+                        (activity.window.decorView.findViewById(android.R.id.content) as ViewGroup).removeView(viewLoggerBirdCoordinator)
+//                        activity.windowManager.removeViewImmediate(viewLoggerBirdCoordinator)
+                    } else if (fragment != null) {
+                        (fragment.view as ViewGroup).removeView(viewLoggerBirdCoordinator)
+                    }
+                    viewLoggerBirdCoordinator = null
                 }
             }
-        }
     }
 
     private fun gatherComponentViews(activity: Activity? = null, fragment: Fragment? = null) {

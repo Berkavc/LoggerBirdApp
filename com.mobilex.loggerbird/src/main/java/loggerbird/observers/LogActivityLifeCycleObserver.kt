@@ -195,7 +195,9 @@ internal class LogActivityLifeCycleObserver() :
                         checkAudioPermissionResult()
                     }
                     LoggerBirdService.controlDrawableSettingsPermission -> {
-                        checkDrawOtherAppPermissionResult(activity = activity)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            checkDrawOtherAppPermissionResult(activity = activity)
+                        }
                     }
                 }
             }
@@ -244,6 +246,7 @@ internal class LogActivityLifeCycleObserver() :
                     totalActivityTime!!
                 ) + "\n"
             )
+            logComponentObserver.removeLoggerBirdCoordinatorLayout(activity = activity)
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()

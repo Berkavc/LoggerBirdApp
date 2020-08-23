@@ -431,6 +431,7 @@ internal class LogFragmentLifeCycleObserver(
             stringBuilderFragmentLifeCycleObserver.append(
                 Constants.fragmentTag + ":" + className + " " + "$formattedTime:$currentLifeCycleState\n"
             )
+            logComponentObserver.initializeLoggerBirdCoordinatorLayout(fragment = f)
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()
