@@ -64,8 +64,11 @@ internal interface AccountIdService {
     @GET("priority")
     fun getJiraPriorities(): Call<List<JiraPriorityModel>>
 
-    @GET("search?query")
-    fun getJiraIssueList(): Call<JsonObject>
+//    @GET("search?query")
+//    fun getJiraIssueList(): Call<JsonObject>
+
+    @POST("search")
+    fun getJiraIssueList(@Body jsonObject: JsonObject): Call<JsonObject>
 
     @GET("?")
     fun getFixJiraCompList(): Call<JsonObject>

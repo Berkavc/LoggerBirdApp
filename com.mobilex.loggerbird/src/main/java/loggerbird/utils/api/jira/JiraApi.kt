@@ -111,6 +111,7 @@ internal class JiraApi {
     private var epicLinkField: String? = null
     private var queueCreateTask = 0
     private lateinit var timerTaskQueue: TimerTask
+    private val hashMapIssueMaxIndex: HashMap<String, String> = HashMap()
     /**
      * This method is used for calling an jira action with network connection check.
      * @param filePathMedia is used for getting the reference of current media file.
@@ -954,12 +955,12 @@ internal class JiraApi {
                 hashMapLinkedIssues.clear()
                 hashMapSprint.clear()
                 hashMapBoard.clear()
+                hashMapIssueMaxIndex.clear()
                 jiraTaskGatherSprintFields()
                 jiraTaskGatherProject()
                 jiraTaskGatherIssueTypes()
                 jiraTaskGatherAssignees()
                 jiraTaskGatherLinkedIssues()
-                jiraTaskGatherIssues(task = "normal")
                 jiraTaskGatherLabels()
                 jiraTaskGatherPriorities()
                 jiraTaskGatherSprint()
@@ -1007,11 +1008,20 @@ internal class JiraApi {
                                     if (it.name != null && it.key != null) {
                                         arrayListProjects.add(it.name!!)
                                         arrayListProjectKeys.add(it.key!!)
-                                        jiraTaskGatherFixComp(
-                                            projectKey = it.key!!
-                                        )
+                                        jiraTaskGatherIssuesIndex(projectKey = it.key!!)
+//                                        jiraTaskGatherFixComp(
+//                                            projectKey = it.key!!
+//                                        )
                                     }
 
+                                }
+                                if (arrayListProjectKeys.size > projectPosition) {
+                                    jiraTaskGatherFixComp(
+                                        projectKey = arrayListProjectKeys[projectPosition]
+                                    )
+                                    jiraTaskGatherIssues(
+                                        projectKey = arrayListProjectKeys[projectPosition]
+                                    )
                                 }
                                 updateFields()
                             }
@@ -1173,13 +1183,16 @@ internal class JiraApi {
      * @throws exception if error occurs.
      * @see jiraExceptionHandler method.
      */
-    private fun jiraTaskGatherIssues(task: String) {
+    private fun jiraTaskGatherIssues(projectKey: String) {
         queueCounter++
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("jql", "project =$projectKey")
+        jsonObject.addProperty("maxResults", 5000)
         val coroutineCallGatherIssues = CoroutineScope(Dispatchers.IO)
         coroutineCallGatherIssues.async {
             RetrofitJiraClient.getJiraUserClient(url = "$jiraDomainName/rest/api/2/")
                 .create(AccountIdService::class.java)
-                .getJiraIssueList()
+                .getJiraIssueList(jsonObject = jsonObject)
                 .enqueue(object : retrofit2.Callback<JsonObject> {
                     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
                     override fun onFailure(
@@ -1201,6 +1214,52 @@ internal class JiraApi {
                                 val issueList = response.body()
                                 issueList?.getAsJsonArray("issues")?.forEach {
                                     arrayListIssues.add(it.asJsonObject["key"].asString)
+                                }
+                                updateFields()
+                            }
+                        }
+                    }
+                })
+        }
+    }
+
+    /**
+     * This method is used for getting max index of issues in the project for jira.
+     * @throws exception if error occurs.
+     * @see jiraExceptionHandler method.
+     */
+    private fun jiraTaskGatherIssuesIndex(projectKey: String) {
+        queueCounter++
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("jql", "project =$projectKey")
+        jsonObject.addProperty("maxResults", 1)
+        val coroutineCallGatherIssues = CoroutineScope(Dispatchers.IO)
+        coroutineCallGatherIssues.async {
+            RetrofitJiraClient.getJiraUserClient(url = "$jiraDomainName/rest/api/2/")
+                .create(AccountIdService::class.java)
+                .getJiraIssueList(jsonObject = jsonObject)
+                .enqueue(object : retrofit2.Callback<JsonObject> {
+                    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
+                    override fun onFailure(
+                        call: retrofit2.Call<JsonObject>,
+                        t: Throwable
+                    ) {
+                        jiraExceptionHandler(throwable = t)
+                    }
+
+                    override fun onResponse(
+                        call: retrofit2.Call<JsonObject>,
+                        response: retrofit2.Response<JsonObject>
+                    ) {
+                        if (response.code() !in 200..299) {
+                            jiraExceptionHandler()
+                        } else {
+                            coroutineCallGatherIssues.async {
+                                Log.d("issue_index_details", response.code().toString())
+                                val issueList = response.body()
+                                issueList?.getAsJsonArray("issues")?.forEach {
+                                    hashMapIssueMaxIndex[projectKey] =
+                                        it.asJsonObject["key"].asString.substringAfter("-")
                                 }
                                 updateFields()
                             }
@@ -1797,7 +1856,7 @@ internal class JiraApi {
     /**
      * This method is used for resetting the values in jira action.
      */
-    private fun resetJiraValues(shareLayoutMessage:String) {
+    private fun resetJiraValues(shareLayoutMessage: String) {
         queueCreateTask--
         if (queueCreateTask == 0 || shareLayoutMessage == "jira_error" || shareLayoutMessage == "jira_error_time_out") {
 //            timerTaskQueue.cancel()
@@ -2072,8 +2131,21 @@ internal class JiraApi {
         activity: Activity,
         autoTextViewIssue: AutoCompleteTextView
     ): Boolean {
-        if (arrayListIssues.contains(autoTextViewIssue.editableText.toString()) || autoTextViewIssue.editableText.toString().isEmpty()) {
-            return true
+        if (autoTextViewIssue.editableText.toString().contains("-") || autoTextViewIssue.editableText.toString().isEmpty()) {
+            if (arrayListProjectKeys.contains(
+                    autoTextViewIssue.editableText.toString().substringBefore(
+                        "-"
+                    )) && (autoTextViewIssue.editableText.toString().substringAfter("-").toInt() >= 1 && autoTextViewIssue.editableText.toString().substringAfter(
+                        "-"
+                    ).toInt() <= hashMapIssueMaxIndex[autoTextViewIssue.editableText.toString().substringBefore("-")]!!.toInt())
+                ) {
+                    return true
+                } else {
+                defaultToast.attachToast(
+                    activity = activity,
+                    toastMessage = activity.resources.getString(R.string.jira_issue_doesnt_exist)
+                )
+            }
         } else {
             defaultToast.attachToast(
                 activity = activity,

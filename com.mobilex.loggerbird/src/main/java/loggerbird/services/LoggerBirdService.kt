@@ -4192,8 +4192,9 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
                     RecyclerViewModelIssue(
                         autoTextViewJiraIssue.editableText.toString()
                     )
-                ) && arrayListJiraIssue.contains(
-                    autoTextViewJiraIssue.editableText.toString()
+                ) && jiraAuthentication.checkJiraIssue(
+                    activity = activity,
+                    autoTextViewIssue = autoTextViewJiraIssue
                 )
             ) {
                 arrayListJiraIssueName.add(RecyclerViewModelIssue(autoTextViewJiraIssue.editableText.toString()))
