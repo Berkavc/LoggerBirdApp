@@ -24,6 +24,7 @@ import io.realm.Sort
 import kotlinx.coroutines.*
 import loggerbird.LoggerBird
 import io.reactivex.disposables.Disposable
+import kotlinx.android.synthetic.main.bottom_sheet_view_2.*
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Callback
@@ -274,6 +275,8 @@ class MainActivity : AppCompatActivity() {
         })
 
         button_next_activity.setOnClickListener({
+            val x= 15
+            LoggerBird.callCustomDetails(customString = "id:$x")
 //            throw  NullPointerException("asdf12")
 //            //            LogDeneme.saveComponentDetails(context = this,view = button_next_activity,resources = button_next_activity.resources)
 ////            LogDeneme.saveAllDetails(context=this)

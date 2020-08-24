@@ -523,7 +523,7 @@ class LoggerBird : LifecycleObserver {
          * @param customString parameter used for getting details from custom details.
          * @throws exception if controlLogInit value is false.
          */
-        fun callOkHttpRequestDetails(
+        fun callCustomDetails(
             customString: String? = null
         ) {
             if (controlLogInit) {
