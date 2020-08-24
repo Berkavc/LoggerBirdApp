@@ -37,7 +37,7 @@ internal class LayoutOnTouchListener(
                     if (it !is ViewGroup) {
                         val rect = Rect(it.left, it.top, it.right, it.bottom)
                         if (rect.contains(event.x.toInt(), event.y.toInt())) {
-//                     Log.d("touch_clicked_activity", "Id:" + it.id + "\n" + it.toString())
+                     Log.d("touch_clicked_activity", "Id:" + it.id + "\n" + it.toString())
                             LoggerBird.stringBuilderActivityLifeCycleObserver.append(Constants.activityTag + ":" + activity.javaClass.simpleName + " " + "$formattedTime" + " "  + "Component Id:" + it.id + "  " + "Component Name:" + it.toString() + "\n")
                         }
                     }
@@ -52,7 +52,7 @@ internal class LayoutOnTouchListener(
                     if (it !is ViewGroup) {
                         val rect = Rect(it.left, it.top, it.right, it.bottom)
                         if (rect.contains(event.x.toInt(), event.y.toInt())) {
-//                        Log.d("touch_clicked_fragment", "Id:" + it.id + "\n" + it.toString())
+                        Log.d("touch_clicked_fragment", "Id:" + it.id + "\n" + it.toString())
                             LogFragmentLifeCycleObserver.stringBuilderFragmentLifeCycleObserver.append(
                                 Constants.fragmentTag + ":" + className + " " + "$formattedTime" + " " + "Component Id:" + it.id  + "Component Name:" + it.toString() + "\n"
                             )

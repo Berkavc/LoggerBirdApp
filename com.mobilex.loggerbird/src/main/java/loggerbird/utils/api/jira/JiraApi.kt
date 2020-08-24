@@ -1573,8 +1573,15 @@ internal class JiraApi {
                                 Log.d("board_details", response.code().toString())
                                 val boardList = response.body()
                                 boardList?.getAsJsonArray("values")?.forEach {
-                                    hashMapBoard[it.asJsonObject["location"].asJsonObject["projectKey"].asString] =
-                                        it.asJsonObject["type"].asString
+                                    if(!hashMapBoard.containsKey(it.asJsonObject["location"].asJsonObject["projectKey"].asString)){
+                                        hashMapBoard[it.asJsonObject["location"].asJsonObject["projectKey"].asString] =
+                                            it.asJsonObject["type"].asString
+                                    }else{
+                                        if(hashMapBoard[it.asJsonObject["location"].asJsonObject["projectKey"].asString] != "scrum"){
+                                            hashMapBoard[it.asJsonObject["location"].asJsonObject["projectKey"].asString] =
+                                                it.asJsonObject["type"].asString
+                                        }
+                                    }
                                 }
                                 updateFields()
                             }
@@ -2131,7 +2138,10 @@ internal class JiraApi {
         activity: Activity,
         autoTextViewIssue: AutoCompleteTextView
     ): Boolean {
-        if (autoTextViewIssue.editableText.toString().contains("-") || autoTextViewIssue.editableText.toString().isEmpty()) {
+        if( autoTextViewIssue.editableText.toString().isEmpty()){
+            return true
+        }
+        if (autoTextViewIssue.editableText.toString().contains("-")) {
             if (arrayListProjectKeys.contains(
                     autoTextViewIssue.editableText.toString().substringBefore(
                         "-"

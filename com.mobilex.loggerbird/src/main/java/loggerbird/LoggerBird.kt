@@ -97,6 +97,7 @@ class LoggerBird : LifecycleObserver {
         private var stringBuilderException: StringBuilder = StringBuilder()
         private var stringBuilderAll: StringBuilder = StringBuilder()
         private var stringBuilderExceedFileWriterLimit: StringBuilder = StringBuilder()
+        private var stringBuilderCustomDetails:StringBuilder = StringBuilder()
         private var coroutineCallComponent: CoroutineScope = CoroutineScope(Dispatchers.IO)
         private var coroutineCallLifeCycle: CoroutineScope = CoroutineScope(Dispatchers.IO)
         private var coroutineCallAnalytics: CoroutineScope = CoroutineScope(Dispatchers.IO)
@@ -112,6 +113,7 @@ class LoggerBird : LifecycleObserver {
         private var coroutineCallRetrofitTask: CoroutineScope = CoroutineScope(Dispatchers.IO)
         private var coroutineCallEmailTask = CoroutineScope(Dispatchers.IO)
         private var coroutineCallMemoryService: CoroutineScope = CoroutineScope(Dispatchers.IO)
+        private var coroutineCallCustomDetails:CoroutineScope = CoroutineScope(Dispatchers.IO)
         private var formattedTime: String? = null
         private var fileLimit: Long = 2097152
         internal lateinit var fragmentLifeCycleObserver: LogFragmentLifeCycleObserver
@@ -482,7 +484,7 @@ class LoggerBird : LifecycleObserver {
         }
 
         /**
-         * This Method adds takeRetrofitRequestDetails into queue.
+         * This Method adds takeOkHttpDetails into queue.
          * @param okHttpClient parameter used for getting details from okHttp client.
          * @param okHttpRequest parameter used for getting details from okHttp request and get it's body,header,url and method values.
          * @param okHttpURLConnection parameter used for getting details from okHttpUrlConnection and get it's response code , error message , response message .
@@ -507,6 +509,36 @@ class LoggerBird : LifecycleObserver {
                             takeOkHttpDetails(
                                 url = url,
                                 okHttpURLConnection = okHttpURLConnection
+                            )
+                        })
+                    }
+                }
+            } else {
+                throw LoggerBirdException(Constants.logInitErrorMessage)
+            }
+        }
+
+        /**
+         * This Method adds takeCustomDetails into queue.
+         * @param customString parameter used for getting details from custom details.
+         * @throws exception if controlLogInit value is false.
+         */
+        fun callOkHttpRequestDetails(
+            customString: String? = null
+        ) {
+            if (controlLogInit) {
+                if (logLevel != LoggerBirdLogLevel.NONE) {
+                    if (logLevel == LoggerBirdLogLevel.ALL || logLevel == LoggerBirdLogLevel.INFO) {
+                        if (runnableList.isEmpty()) {
+                            workQueueLinked.put {
+                               takeCustomDetails(
+                                   customString = customString
+                               )
+                            }
+                        }
+                        runnableList.add(Runnable {
+                            takeCustomDetails(
+                                customString = customString
                             )
                         })
                     }
@@ -1568,6 +1600,39 @@ class LoggerBird : LifecycleObserver {
         }
 
         /**
+         * This Method Takes Custom Details.
+         * @param customString parameter used for getting details from user for printing custom details.
+         * @throws exception if error occurs then com.mobilex.loggerbird.loggerbird.exception message will be put in the queue with callExceptionDetails , which it's details gathered by takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+         * @throws exception if logInit method return value is false.
+         */
+        private fun takeCustomDetails(
+            customString:String? = null
+        ) {
+            workQueueLinked.controlRunnable = true
+            coroutineCallCustomDetails.async {
+                if (controlLogInit) {
+                    try {
+                        stringBuilderCustomDetails = StringBuilder()
+                        val date = Calendar.getInstance().time
+                        val formatter = SimpleDateFormat.getDateTimeInstance()
+                        formattedTime = formatter.format(date)
+                        stringBuilderCustomDetails.append("\n" + formattedTime + ":" + Constants.customDetailsTag + ":" + "\n" + customString)
+                        saveCustomDetails()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        callEnqueue()
+                        callExceptionDetails(
+                            exception = e,
+                            tag = Constants.customDetailsTag
+                        )
+                    }
+                } else {
+                    throw LoggerBirdException(Constants.logInitErrorMessage)
+                }
+            }
+        }
+
+        /**
          * This Method Takes Exception Details.
          * @param exception parameter used for getting details from Exception class details
          * @param tag parameter used for getting details of which method caused this loggerbird.exception.
@@ -2106,6 +2171,62 @@ class LoggerBird : LifecycleObserver {
                     callExceptionDetails(
                         exception = e,
                         tag = Constants.httpTag
+                    )
+                }
+            }
+        }
+        /**
+         * This Method Saves Custom Details To Txt File.
+         * @throws exception if error occurs then com.mobilex.loggerbird.loggerbird.exception message will be put in the queue with callExceptionDetails , which it's details gathered by takeExceptionDetails method and saves exceptions instance to the txt file with saveExceptionDetails method.
+         */
+        private fun saveCustomDetails() {
+            if (stringBuilderCustomDetails.isNotEmpty()) {
+                try {
+                    fileDirectory = context.filesDir
+                    filePath = if (filePathName != null) {
+                        File(
+                            fileDirectory,
+                            "$filePathName.txt"
+                        )
+                    } else {
+                        File(
+                            fileDirectory,
+                            "logger_bird_details.txt"
+                        )
+                    }
+                    if (!filePath.exists()) {
+                        filePath.createNewFile()
+                        takeDeviceInformationDetails()
+                        filePath.appendText(
+                            stringBuilderBuild.toString()
+                        )
+                        filePath.appendText(
+                            stringBuilderCustomDetails.toString()
+                        )
+                    } else {
+                        if (filePath.length() > fileLimit) {
+                            stringBuilderExceedFileWriterLimit.append(
+                                stringBuilderCustomDetails.toString()
+                            )
+                        } else {
+                            filePath.appendText(
+                                stringBuilderCustomDetails.toString()
+                            )
+                        }
+                    }
+                    callEnqueue()
+                    if (runnableList.size == 0 && stringBuilderExceedFileWriterLimit.isNotEmpty()) {
+                        exceededFileLimitWriter(
+                            stringBuilder = stringBuilderExceedFileWriterLimit,
+                            file = filePath
+                        )
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    callEnqueue()
+                    callExceptionDetails(
+                        exception = e,
+                        tag = Constants.customDetailsTag
                     )
                 }
             }
