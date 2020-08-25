@@ -64,26 +64,42 @@ internal class LogComponentObserver {
                 (activity.window.decorView.findViewById(android.R.id.content) as ViewGroup).addView(layoutCoordinator)
             } else if (fragment != null) {
                 if (fragment.view != null) {
-                    val layoutInflater: LayoutInflater =
-                        (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
-                    viewLoggerBirdCoordinator = layoutInflater.inflate(
-                        R.layout.loggerbird_coordinator,
-                        (fragment.view as ViewGroup),
-                        false
+//                    val layoutInflater: LayoutInflater =
+//                        (fragment.context?.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater)
+//                    viewLoggerBirdCoordinator = layoutInflater.inflate(
+//                        R.layout.loggerbird_coordinator,
+//                        (fragment.view as ViewGroup),
+//                        false
+//                    )
+//                    if(viewLoggerBirdCoordinator != null){
+//                        (fragment.view as ViewGroup).addView(viewLoggerBirdCoordinator)
+//                        val frameLayout =
+//                            viewLoggerBirdCoordinator!!.findViewById<FrameLayout>(R.id.logger_bird_coordinator)
+//                        layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
+//                        frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
+//                        frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+//                            override fun onGlobalLayout() {
+//                                gatherComponentViews(fragment = fragment)
+//                                frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
+//                            }
+//                        })
+//                    }
+                    val layoutCoordinator = LayoutCoordinator(context = fragment.requireContext())
+                    layoutCoordinator.layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    if(viewLoggerBirdCoordinator != null){
-                        (fragment.view as ViewGroup).addView(viewLoggerBirdCoordinator)
-                        val frameLayout =
-                            viewLoggerBirdCoordinator!!.findViewById<LayoutCoordinator>(R.id.logger_bird_coordinator)
-                        layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
-                        frameLayout.setOnTouchListener(layoutOnTouchFragmentListener)
-                        frameLayout.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
-                            override fun onGlobalLayout() {
-                                gatherComponentViews(fragment = fragment)
-                                frameLayout.viewTreeObserver.removeOnGlobalLayoutListener(this)
-                            }
-                        })
-                    }
+                    layoutCoordinator.background = null
+                    layoutCoordinator.isFocusableInTouchMode = true
+                    layoutOnTouchFragmentListener = LayoutOnTouchListener(fragment = fragment)
+                    layoutCoordinator.setOnTouchListener(layoutOnTouchFragmentListener)
+                    layoutCoordinator.viewTreeObserver.addOnGlobalLayoutListener(object :ViewTreeObserver.OnGlobalLayoutListener{
+                        override fun onGlobalLayout() {
+                            gatherComponentViews(fragment = fragment)
+                            layoutCoordinator.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    })
+                    (fragment.view as ViewGroup).addView(layoutCoordinator)
                 }
             }
         } catch (e: Exception) {
