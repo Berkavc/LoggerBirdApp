@@ -61,6 +61,11 @@ internal class LogComponentObserver {
                         layoutCoordinator.viewTreeObserver.removeOnGlobalLayoutListener(this)
                     }
                 })
+                layoutCoordinator.viewTreeObserver.addOnWindowFocusChangeListener { hasFocus ->
+                    if(!hasFocus){
+                        layoutCoordinator.requestFocus()
+                    }
+                }
                 (activity.window.decorView.findViewById(android.R.id.content) as ViewGroup).addView(layoutCoordinator)
             } else if (fragment != null) {
                 if (fragment.view != null) {
@@ -99,6 +104,11 @@ internal class LogComponentObserver {
                             layoutCoordinator.viewTreeObserver.removeOnGlobalLayoutListener(this)
                         }
                     })
+                    layoutCoordinator.viewTreeObserver.addOnWindowFocusChangeListener { hasFocus ->
+                        if(!hasFocus){
+                            layoutCoordinator.requestFocus()
+                        }
+                    }
                     (fragment.view as ViewGroup).addView(layoutCoordinator)
                 }
             }
