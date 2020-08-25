@@ -173,6 +173,10 @@ class MainActivity : AppCompatActivity() {
                 Log.d("thread_line",it.lineNumber.toString())
             }
         }
+        main_activity_layout.setOnLongClickListener {
+            Log.d("main_layout","long clicked!")
+            false
+        }
 
         LoggerBird.callMemoryUsageDetails(1)
 

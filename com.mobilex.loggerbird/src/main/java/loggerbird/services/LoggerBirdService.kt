@@ -2623,24 +2623,28 @@ internal class LoggerBirdService : Service(), LoggerBirdShakeDetector.Listener {
     override fun hearShake() {
         try {
             Log.d("shake", "shake fired!!")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (Settings.canDrawOverlays(this.activity)) {
-                    initializeShakeAction()
-                } else {
-                    if (!isFabEnable) {
-                        if (!isActivateDialogShown) {
-                            initializeLoggerBirdActivatePopup(activity = this.activity)
-                            isActivateDialogShown = true
-                        }
-                    }
-                }
-            } else {
-                initializeShakeAction()
-            }
+            initializeLoggerBirdLayoutAction()
         } catch (e: Exception) {
             e.printStackTrace()
             LoggerBird.callEnqueue()
             LoggerBird.callExceptionDetails(exception = e, tag = Constants.shakerTag)
+        }
+    }
+
+    internal fun initializeLoggerBirdLayoutAction(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(this.activity)) {
+                initializeShakeAction()
+            } else {
+                if (!isFabEnable) {
+                    if (!isActivateDialogShown) {
+                        initializeLoggerBirdActivatePopup(activity = this.activity)
+                        isActivateDialogShown = true
+                    }
+                }
+            }
+        } else {
+            initializeShakeAction()
         }
     }
 
